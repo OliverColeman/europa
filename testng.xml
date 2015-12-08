@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Suite" parallel="none">
+  <test name="Test">
+    <classes>
+      <class name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest"/>
+      <class name="com.ojcoleman.europa.configurable.SubComponentWrapper"/>
+      <class name="com.ojcoleman.europa.SubcomponentExtendedWithParams"/>
+      <class name="com.ojcoleman.europa.CustomObjectNoGoodConstructor"/>
+      <class name="com.ojcoleman.europa.ParamsSet"/>
+      <class name="com.ojcoleman.europa.SubcomponentWithParams"/>
+      <class name="com.ojcoleman.europa.configurable.ParameterWrapper"/>
+      <class name="com.ojcoleman.europa.ParamsCustomObjectNoGoodConstructor"/>
+      <class name="com.ojcoleman.europa.BaseComponentRequiredSub"/>
+      <class name="com.ojcoleman.europa.BaseComponentDefaultSub"/>
+      <class name="com.ojcoleman.europa.SubcomponentEmpty"/>
+      <class name="com.ojcoleman.europa.ParamsDefault"/>
+      <class name="com.ojcoleman.europa.BaseComponentSubWithParams"/>
+      <class name="com.ojcoleman.europa.ParamsMinMaxValidation"/>
+      <class name="com.ojcoleman.europa.configurable.ConfigurableComponent"/>
+      <class name="com.ojcoleman.europa.ParamsRegexValidation"/>
+      <class name="com.ojcoleman.europa.BaseComponentExtendedSubWithParams"/>
+      <class name="com.ojcoleman.europa.BaseComponentInvalidSub"/>
+      <class name="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
+      <class name="com.ojcoleman.europa.BaseComponentOptionalSub"/>
+      <class name="com.ojcoleman.europa.BaseComponentArraySubWithParams"/>
+      <class name="com.ojcoleman.europa.CustomObject"/>
+      <class name="com.ojcoleman.europa.ParamsArrays"/>
+    </classes>
+  </test> <!-- Test -->
+</suite> <!-- Suite -->
