@@ -11,19 +11,19 @@ import com.ojcoleman.europa.core.Transcriber;
  * 
  * @author O. J. Coleman
  */
-public class DummyTranscriber extends Transcriber<Function<?, ?>> {
+public class DummyTranscriber extends Transcriber<Genotype<?>, Function<?, ?>> {
 
 	public DummyTranscriber(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
 	@Override
-	public Function<?, ?> transcribe(Genotype genotype, Function<?, ?> function) {
+	public Function<?, ?> transcribe(Genotype<?> genotype, Function<?, ?> function) {
 		return null;
 	}
 
 	@Override
-	public Genotype getTemplateGenotype() {
+	public Genotype<?> getTemplateGenotype() {
 		return null;
 	}
 

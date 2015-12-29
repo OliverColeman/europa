@@ -6,18 +6,14 @@ import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +23,6 @@ import com.ojcoleman.europa.configurable.ConfigurableComponent;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.SubComponent;
 import com.ojcoleman.europa.evaluators.DummyEvaluator;
-import com.ojcoleman.europa.evolvers.DefaultEvolver;
 import com.ojcoleman.europa.populations.SimplePopulation;
 import com.ojcoleman.europa.rankers.DefaultRanker;
 import com.ojcoleman.europa.speciators.NoSpeciation;
@@ -54,7 +49,9 @@ import com.ojcoleman.europa.transcribers.DummyTranscriber;
 public class Run extends ConfigurableComponent {
 	private final Logger logger = LoggerFactory.getLogger(Run.class);
 	
-	private static Run singleton;
+	private static long nextID;
+	
+	//private static Run singleton;
 	
 	/**
 	 * Run event types.
@@ -72,13 +69,13 @@ public class Run extends ConfigurableComponent {
 	}
 	
 	
-	@Parameter(description="The name of the run. Default is the name of the configuration file appended with the current date and time.", optional=true)
+	@Parameter(description="The name of the run. DefaultEvolver is the name of the configuration file appended with the current date and time.", optional=true)
 	protected String name;
 	
-	@Parameter(description = "File output directory. Default is run name (with an integer appended to make it unique if necessary).", optional=true)
+	@Parameter(description = "File output directory. DefaultEvolver is run name (with an integer appended to make it unique if necessary).", optional=true)
 	protected String outputDirectory;
 	
-	@Parameter(description="The random seed. Default value is the system time.", optional=true)
+	@Parameter(description="The random seed. DefaultEvolver value is the system time.", optional=true)
 	protected long randomSeed;
 	
 	@Parameter(description="The class to use to generate random numbers. It must extend Java.util.Random.", defaultValue="java.util.Random")
@@ -93,7 +90,7 @@ public class Run extends ConfigurableComponent {
 	
 	
 	@SubComponent (description="Sub-component for transcribing a genotype to a 'phenotype' function to be evaluated (these may be one and the same).", defaultImplementation=DummyTranscriber.class)
-	protected Transcriber<Function<? ,?>> transcriber;
+	protected Transcriber transcriber;
 	
 	@SubComponent (description="Sub-component for the population of individuals.", defaultImplementation=SimplePopulation.class)
 	protected Population population;
@@ -110,7 +107,7 @@ public class Run extends ConfigurableComponent {
 	@SubComponent (description="Sub-component for maintaining pertinent bits of evolution history.", defaultImplementation=History.class)
 	protected History history;
 	
-	@SubComponent (description="Sub-component(s) for the fitness evaluator(s). The first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultImplementation=DummyEvaluator.class)
+	@SubComponent (description="Sub-component(s) for the fitness evaluator(s). By default the first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultImplementation=DummyEvaluator.class)
 	protected Evaluator[] evaluators;
 	
 	
@@ -137,15 +134,14 @@ public class Run extends ConfigurableComponent {
 	
 	/**
 	 * Constructor for {@link ConfigurableComponent}.
-	 * @throws Exception if there is already an instance of Run.
 	 */
 	public Run(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		
-		if (singleton != null) {
-			throw new Exception("There should only be a single instance of Run.");
-		}
-		singleton = this;
+		//if (singleton != null) {
+		//	throw new Exception("There should only be a single instance of Run.");
+		//}
+		//singleton = this;
 		
 		if (name == null) {
 			if ((parentComponent instanceof Base) && ((Base) parentComponent).getConfigFilePath() != null) {
@@ -184,22 +180,22 @@ public class Run extends ConfigurableComponent {
 		//evolver = new Evolver();
 	}
 	
-	public static final Run get() {
-		return singleton;
-	}
+	//public static final Run get() {
+	//	return singleton;
+	//}
 	
 	/**
 	 * Execute the run.
 	 * @throws Exception 
 	 */
 	public final synchronized void run() throws Exception {
-		if (singleton != null && singleton != this) {
-			throw new Exception("There is another Run instance already running.");
-		}
+		//if (singleton != null && singleton != this) {
+		//	throw new Exception("There is another Run instance already running.");
+		//}
 		
 		mainLoop();
 		
-		singleton = null;
+		//singleton = null;
 	}
 	
 	
@@ -293,7 +289,7 @@ public class Run extends ConfigurableComponent {
 	}
 	
 
-	public Transcriber<Function<? ,?>> getTranscriber() {
+	public Transcriber getTranscriber() {
 		return transcriber;
 	}
 
@@ -319,6 +315,13 @@ public class Run extends ConfigurableComponent {
 
 	public Evaluator[] getEvaluators() {
 		return evaluators;
+	}
+	
+	/**
+	 * Get the next Run-wide ID. This is useful when IDs must be unique across an entire Run.
+	 */
+	public long getNextID() {
+		return ++nextID;
 	}
 	
 	/**
@@ -357,5 +360,12 @@ public class Run extends ConfigurableComponent {
 	 */
 	public Path getOutputDirectory() {
 		return Paths.get(outputDirectory);
+	}
+
+	/**
+	 * Returns the primary evaluator, which is the first evaluator in the list of evaluators by default.
+	 */
+	public Evaluator getPrimaryEvaluator() {
+		return evaluators[0];
 	}
 }

@@ -8,7 +8,7 @@ import com.ojcoleman.europa.configurable.ConfigurableComponent;
  * the Genotype and the Function, and be able to produce a template genotype. Typically a Transcriber will query the
  * primary {@link Evaluator} to determine some aspects of the Genotype and phenotype Function.
  */
-public abstract class Transcriber<F extends Function<?, ?>> extends ConfigurableComponent {
+public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends ConfigurableComponent {
 	/**
 	 * Constructor for {@link ConfigurableComponent}.
 	 */
@@ -26,11 +26,11 @@ public abstract class Transcriber<F extends Function<?, ?>> extends Configurable
 	 *            recreating them from scratch is inefficient. Note that this will be null at times (for example in the
 	 *            first calls to this method).
 	 */
-	public abstract F transcribe(Genotype genotype, F function);
+	public abstract F transcribe(G genotype, F function);
 	
 	/**
 	 * Generate and return a template genotype that this Transcriber knows how to transcribe. The template is used to
 	 * seed an evolutionary run.
 	 */
-	public abstract Genotype getTemplateGenotype();
+	public abstract G getTemplateGenotype();
 }

@@ -18,6 +18,10 @@ repositories {
     // Use 'jcenter' for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven { 
+    	url 'https://raw.github.com/slok/algs4-mvn-repo/master'
+    	url  "http://dl.bintray.com/olivercoleman/maven"
+    }
 }
 
 // In this section you declare the dependencies for your production and test code
@@ -29,24 +33,31 @@ dependencies {
     compile "com.thoughtworks.xstream:xstream:1.4.8"
     compile "com.eclipsesource.minimal-json:minimal-json:0.9.4"
     compile 'com.google.guava:guava:18.0'
+    compile 'edu.princeton.cs.algs4:algs4:1.0'
+    compile(group: 'org.ojcoleman.bain', name: 'bain', version: '1.0.0', ext: 'jar')
+    
+    // aparapi not available in any repo.
+    compile fileTree(dir: 'lib', include: 'aparapi.jar')
 
-    // Declare the dependency for your favourite test framework you want to use in your tests.
-    // TestNG is also supported by the Gradle Test task. Just change the
-    // testCompile dependency to testCompile 'org.testng:testng:6.8.1' and add
-    // 'test.useTestNG()' to your build script.
+    
     testCompile 'org.testng:testng:6.9.9'
 }
 
 test.useTestNG()
 
-libsDirName = '../../europa-build'
 
 jar {
   manifest { 
     attributes "Main-Class": "com.ojcoleman.europa.Main"
   }  
+}
 
-  from {
-    configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-  }
+// Assemble task that includes all dependencies (makes a "fat" jar")
+task withDeps(type: Jar) {
+	manifest.from jar.manifest
+	baseName = project.name + '-all'
+	from {
+	    configurations.runtime.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+	with jar
 }

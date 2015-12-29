@@ -25,7 +25,7 @@ public class Base extends ConfigurableComponent {
 	@Parameter (description="How many iterations/generations to perform before saving the Run state to a file (for later resume or examination). A value <= 0 indicates no saving.", defaultValue="1000")
 	protected int saveFrequency;
 	
-	@Parameter (description="The path of the file to save the Run state to (for later resume or examination). Default is the name of the Run in the current working directory.", optional=true)
+	@Parameter (description="The path of the file to save the Run state to (for later resume or examination). DefaultEvolver is the name of the Run in the current working directory.", optional=true)
 	protected String savePath;
 	
 	@Parameter (description="The number of runs to perform.", defaultValue="1")

@@ -7,5 +7,16 @@ package com.ojcoleman.europa.core;
  * fixed when the gene is added to the genotype.
  */
 public abstract class Gene {
-
+	/**
+	 * The type of gene, if applicable to the evolutionary algorithm in use. Usually an enum constant. May be null.
+	 */
+	public final Object type;
+	
+	/**
+	 * Create a gene of the specified type.
+	 * @param type The type of gene, if applicable to the evolutionary algorithm in use. Usually an enum constant. May be null.
+	 */ 
+	public Gene(Object type) {
+		this.type = type;
+	}
 }

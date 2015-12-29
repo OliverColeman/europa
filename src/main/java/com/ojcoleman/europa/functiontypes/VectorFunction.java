@@ -10,4 +10,7 @@ import com.ojcoleman.europa.core.Function;
 public interface VectorFunction extends Function<double[], double[]> {
 	@Override
 	public double[] apply(double[] input);
+	
+	@Override
+	public double[][] apply(double[][] input);
 }

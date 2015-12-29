@@ -8,6 +8,7 @@ Europa is a new general purpose evolutionary algorithm framework designed with t
   This is possible because Europa is built on a "configurable component" architecture. See more below.  
 * Easily configurable: configuration files are in JSON format. Java's reflection mechanisms are used to configure a hierarchy of parametrised and pluggable components (see  Configurable Component Architecture below).
 * Intuitive: the hierarchical organisation of parametrised components allows for an intuitive understanding of how the software is organised. Sample configuration files with parameter and sub-component descriptions and other meta-data can be automatically generated from the Class field annotations.
+* Provide built-in support for multi-objective evaluation.
 * Provide built-in support for multi-threaded evaluation of the members of a population.
 * Provide built-in support for cluster-computing evaluation of the members of a population.
 * Support generating snap-shots of a run in order to be able to resume from them later.
@@ -17,20 +18,21 @@ Europa is currently a work in progress. If you'd like to contribute please conta
 
 ## Building and Running
 
-Europa requires Java 7 or greater. Europa is built with [gradle](http://gradle.org). A runnable JAR file can be built from the source files with:
 
-```sh
-gradle build
+Europa requires Java 7 or greater. Europa is built with 
+[gradle](http://gradle.org). To build a runnable JAR file, run the following 
+command from the project directory (it is not necessary to install gradle):
 ```
-
-This will create a runnable jar file in a directory called europa-build in the same directory that the europa project 
-directory resides in. The jar file will contain all the required dependencies.
-
-To see usage instruction run:
-
-```sh
-java -jar europa-[version].jar
+./gradlew withDeps
 ```
+on *nix systems, or
+```
+gradlew withDeps
+```
+on Windows systems. This will create a runnable jar file in build/libs. If you
+want a jar file that does not include the dependencies replace "withDeps" with
+"assemble".
+
 
 ## Configurable Component Architecture
 
@@ -219,4 +221,7 @@ Configuration files are in JSON format. The structure of these files reflects th
 
 ## License
   
-Europa is licensed under the Apache 2 license, please refer to LICENSE.txt, which should accompany this file.
+Europa is licensed under the GNU General Public License v3. A copy of the license
+is included in the distribution. Please note that Europa is distributed WITHOUT 
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS 
+FOR A PARTICULAR PURPOSE. Please refer to the license for details.

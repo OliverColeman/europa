@@ -25,19 +25,19 @@ public abstract class Mutator extends ConfigurableComponent {
 	/**
 	 * Mutate the given genotype.
 	 */
-	public abstract void mutate(Genotype genotype);
+	public abstract void mutate(Genotype<?> genotype);
 
 	/**
 	 * Determine if this mutator should be applied to the given genotype. This may be influenced by randomised processes so can not be relied upon to return the same value for the same genotype.
 	 * This default implementation checks if the genotype is a clone of a single parent or a child  of multiple parents and then compares either {@link #applyPercentageClones}
 	 * or {@link #applyPercentageChildren} accordingly to a randomly generated number to determine if this mutator should be applied.
 	 */
-	public boolean shouldMutate(Genotype genotype) {
+	public boolean shouldMutate(Genotype<?> genotype) {
 		if (genotype.parents.size() == 1) {
-			return Run.get().random.nextDouble() < applyPercentageClones;
+			return getParentComponent(Run.class).random.nextDouble() < applyPercentageClones;
 		}
 		else {
-			return Run.get().random.nextDouble() < applyPercentageChildren;
+			return getParentComponent(Run.class).random.nextDouble() < applyPercentageChildren;
 		}
 	}
 	

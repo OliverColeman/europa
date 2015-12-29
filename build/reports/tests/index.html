@@ -26,19 +26,19 @@
 </td>
 <td>
 <div class="infoBox" id="failures">
-<div class="counter">0</div>
+<div class="counter">1</div>
 <p>failures</p>
 </div>
 </td>
 <td>
 <div class="infoBox" id="ignored">
-<div class="counter">0</div>
+<div class="counter">8</div>
 <p>ignored</p>
 </div>
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">0.041s</div>
+<div class="counter">0.035s</div>
 <p>duration</p>
 </div>
 </td>
@@ -47,8 +47,8 @@
 </div>
 </td>
 <td>
-<div class="infoBox success" id="successRate">
-<div class="percent">100%</div>
+<div class="infoBox failures" id="successRate">
+<div class="percent">90%</div>
 <p>successful</p>
 </div>
 </td>
@@ -58,13 +58,65 @@
 <div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#tab0">Packages</a>
+<a href="#tab0">Failed tests</a>
 </li>
 <li>
-<a href="#tab1">Classes</a>
+<a href="#tab1">Ignored tests</a>
+</li>
+<li>
+<a href="#tab2">Packages</a>
+</li>
+<li>
+<a href="#tab3">Classes</a>
 </li>
 </ul>
 <div id="tab0" class="tab">
+<h2>Failed tests</h2>
+<ul class="linkList">
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsSetValues[0]({&quot;booleanParamTrue&quot;:true,&quot;booleanParamFalse&quot;:false,&quot;intParam&quot;:2,&quot;longParam&quot;:3,&quot;floatParam&quot;:5.7,&quot;doubleParam&quot;:11.13,&quot;stringParam&quot;:&quot;Seventeen, nineteen.&quot;,&quot;customObjectParam&quot;:{&quot;intVal&quot;:21,&quot;stringVal&quot;:&quot;twenty three&quot;},&quot;classParam&quot;:&quot;java.lang.Double&quot;,&quot;enumParam&quot;:&quot;test_1&quot;})">paramsSetValues[0]({&quot;booleanParamTrue&quot;:true,&quot;booleanParamFalse&quot;:false,&quot;intParam&quot;:2,&quot;longParam&quot;:3,&quot;floatParam&quot;:5.7,&quot;doubleParam&quot;:11.13,&quot;stringParam&quot;:&quot;Seventeen, nineteen.&quot;,&quot;customObjectParam&quot;:{&quot;intVal&quot;:21,&quot;stringVal&quot;:&quot;twenty three&quot;},&quot;classParam&quot;:&quot;java.lang.Double&quot;,&quot;enumParam&quot;:&quot;test_1&quot;})</a>
+</li>
+</ul>
+</div>
+<div id="tab1" class="tab">
+<h2>Ignored tests</h2>
+<ul class="linkList">
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsDefaultArrayValues">paramsDefaultArrayValues</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsDefaults">paramsDefaults</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsMaxValidation">paramsMaxValidation</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsMinValidation">paramsMinValidation</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsMissingRequired">paramsMissingRequired</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsOptional">paramsOptional</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsRegexValidation">paramsRegexValidation</a>
+</li>
+<li>
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">ConfigurableComponentParamsTest</a>.
+<a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html#paramsSetArrayValues">paramsSetArrayValues</a>
+</li>
+</ul>
+</div>
+<div id="tab2" class="tab">
 <h2>Packages</h2>
 <table>
 <thead>
@@ -79,19 +131,19 @@
 </thead>
 <tbody>
 <tr>
-<td class="success">
+<td class="failures">
 <a href="packages/com.ojcoleman.europa.html">com.ojcoleman.europa</a>
 </td>
 <td>19</td>
-<td>0</td>
-<td>0</td>
-<td>0.041s</td>
-<td class="success">100%</td>
+<td>1</td>
+<td>8</td>
+<td>0.035s</td>
+<td class="failures">90%</td>
 </tr>
 </tbody>
 </table>
 </div>
-<div id="tab1" class="tab">
+<div id="tab3" class="tab">
 <h2>Classes</h2>
 <table>
 <thead>
@@ -106,13 +158,13 @@
 </thead>
 <tbody>
 <tr>
-<td class="success"/>
+<td class="failures"/>
 <a href="classes/com.ojcoleman.europa.ConfigurableComponentParamsTest.html">com.ojcoleman.europa.ConfigurableComponentParamsTest</a>
 <td>10</td>
-<td>0</td>
-<td>0</td>
-<td>0.033s</td>
-<td class="success">100%</td>
+<td>1</td>
+<td>8</td>
+<td>0.027s</td>
+<td class="failures">50%</td>
 </tr>
 <tr>
 <td class="success"/>
@@ -134,7 +186,7 @@
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 2.5</a> at 09/12/2015 7:18:23 AM</p>
+<a href="http://www.gradle.org">Gradle 2.5</a> at 28/12/2015 8:06:59 AM</p>
 </div>
 </div>
 </body>

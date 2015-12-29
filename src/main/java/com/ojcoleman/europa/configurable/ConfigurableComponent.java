@@ -61,10 +61,17 @@ import com.google.common.collect.Lists;
 public abstract class ConfigurableComponent extends Observable {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurableComponent.class);
 	
+	/**
+	 * The parent component of this component.
+	 */
 	public final ConfigurableComponent parentComponent;
+	
+	private final boolean isDummy;
 	
 	private Map<String, ParameterWrapper> parameters = new HashMap<String, ParameterWrapper>();
 	private Map<String, SubComponentWrapper> subComponents = new HashMap<String, SubComponentWrapper>();
+	
+	Map<Class<?>, ConfigurableComponent> parentClassMap = new HashMap<Class<?>, ConfigurableComponent>();
 	
 	/**
 	 * Creates and configures this component and any subcomponents specified in the given configuration.
@@ -76,11 +83,18 @@ public abstract class ConfigurableComponent extends Observable {
 	public ConfigurableComponent(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
 		this.parentComponent = parentComponent;
 		
+		if (parentComponent != null) {
+			parentClassMap.putAll(parentComponent.parentClassMap);
+			parentClassMap.put(parentComponent.getClass(), parentComponent);
+		}
+		
 		// If no config provided then we should just create a dummy instance (used for printing of config options).
 		if (componentConfig == null) {
+			this.isDummy = true;
 			createDummy();
 			return;
 		}
+		this.isDummy = false;
 		
 		List<Class<?>> superClasses = getSuperClasses();
 		
@@ -179,19 +193,22 @@ public abstract class ConfigurableComponent extends Observable {
 			String name = param.field.getName();
 			
 			if (includeMetaData) {
-				//JsonObject meta = new JsonObject();
 				// Anything beginning with "_metadata is commented out in the pretty-printed output.
-				config.add("_metadata<" + name + "> description", param.annotation.description());
+				// Allow for multi-line descriptions.
+				String[] description = param.annotation.description().split("\n");
+				int descIdx = 0;
+				for (String desc: description) {
+					config.add("_metadata<" + name + descIdx + "> description", desc);
+				}
 				config.add("_metadata<" + name + "> type", type.getCanonicalName());
 				if (param.annotation.defaultValue() != null && !param.annotation.defaultValue().equals("")) {
-					if (type.equals(String.class) || type.equals(Class.class)) {
+					if (type.equals(String.class) || type.equals(Class.class) || type.isEnum()) {
 						config.add("_metadata<" + name + "> defaultValue", param.annotation.defaultValue());
 					}
 					else {
 						config.add("_metadata<" + name + "> defaultValue", Json.parse(param.annotation.defaultValue()));
 					}
 				}
-				//config.add("_metadata for parameter '" + name + "'", meta);
 			}
 			
 			param.field.setAccessible(true);
@@ -206,7 +223,7 @@ public abstract class ConfigurableComponent extends Observable {
 					config.add(name, arr);
 				}
 				else {
-					if (type.equals(String.class)) {
+					if (type.equals(String.class) || type.isEnum()) {
 						config.add(name, val.toString());
 					}
 					else if (type.equals(Class.class)) {
@@ -247,9 +264,12 @@ public abstract class ConfigurableComponent extends Observable {
 					for (ConfigurableComponent subComp : subComponentsList) {
 						JsonObject subCompConfig = new JsonObject();
 						if (includeMetaData) {
-							//JsonObject meta = new JsonObject();
-							//subCompConfig.add("_metadata Component " + name, subCompWrap.annotation.optional());
-							subCompConfig.add("_metadata<" + name + "> description", subCompWrap.annotation.description());
+							// Allow for multi-line descriptions.
+							String[] description = subCompWrap.annotation.description().split("\n");
+							int descIdx = 0;
+							for (String desc: description) {
+								subCompConfig.add("_metadata<" + name + descIdx + "> description", desc);
+							}
 							subCompConfig.add("_metadata<" + name + "> optional", subCompWrap.annotation.optional());
 							subCompConfig.add("_metadata<" + name + "> multiple", subCompWrap.isArray);
 							if (!subCompWrap.annotation.defaultImplementation().equals(ConfigurableComponent.class)) {
@@ -292,6 +312,10 @@ public abstract class ConfigurableComponent extends Observable {
 		return subComponents.containsKey(name);
 	}
 	
+	
+	public <T extends ConfigurableComponent> T getParentComponent(Class<T> clazz) {
+		return (T) parentClassMap.get(clazz);
+	}
 	
 	
 	/**
@@ -374,6 +398,10 @@ public abstract class ConfigurableComponent extends Observable {
 		final boolean isArray;
 		
 		ParameterWrapper(Class<?> definingClass, Parameter annotation, Field field) {
+			if (field.getName().equals("componentClass")){
+				throw new RuntimeException("Component parameter fields may not be named \"componentClass\", this is a reserved name. Please rename the field in component (super)class " + definingClass.getCanonicalName());
+			}
+			
 			this.definingClass = definingClass;
 			this.annotation = annotation;
 			this.field = field;
@@ -384,7 +412,7 @@ public abstract class ConfigurableComponent extends Observable {
 			if (jsonValue != null || !annotation.defaultValue().equals("")) {
 				if (jsonValue == null) {
 					String val = annotation.defaultValue();
-					if (field.getType().equals(String.class) || field.getType().equals(Class.class)) {
+					if (field.getType().equals(String.class) || field.getType().equals(Class.class) || field.getType().isEnum()) {
 						val = '"' + val + '"';
 					}
 					jsonValue = Json.parse(val);
@@ -416,11 +444,12 @@ public abstract class ConfigurableComponent extends Observable {
 				}
 				
 				boolean isClassType = type.equals(Class.class);
+				boolean isEnumType = type.isEnum();
 				
 				// Find a constructor taking either a single JsonValue or String argument.
 				Constructor<?> jsonConstructor = null, stringConstructor = null;
-				// No constructor for fields of type Class.
-				if (!isClassType) {
+				// No constructor for fields of type Class or Enum.
+				if (!isClassType && !isEnumType) {
 					for (Constructor<?> c : type.getConstructors()) {
 						if (c.getParameterTypes().length == 1) {
 							if (c.getParameterTypes()[0].equals(JsonValue.class)) {
@@ -481,15 +510,27 @@ public abstract class ConfigurableComponent extends Observable {
 					
 					int idx = 0;
 					for (JsonValue jsonVal : jsonValue.asArray()) {
-						if (isClassType) {
-							checkClassExists(definingClass, component, field, jsonValue.asString());
+						if (isEnumType) {
+							checkEnumValueExists(definingClass, component, field, field.getType(), jsonVal.asString());
+						}
+						else if (isClassType) {
+							checkClassExists(definingClass, component, field, jsonVal.asString());
 						}
 						
-						Object val = isClassType ? 
-										Class.forName(jsonVal.asString()) : 
-										(jsonConstructor != null ? 
-											jsonConstructor.newInstance(jsonVal) : 
-											stringConstructor.newInstance(jsonVal.isString() ? jsonVal.asString() : jsonVal.toString()));
+						Object val = null;
+						if (isClassType) { 
+							val = Class.forName(jsonVal.asString());
+						}
+						else if (isEnumType) {
+							// field.getType() returns a Class<?>, but Enum.valueOf expects a Class<T extends Enum<T>>, so we have to cast to the non-generic Class.
+							val = Enum.valueOf((Class) field.getType(), jsonVal.asString());
+						}
+						else if (jsonConstructor != null) {
+							val = jsonConstructor.newInstance(jsonVal);
+						}
+						else {
+							val = stringConstructor.newInstance(jsonVal.isString() ? jsonVal.asString() : jsonVal.toString());
+						}
 						
 						testNumericValueBounds(val, minValue, maxValue, component, field);
 						
@@ -499,24 +540,49 @@ public abstract class ConfigurableComponent extends Observable {
 					field.set(component, array);
 				}
 				else {
-					if (isClassType) {
+					if (isEnumType) {
+						checkEnumValueExists(definingClass, component, field, field.getType(), jsonValue.asString());
+					}
+					else if (isClassType) {
 						checkClassExists(definingClass, component, field, jsonValue.asString());
 					}
 					
-					Object val = isClassType ? 
-									Class.forName(jsonValue.asString()) : 
-									(jsonConstructor != null ? 
-										jsonConstructor.newInstance(jsonValue) : 
-										stringConstructor.newInstance(jsonValue.isString() ? jsonValue.asString() : jsonValue.toString()));
+					Object val = null;
+					if (isClassType) { 
+						val = Class.forName(jsonValue.asString());
+					}
+					else if (isEnumType) {
+						// field.getType() returns a Class<?>, but Enum.valueOf expects a Class<T extends Enum<T>>, so we have to cast to the non-generic Class.
+						val = Enum.valueOf((Class) field.getType(), jsonValue.asString());
+					}
+					else if (jsonConstructor != null) {
+						val = jsonConstructor.newInstance(jsonValue);
+					}
+					else {
+						val = stringConstructor.newInstance(jsonValue.isString() ? jsonValue.asString() : jsonValue.toString());
+					}
 					
 					testNumericValueBounds(val, minValue, maxValue, component, field);
 					
 					field.set(component, val);
 				}
 			}
-			else if (!annotation.optional()) {
-				throw new RequiredParameterValueMissingException("Value for required parameter " + field.getName() + " in component (super)class " + definingClass.getName());
+			else if (!component.isDummy && !annotation.optional()) {
+				throw new RequiredParameterValueMissingException("Value for required parameter " + field.getName() + " in component (super)class " + definingClass.getName() + " missing.");
 			}
+		}
+	}
+	
+	// Make sure the given enum value exists.
+	@SuppressWarnings("unchecked")
+	private static void checkEnumValueExists(Class<?> definingClass, ConfigurableComponent component, Field field, Class enumClass, String value) {
+		try {
+			Enum.valueOf(enumClass, value);
+		}
+		catch (IllegalArgumentException ex) {
+			String error = "The enum constant " + value + " specified for the parameter " + field.getName() + " in component (super)class " + definingClass.getCanonicalName() + " does not exist. Check case?";
+			logger.error(error);
+			throw new IllegalArgumentException(error, ex);
 		}
 	}
 	
@@ -574,7 +640,7 @@ public abstract class ConfigurableComponent extends Observable {
 						ConfigurableComponent[] array;
 						
 						// If we're not constructing a dummy instance.
-						if (subCompConfigRaw != null) {
+						if (!component.isDummy) {
 							// Get component config(s) as JsonArray.
 							JsonArray subCompConfigArray;
 							if (!subCompConfigRaw.isArray()) {
@@ -615,7 +681,7 @@ public abstract class ConfigurableComponent extends Observable {
 					throw (Exception) ex.getCause();
 				}
 			}
-			else if (!annotation.optional()) {
+			else if (!component.isDummy && !annotation.optional()) {
 				throw new RequiredSubComponentDefinitionMissingException("Definition for required sub-component(s) for " + field.getName() + " in component (super)class" + definingClass.getName() + " missing.");
 			}
 		}
@@ -661,7 +727,7 @@ public abstract class ConfigurableComponent extends Observable {
 				throw new IllegalParameterValueException("The value for parameter " + field.getName() + " in component " + component.getClass().getCanonicalName() + " is less than the maximum of " + max + ".");
 			}
 		}
-		else {
+		else if (val instanceof Number) {
 			if (min != null && ((Number) val).longValue() < ((Number) min).longValue()) {
 				throw new IllegalParameterValueException("The value for parameter " + field.getName() + " in component " + component.getClass().getCanonicalName() + " is less than the minimum of " + min + ".");
 			}

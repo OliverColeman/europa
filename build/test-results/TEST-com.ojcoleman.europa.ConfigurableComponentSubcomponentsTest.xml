@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2015-12-08T20:18:23" hostname="hubert" time="0.012">
+<testsuite name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2015-12-27T21:06:59" hostname="hubert" time="0.01">
   <properties/>
-  <testcase name="subCompArrayWithParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.004"/>
-  <testcase name="subCompDefault" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
-  <testcase name="subCompExtendedWithOverriddenParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.002"/>
+  <testcase name="subCompArrayWithParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.003"/>
+  <testcase name="subCompDefault" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
+  <testcase name="subCompExtendedWithOverriddenParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
   <testcase name="subCompExtendedWithParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
-  <testcase name="subCompInvalid" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
+  <testcase name="subCompInvalid" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
   <testcase name="subCompOptional" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
-  <testcase name="subCompRequired" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
-  <testcase name="subCompSetImpl" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.0"/>
+  <testcase name="subCompRequired" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
+  <testcase name="subCompSetImpl" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
   <testcase name="subCompWithParams" classname="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest" time="0.001"/>
   <system-out><![CDATA[]]></system-out>
   <system-err><![CDATA[]]></system-err>

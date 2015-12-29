@@ -1,4 +1,8 @@
+bin/
+build/
+doc/
+.gradle
 .settings
 .classpath
 .project
-/bin/
+!gradle-wrapper.jar

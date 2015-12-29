@@ -1,9 +1,18 @@
 package com.ojcoleman.europa.core;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import com.google.common.reflect.TypeToken;
 
 /**
  * Represents the inheritable genetic material of an {@link Individual}.
@@ -12,28 +21,139 @@ import java.util.Set;
  */
 public abstract class Genotype<A extends Allele<?>> {
 	/**
-	 * The parent(s) of this Genotype (as an unmodifiable List).
+	 * A unique identifier for this genotype.
 	 */
-	public final List<Genotype<A>> parents;
+	public final long id;
 	
 	/**
-	 * The alleles in this genotype (as an unmodifiable Set). Each Allele references a {@link Gene}.
+	 * The parent(s) of this Genotype (as an unmodifiable List).
 	 */
-	public final Set<A> alleles;
+	public final List<Genotype<?>> parents;
+	
+	/**
+	 * The alleles in this genotype (as an unmodifiable Collection). Each Allele references a {@link Gene}.
+	 */
+	protected final Collection<A> alleles;
+	
+	private final Map<Object, List<A>> allelesByGeneType; 
+	
 	
 	/**
 	 * Create a new Genotype instance. Sub-classes should generally call this constructor from their own constructor(s).
+	 * @param alleles The alleles (backed by {@link Gene}s) that make up the new genotype.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only, implementations of this class
 	 * do not need to create new instances from multiple parents (this is the job of {@link Recombiner)s.
 	 */
 	@SafeVarargs
-	public Genotype(Set<A> alleles, Genotype<A>... parents) {
-		this.alleles = Collections.unmodifiableSet(alleles);
-		this.parents = Collections.unmodifiableList(Arrays.asList(parents));
+	public Genotype(long id, Collection<A> alleles, Genotype<?>... parents) {
+		this.id = id;
+		this.alleles = alleles;
+		if (parents == null) {
+			this.parents = Collections.unmodifiableList(new ArrayList<Genotype<?>>());
+		}
+		else {
+			this.parents = Collections.unmodifiableList(Arrays.asList(parents));
+		}
+		
+		allelesByGeneType = new HashMap<Object, List<A>>();
+		for (A allele : this.alleles) {
+			if (!allelesByGeneType.containsKey(allele.gene.type)){
+				allelesByGeneType.put(allele.gene.type, new ArrayList<A>());
+			}
+			allelesByGeneType.get(allele.gene.type).add(allele);
+		}
+		
+		for (Object type : allelesByGeneType.keySet()) {
+			allelesByGeneType.put(type, Collections.unmodifiableList(allelesByGeneType.get(type)));
+		}
 	}
-	 
-	 /**
-	  * Create and return a deep copy of this Genotype.
-	  */
-	 public abstract Genotype<A> clone();
+	
+	/**
+	 * Get the alleles of this genotype as unmodifiable collection.
+	 */
+	public Collection<A> getAlleles() {
+		return Collections.unmodifiableCollection(alleles);
+	}
+	
+	/**
+	 * Returns true iff this genotype contains alleles for {@link Gene}s of the specified type.
+	 * 
+	 * @param type Object representing the type, usually an enum constant.
+	 */
+	public boolean hasAllelesOfType(Object type) {
+		return allelesByGeneType.containsKey(type);
+	}
+
+	/**
+	 * Get the list of alleles in this genotype that are for {@link Gene}s of the specified type.
+	 * 
+	 * @param type Object representing the type, usually an enum constant.
+	 * @return The list of alleles in this genotype that are for {@link Gene}s of the specified type, in the same order
+	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles.
+	 * @throws IllegalArgumentException If there are no alleles of specified type present.
+	 * @see hasAllelesOfType(String)
+	 */
+	public List<A> getAllelesOfType(Object type) {
+		if (!allelesByGeneType.containsKey(type)) {
+			throw new IllegalArgumentException("No alleles of specified type present.");
+		}
+		return allelesByGeneType.get(type);
+	}
+
+	/**
+	 * Get the list of alleles in this genotype that are for {@link Gene}s of the specified type, or a provided default
+	 * list if there are no alleles of specified type present.
+	 * 
+	 * @param type Object representing the type, usually an enum constant.
+	 * @param type defaultList A list of default values to return if there are no alleles of specified type present. May
+	 *            be null.
+	 * @return The list of alleles in this genotype that are for {@link Gene}s of the specified type, in the same order
+	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles.
+	 * @see hasAllelesOfType(String)
+	 */
+	public List<A> getAllelesOfType(Object type, List<A> defaultList) {
+		if (!allelesByGeneType.containsKey(type)) {
+			return defaultList;
+		}
+		return allelesByGeneType.get(type);
+	}
+	
+	
+	/**
+	 * Create a new Genotype of this class with the given id, alleles and (optionally) parents.
+	 */
+	public abstract Genotype<A> create(long id, Collection<A> alleles, Genotype<?>... parents);
+	
+	
+	@SafeVarargs
+	public final Genotype<A> createNew(long id, Collection<?> alleles, Genotype<?>... parents) {
+		Collection<A> typedAlleles = new ArrayList<A>(alleles.size());
+		
+		for (Object o : alleles) {
+			try {
+				A allele = (A) o;
+				
+				Constructor<A> alleleConstructor = (Constructor<A>) allele.getClass().getConstructor(allele.getClass());
+				
+				typedAlleles.add(alleleConstructor.newInstance(allele));
+			}
+			catch (ClassCastException e) {
+				throw new RuntimeException("The alleles passed to Genotype.new do not match the allele type of the genotype.");
+			} catch (NoSuchMethodException e) {
+				throw new RuntimeException("The allele class " + o.getClass().getName() + " must define a copy constructor.");
+			} catch (SecurityException e) {
+				throw new RuntimeException(e);
+			} catch (InstantiationException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalAccessException e) {
+				throw new RuntimeException(e);
+			} catch (IllegalArgumentException e) {
+				throw new RuntimeException(e);
+			} catch (InvocationTargetException e) {
+				throw new RuntimeException(e);
+			}
+		}
+		
+		return create(id, typedAlleles, parents);
+	}
 }

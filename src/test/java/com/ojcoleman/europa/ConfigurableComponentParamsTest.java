@@ -25,6 +25,7 @@ public class ConfigurableComponentParamsTest {
 		json.add("stringParam", "Seventeen, nineteen.");
 		json.add("customObjectParam", Json.parse("{\"intVal\":21,\"stringVal\":\"twenty three\"}"));
 		json.add("classParam", "java.lang.Double");
+		json.add("enumParam", "test_1");
 		return new Object[][]{{json}};
 	}
 	
@@ -41,6 +42,7 @@ public class ConfigurableComponentParamsTest {
 		Assert.assertEquals(cc.stringParam, "Seventeen, nineteen.");
 		Assert.assertEquals(cc.customObjectParam, new CustomObject(21, "twenty three"));
 		Assert.assertEquals(cc.classParam, Double.class);
+		Assert.assertEquals(cc.enumParam, TestEnum.TEST_1);
 	}
 	
 	
@@ -84,6 +86,7 @@ public class ConfigurableComponentParamsTest {
 		Assert.assertEquals(cc.stringParam, "Seventeen, nineteen.");
 		Assert.assertEquals(cc.customObjectParam, new CustomObject(21, "twenty three"));
 		Assert.assertEquals(cc.classParam, Double.class);
+		Assert.assertEquals(cc.enumParam, TestEnum.TEST_2);
 	}
 	
 	
@@ -185,6 +188,11 @@ public class ConfigurableComponentParamsTest {
 	}
 	
 	
+	static public enum TestEnum {
+		TEST_1, TEST_2
+	}
+	
+	
 	static public class ParamsSet extends ConfigurableComponent {
 		public ParamsSet(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
@@ -215,7 +223,11 @@ public class ConfigurableComponentParamsTest {
 		
 		@Parameter(description = "Test class parameter.")
 		Class<? extends Double> classParam;
+
+		@Parameter(description = "Test enum constant parameter.")
+		TestEnum enumParam;
 	}
+		
 	
 	
 	static public class ParamsDefault extends ConfigurableComponent {
@@ -248,6 +260,9 @@ public class ConfigurableComponentParamsTest {
 
 		@Parameter(description = "Test class parameter with default.", defaultValue="java.lang.Double")
 		Class<? extends Double> classParam;
+
+		@Parameter(description = "Test enum constant parameter with default.", defaultValue="test_2")
+		TestEnum enumParam;
 	}
 	
 	

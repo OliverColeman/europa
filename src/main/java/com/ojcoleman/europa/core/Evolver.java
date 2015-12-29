@@ -1,6 +1,11 @@
 package com.ojcoleman.europa.core;
 
+import java.lang.reflect.Array;
+import java.lang.reflect.Constructor;
 import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.ConfigurableComponent;
@@ -17,6 +22,8 @@ import com.ojcoleman.europa.recombiners.DummyRecombiner;
  * @author O. J. Coleman
  */
 public abstract class Evolver extends ConfigurableComponent {
+	private final Logger logger = LoggerFactory.getLogger(Evolver.class);
+	
 	/**
 	 * The set of mutators used to mutate genotypes.
 	 */
@@ -41,8 +48,8 @@ public abstract class Evolver extends ConfigurableComponent {
 	 * The class to use for the {@link Genotype}.
 	 */
 	@Parameter(description = "The class to use for the Genotype.", defaultValue="com.ojcoleman.europa.genotypes.DummyGenotype")
-	protected Class<? extends Genotype> genotypeClass;
-
+	protected Class<? extends Genotype<?>> genotypeClass;
+	
 	
 	/**
 	 * Constructor for {@link ConfigurableComponent}.
@@ -80,16 +87,28 @@ public abstract class Evolver extends ConfigurableComponent {
 	 * added.
 	 */
 	public void createPopulation(Population pop) {
-		Genotype seed = Run.get().getTranscriber().getTemplateGenotype();
-		pop.addGenotype(seed.clone());
+		Run run = this.getParentComponent(Run.class);
+		
+		Genotype seed = getParentComponent(Run.class).getTranscriber().getTemplateGenotype();
+		
+		pop.addGenotype(seed);
 
 		for (int i = 0; i < pop.getDesiredSize() - 1; i++) {
-			Genotype g = seed.clone();
+			Genotype g = seed.createNew(run.getNextID(), seed.alleles, seed);
 			mutateGenotype(g, true);
 			pop.addGenotype(g);
 		}
 	}
-
+	/*
+	protected <T extends Genotype<?>> Constructor<T> getGenotypeCopyConstructor(Class<T> clazz) {
+		try {
+			return clazz.getConstructor(long.class, clazz, Array.newInstance(clazz, 0).getClass());
+		} catch (NoSuchMethodException ex) {
+			String name = this.getClass().getSimpleName();
+			throw new RuntimeException("The Genotype class " + this.getClass().getName() + " must provide a constructor with signature \"public " + name + "(long id,  genotype, )\").");
+		}
+	}
+	*/
 	/**
 	 * Mutate the given genotype. This default implementation calls {@link Mutator#mutate(Genotype)} for each of the
 	 * {@link #mutators} on the given genotype.
@@ -99,7 +118,7 @@ public abstract class Evolver extends ConfigurableComponent {
 	 *            will be applied only if their implementation of {@link Mutator#shouldMutate(Genotype)} returns true
 	 *            for the given Genotype.
 	 */
-	public void mutateGenotype(Genotype genotype, boolean applyAllMutators) {
+	public void mutateGenotype(Genotype<?> genotype, boolean applyAllMutators) {
 		for (Mutator m : mutators) {
 			if (applyAllMutators || m.shouldMutate(genotype)) {
 				m.mutate(genotype);

@@ -1,90 +1,49 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results skipped="0" failed="0" total="10" passed="10">
+<testng-results skipped="0" failed="0" total="9" passed="9">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="107" started-at="2015-12-06T03:58:47Z" finished-at="2015-12-06T03:58:47Z">
+  <suite name="Default suite" duration-ms="67" started-at="2015-12-16T01:49:48Z" finished-at="2015-12-16T01:49:48Z">
     <groups>
-      <group name="validation">
-        <method signature="ConfigurableComponentParamsTest.paramsMaxValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMaxValidation" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsMinValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMinValidation" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsRegexValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsRegexValidation" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-      </group> <!-- validation -->
-      <group name="basic">
-        <method signature="ConfigurableComponentParamsTest.paramsSetValues(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsSetValues" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsDefaults()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsDefaults" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsMissingRequired(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMissingRequired" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsOptional(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsOptional" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.setObjectParamNoGoodConstructor()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="setObjectParamNoGoodConstructor" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-      </group> <!-- basic -->
-      <group name="arrays">
-        <method signature="ConfigurableComponentParamsTest.paramsSetArrayValues()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsSetArrayValues" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-        <method signature="ConfigurableComponentParamsTest.paramsDefaultArrayValues()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsDefaultArrayValues" class="com.ojcoleman.europa.ConfigurableComponentParamsTest"/>
-      </group> <!-- arrays -->
     </groups>
-    <test name="Default test" duration-ms="107" started-at="2015-12-06T03:58:47Z" finished-at="2015-12-06T03:58:47Z">
-      <class name="com.ojcoleman.europa.ConfigurableComponentParamsTest">
-        <test-method status="PASS" signature="paramsSetValues(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsSetValues" duration-ms="33" started-at="2015-12-06T14:58:47Z" data-provider="params" finished-at="2015-12-06T14:58:47Z">
-          <params>
-            <param index="0">
-              <value>
-                <![CDATA[{"booleanParamTrue":true,"booleanParamFalse":false,"intParam":2,"longParam":3,"floatParam":5.7,"doubleParam":11.13,"stringParam":"Seventeen, nineteen.","customObjectParam":{"intVal":21,"stringVal":"twenty three"},"classParam":"java.lang.Double"}]]>
-              </value>
-            </param>
-          </params>
+    <test name="Default test" duration-ms="67" started-at="2015-12-16T01:49:48Z" finished-at="2015-12-16T01:49:48Z">
+      <class name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest">
+        <test-method status="PASS" signature="subCompArrayWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompArrayWithParams" duration-ms="36" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsSetValues -->
-        <test-method status="PASS" signature="setObjectParamNoGoodConstructor()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="setObjectParamNoGoodConstructor" duration-ms="1" started-at="2015-12-06T14:58:47Z" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompArrayWithParams -->
+        <test-method status="PASS" signature="subCompDefault()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompDefault" duration-ms="0" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- setObjectParamNoGoodConstructor -->
-        <test-method status="PASS" signature="paramsDefaults()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsDefaults" duration-ms="3" started-at="2015-12-06T14:58:47Z" depends-on-methods="com.ojcoleman.europa.ConfigurableComponentParamsTest.paramsSetValues" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompDefault -->
+        <test-method status="PASS" signature="subCompExtendedWithOverriddenParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompExtendedWithOverriddenParams" duration-ms="5" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsDefaults -->
-        <test-method status="PASS" signature="paramsMissingRequired(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMissingRequired" duration-ms="8" started-at="2015-12-06T14:58:47Z" data-provider="params" depends-on-methods="com.ojcoleman.europa.ConfigurableComponentParamsTest.paramsSetValues" finished-at="2015-12-06T14:58:47Z">
-          <params>
-            <param index="0">
-              <value>
-                <![CDATA[{"booleanParamTrue":true,"booleanParamFalse":false,"intParam":2,"longParam":3,"floatParam":5.7,"doubleParam":11.13,"stringParam":"Seventeen, nineteen.","customObjectParam":{"intVal":21,"stringVal":"twenty three"},"classParam":"java.lang.Double"}]]>
-              </value>
-            </param>
-          </params>
+        </test-method> <!-- subCompExtendedWithOverriddenParams -->
+        <test-method status="PASS" signature="subCompExtendedWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompExtendedWithParams" duration-ms="2" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsMissingRequired -->
-        <test-method status="PASS" signature="paramsOptional(com.eclipsesource.json.JsonObject)[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsOptional" duration-ms="3" started-at="2015-12-06T14:58:47Z" data-provider="params" depends-on-methods="com.ojcoleman.europa.ConfigurableComponentParamsTest.paramsSetValues" finished-at="2015-12-06T14:58:47Z">
-          <params>
-            <param index="0">
-              <value>
-                <![CDATA[{"booleanParamTrue":true,"booleanParamFalse":false,"intParam":2,"longParam":3,"floatParam":5.7,"doubleParam":11.13,"stringParam":"Seventeen, nineteen.","customObjectParam":{"intVal":21,"stringVal":"twenty three"},"classParam":"java.lang.Double"}]]>
-              </value>
-            </param>
-          </params>
+        </test-method> <!-- subCompExtendedWithParams -->
+        <test-method status="PASS" signature="subCompInvalid()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompInvalid" duration-ms="0" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsOptional -->
-        <test-method status="PASS" signature="paramsMaxValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMaxValidation" duration-ms="4" depends-on-groups="basic" started-at="2015-12-06T14:58:47Z" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompInvalid -->
+        <test-method status="PASS" signature="subCompOptional()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompOptional" duration-ms="1" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsMaxValidation -->
-        <test-method status="PASS" signature="paramsMinValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsMinValidation" duration-ms="3" depends-on-groups="basic" started-at="2015-12-06T14:58:47Z" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompOptional -->
+        <test-method status="PASS" signature="subCompRequired()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompRequired" duration-ms="0" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsMinValidation -->
-        <test-method status="PASS" signature="paramsRegexValidation()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsRegexValidation" duration-ms="2" depends-on-groups="basic" started-at="2015-12-06T14:58:47Z" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompRequired -->
+        <test-method status="PASS" signature="subCompSetImpl()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompSetImpl" duration-ms="2" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsRegexValidation -->
-        <test-method status="PASS" signature="paramsSetArrayValues()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsSetArrayValues" duration-ms="3" depends-on-groups="basic" started-at="2015-12-06T14:58:47Z" finished-at="2015-12-06T14:58:47Z">
+        </test-method> <!-- subCompSetImpl -->
+        <test-method status="PASS" signature="subCompWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@7d095197]" name="subCompWithParams" duration-ms="1" started-at="2015-12-16T12:49:48Z" finished-at="2015-12-16T12:49:48Z">
           <reporter-output>
           </reporter-output>
-        </test-method> <!-- paramsSetArrayValues -->
-        <test-method status="PASS" signature="paramsDefaultArrayValues()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentParamsTest@52fc7db]" name="paramsDefaultArrayValues" duration-ms="3" depends-on-groups="basic" started-at="2015-12-06T14:58:47Z" depends-on-methods="com.ojcoleman.europa.ConfigurableComponentParamsTest.paramsSetArrayValues" finished-at="2015-12-06T14:58:47Z">
-          <reporter-output>
-          </reporter-output>
-        </test-method> <!-- paramsDefaultArrayValues -->
-      </class> <!-- com.ojcoleman.europa.ConfigurableComponentParamsTest -->
+        </test-method> <!-- subCompWithParams -->
+      </class> <!-- com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest -->
     </test> <!-- Default test -->
   </suite> <!-- Default suite -->
 </testng-results>

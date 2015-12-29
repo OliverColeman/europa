@@ -1,15 +1,10 @@
-package com.ojcoleman.europa.evolvers;
+package com.ojcoleman.europa.core;
 
 import java.util.List;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.ConfigurableComponent;
 import com.ojcoleman.europa.configurable.Parameter;
-import com.ojcoleman.europa.core.Evolver;
-import com.ojcoleman.europa.core.Genotype;
-import com.ojcoleman.europa.core.Individual;
-import com.ojcoleman.europa.core.Population;
-import com.ojcoleman.europa.core.Run;
 
 /**
  * A default Evolver that selects some proportion of the fittest members ({@link Individual}s) from the population, or

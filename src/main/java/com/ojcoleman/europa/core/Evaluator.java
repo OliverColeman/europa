@@ -13,7 +13,7 @@ import com.ojcoleman.europa.configurable.Parameter;
  * @author O. J. Coleman
  */
 public abstract class Evaluator extends ConfigurableComponent {
-	@Parameter (description="A name for the evaluator, used in logging. Default is the evaluator class name.", optional=true) 
+	@Parameter (description="A name for the evaluator, used in logging. DefaultEvolver is the evaluator class name.", optional=true) 
 	private String name;
 	
 	/**

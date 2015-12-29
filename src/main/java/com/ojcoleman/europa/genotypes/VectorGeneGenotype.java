@@ -1,5 +1,6 @@
 package com.ojcoleman.europa.genotypes;
 
+import java.util.Collection;
 import java.util.Set;
 
 import com.ojcoleman.europa.core.Genotype;
@@ -10,8 +11,7 @@ import com.ojcoleman.europa.core.Genotype;
  * @author O. J. Coleman
  */
 public abstract class VectorGeneGenotype<G extends VectorAllele<?>> extends Genotype<G> {
-	@SafeVarargs
-	public VectorGeneGenotype(Set<G> alleles, Genotype<G>... parents) {
-		super(alleles, parents);
+	public VectorGeneGenotype(long id, Collection<G> alleles, Genotype<G>... parents) {
+		super(id, alleles, parents);
 	}
 }

@@ -18,13 +18,13 @@ import com.ojcoleman.europa.core.Individual;
  * @author O. J. Coleman
  */
 public class DummyGenotype extends Genotype<Allele<?>> {
-	public DummyGenotype(Set<Allele<?>> alleles, Genotype<Allele<?>>[] parents) {
-		super(alleles, parents);
+	public DummyGenotype(long id, Collection<Allele<?>> alleles, Genotype<?>... parents) {
+		super(id, alleles, parents);
 	}
 
 	@Override
-	public Genotype<Allele<?>> clone() {
-		return null;
+	public Genotype<Allele<?>> create(long id, Collection<Allele<?>> alleles, Genotype<?>... parents) {
+		return new DummyGenotype(id, alleles, parents);
 	}
 	
 }

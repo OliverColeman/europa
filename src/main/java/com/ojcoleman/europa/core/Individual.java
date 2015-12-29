@@ -11,7 +11,7 @@ public class Individual {
 	/**
 	 * The genotype represented by this individual.
 	 */
-	public final Genotype genotype;
+	public final Genotype<?> genotype;
 	
 	/**
 	 * Contains the results of evaluating this individual.
@@ -32,7 +32,7 @@ public class Individual {
 	 * <strong>NOTE: All Individuals should be created via {@link Population#newIndividual(Object...)}.</strong>
 	 * Creates a new Individual with the given genotype.
 	 */
-	public Individual(Genotype genotype) {
+	public Individual(Genotype<?> genotype) {
 		this.genotype =  genotype;
 		evaluationData = new EvaluationData();
 	}

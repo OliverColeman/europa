@@ -5,7 +5,7 @@
     <classes>
       <class name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest">
         <methods>
-          <include name="subCompExtendedWithOverriddenParams"/>
+          <include name="subCompDefault"/>
         </methods>
       </class> <!-- com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest -->
     </classes>

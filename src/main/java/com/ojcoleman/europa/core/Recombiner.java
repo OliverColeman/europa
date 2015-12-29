@@ -28,7 +28,7 @@ public abstract class Recombiner extends ConfigurableComponent {
 	 * @param parents The parent genotypes. Two parents will be provided unless a custom {@link Evolver} is used which
 	 *            provides more.
 	 */
-	public abstract Genotype recombine(Genotype... parents);
+	public abstract Genotype<?> recombine(Genotype<?>... parents);
 	
 	/**
 	 * Returns true iff the children produced by this recombiner should not be mutated.

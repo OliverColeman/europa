@@ -13,4 +13,9 @@ public interface Function<I, O> {
 	 * Apply this function to the given input and return the output.
 	 */
 	public O apply(I input);
+	
+	/**
+	 * Apply this function to the given sequence of inputs and return the corresponding outputs.
+	 */
+	public O[] apply(I[] input);
 }

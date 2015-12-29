@@ -10,7 +10,7 @@ import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 
 /**
- * Default population class. Stores {@link Individual}s as a HashSet.
+ * DefaultEvolver population class. Stores {@link Individual}s as a HashSet.
  * 
  * @author O. J. Coleman
  */
