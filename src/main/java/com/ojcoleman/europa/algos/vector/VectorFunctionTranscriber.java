@@ -1,4 +1,4 @@
-package com.ojcoleman.europa.transcribers;
+package com.ojcoleman.europa.algos.vector;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.ConfigurableComponent;
@@ -7,7 +7,6 @@ import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.core.Transcriber;
-import com.ojcoleman.europa.evaluators.VectorFunctionEvaluator;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 
 /**

@@ -157,12 +157,12 @@ public class ArrayUtil {
 	}
 	
 	/**
-	 * Scales each value to the range [0 ,1], using the given Range.
+	 * Scales each value to the range [0 ,1], using the given Interval.
 	 * @param a The array to scale the values in (the values in this array are altered).
-	 * @param r The Range to use, this range should encompass all the values in the array.
+	 * @param r The Interval to use, this range should encompass all the values in the array.
 	 * @return The given array with scaled values.
 	 */
-	public static double[] scaleToUnit(double[] a, RangeDouble r) {
+	public static double[] scaleToUnit(double[] a, IntervalDouble r) {
 		for (int i = 0; i < a.length; i++)
 			a[i] = r.translateToUnit(a[i]);
 		return a;
@@ -171,10 +171,10 @@ public class ArrayUtil {
 	/**
 	 * Scales each value in the array to the given.
 	 * @param a The array to scale the values in (the values in this array are altered). All values should be in the range [0, 1].
-	 * @param r The Range to use to scale the values with.
+	 * @param r The Interval to use to scale the values with.
 	 * @return The given array with scaled values.
 	 */
-	public static double[] scaleFromUnit(double[] a, RangeDouble r) {
+	public static double[] scaleFromUnit(double[] a, IntervalDouble r) {
 		for (int i = 0; i < a.length; i++)
 			a[i] = r.translateFromUnit(a[i]);
 		return a;

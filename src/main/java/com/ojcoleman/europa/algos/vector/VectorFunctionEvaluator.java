@@ -1,4 +1,4 @@
-package com.ojcoleman.europa.evaluators;
+package com.ojcoleman.europa.algos.vector;
 
 import java.util.Set;
 

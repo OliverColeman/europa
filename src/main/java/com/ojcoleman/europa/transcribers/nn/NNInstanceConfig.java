@@ -1,8 +1,8 @@
 package com.ojcoleman.europa.transcribers.nn;
 
 /**
- * Container for basic configuration info for neural networks.
- * Sub-classes may extend this for neural network implementations requiring other configuration info.
+ * Container for basic configuration metadata for neural networks.
+ * Sub-classes may extend this for neural network implementations requiring other configuration metadata.
  * 
  * @see NNWrapper
  * 
@@ -42,7 +42,7 @@ public class NNInstanceConfig {
 	}
 	
 	/**
-	 * Creates an NNInstanceConfig initialised with the given info.
+	 * Creates an NNInstanceConfig initialised with the given metadata.
 	 */
 	public NNInstanceConfig(int neuronCount, int synapseCount, int inputCount, int outputCount, String name) {
 		this.neuronCount = neuronCount;

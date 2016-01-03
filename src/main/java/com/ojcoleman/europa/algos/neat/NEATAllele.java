@@ -1,8 +1,11 @@
 package com.ojcoleman.europa.algos.neat;
 
+import com.ojcoleman.europa.algos.vector.Vector;
+import com.ojcoleman.europa.algos.vector.VectorAllele;
+import com.ojcoleman.europa.algos.vector.VectorMetadata;
 import com.ojcoleman.europa.core.Allele;
-import com.ojcoleman.europa.genotypes.VectorAllele;
-import com.ojcoleman.europa.util.VectorInfo;
+import com.ojcoleman.europa.core.Gene;
+import com.ojcoleman.europa.transcribers.nn.NNPart;
 
 /**
  * Base class for representations of NEAT alleles.
@@ -21,21 +24,10 @@ public class NEATAllele<T extends NEATGene> extends VectorAllele<T> implements C
 	 * Create a NEATAllele with values initialised to 0.
 	 * 
 	 * @param gene The gene this allele is for.
-	 * @param info The information about each element of the vector representing this allele.
+	 * @param vector The parameter vector for this allele.
 	 */
-	public NEATAllele(T gene, VectorInfo info) {
-		super(gene, info);
-	}
-
-	/**
-	 * Create a NEATAllele with values initialised to those specified.
-	 * 
-	 * @param gene The gene this allele is for.
-	 * @param info The information about each element of the vector representing this allele.
-	 * @param values The initial values of the allele.
-	 */
-	public NEATAllele(T gene, VectorInfo info, double[] values) {
-		super(gene, info, values);
+	public NEATAllele(T gene, Vector vector) {
+		super(gene, vector);
 	}
 	
 	@Override

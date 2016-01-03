@@ -21,13 +21,13 @@ public enum NNPart {
 	 */
 	NEURON_INPUT,
 	/**
+	 * Represents a hidden or internal neuron.
+	 */
+	NEURON_HIDDEN,
+	/**
 	 * Represents an output neuron.
 	 */
 	NEURON_OUTPUT,
-	/**
-	 * Represents a hidden, or internal, neuron.
-	 */
-	NEURON_HIDDEN,
 	/**
 	 * Represents a synapse.
 	 */

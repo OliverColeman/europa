@@ -85,7 +85,14 @@ public abstract class ConfigurableComponent extends Observable {
 		
 		if (parentComponent != null) {
 			parentClassMap.putAll(parentComponent.parentClassMap);
-			parentClassMap.put(parentComponent.getClass(), parentComponent);
+			
+			// Add mappings for all the super-classes of the parent up to ConfigurableComponent 
+			// so that all sub/super-classes may be specified in getParentComponent()
+			Class<? extends ConfigurableComponent> parentType = parentComponent.getClass();
+			while (parentType != ConfigurableComponent.class) {
+				parentClassMap.put(parentType, parentComponent);
+				parentType = (Class<? extends ConfigurableComponent>) parentType.getSuperclass();
+			}
 		}
 		
 		// If no config provided then we should just create a dummy instance (used for printing of config options).
@@ -312,11 +319,15 @@ public abstract class ConfigurableComponent extends Observable {
 		return subComponents.containsKey(name);
 	}
 	
-	
+	/**
+	 * Returns the instance for the parent component with the given class, or null if no such parent component exists.
+	 * 
+	 * @param clazz The class of the desired parent component. Any sub- or super-class of the desired parent component
+	 *            may be specified.
+	 */
 	public <T extends ConfigurableComponent> T getParentComponent(Class<T> clazz) {
 		return (T) parentClassMap.get(clazz);
 	}
-	
 	
 	/**
 	 * Instantiates and returns a new instance of the specified class with the specified arguments.
@@ -510,20 +521,15 @@ public abstract class ConfigurableComponent extends Observable {
 					
 					int idx = 0;
 					for (JsonValue jsonVal : jsonValue.asArray()) {
-						if (isEnumType) {
-							checkEnumValueExists(definingClass, component, field, field.getType(), jsonVal.asString());
-						}
-						else if (isClassType) {
-							checkClassExists(definingClass, component, field, jsonVal.asString());
-						}
-						
 						Object val = null;
 						if (isClassType) { 
+							checkClassExists(definingClass, component, field, jsonVal.asString());
 							val = Class.forName(jsonVal.asString());
 						}
 						else if (isEnumType) {
+							checkEnumValueExists(definingClass, component, field, field.getType(), jsonVal.asString().toUpperCase());
 							// field.getType() returns a Class<?>, but Enum.valueOf expects a Class<T extends Enum<T>>, so we have to cast to the non-generic Class.
-							val = Enum.valueOf((Class) field.getType(), jsonVal.asString());
+							val = Enum.valueOf((Class) field.getType(), jsonVal.asString().toUpperCase());
 						}
 						else if (jsonConstructor != null) {
 							val = jsonConstructor.newInstance(jsonVal);
@@ -540,20 +546,15 @@ public abstract class ConfigurableComponent extends Observable {
 					field.set(component, array);
 				}
 				else {
-					if (isEnumType) {
-						checkEnumValueExists(definingClass, component, field, field.getType(), jsonValue.asString());
-					}
-					else if (isClassType) {
-						checkClassExists(definingClass, component, field, jsonValue.asString());
-					}
-					
 					Object val = null;
-					if (isClassType) { 
+					if (isClassType) {
+						checkClassExists(definingClass, component, field, jsonValue.asString());
 						val = Class.forName(jsonValue.asString());
 					}
 					else if (isEnumType) {
+						checkEnumValueExists(definingClass, component, field, field.getType(), jsonValue.asString().toUpperCase());
 						// field.getType() returns a Class<?>, but Enum.valueOf expects a Class<T extends Enum<T>>, so we have to cast to the non-generic Class.
-						val = Enum.valueOf((Class) field.getType(), jsonValue.asString());
+						val = Enum.valueOf((Class) field.getType(), jsonValue.asString().toUpperCase());
 					}
 					else if (jsonConstructor != null) {
 						val = jsonConstructor.newInstance(jsonValue);

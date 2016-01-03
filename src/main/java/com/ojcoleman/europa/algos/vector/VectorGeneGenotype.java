@@ -1,4 +1,4 @@
-package com.ojcoleman.europa.genotypes;
+package com.ojcoleman.europa.algos.vector;
 
 import java.util.Collection;
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.ojcoleman.europa.integration;
+package com.ojcoleman.europa.transcribers.nn.integration;
 
 import com.amd.aparapi.Kernel;
 import com.eclipsesource.json.JsonObject;
@@ -7,7 +7,7 @@ import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
 
 /**
- * Describes additional configuration info for Bain neural networks.
+ * Describes additional configuration metadata for Bain neural networks.
  * 
  * @author O. J. Coleman
  */

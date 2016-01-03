@@ -32,17 +32,17 @@ public class NNConfig extends ConfigurableComponent {
 	/**
 	 * @return the configuration for the neurons.
 	 */
-	public NNParametrisedGeneType neuronConfig() {
+	public NNParametrisedGeneType neuron() {
 		return neuron;
 	}
 
 	/**
 	 * @return the configuration for the synapses.
 	 */
-	public NNParametrisedGeneType synapseConfig() {
+	public NNParametrisedGeneType synapse() {
 		return synapse;
 	}
-
+	
 	/**
 	 * @return the basic allowable topology type of the networks.
 	 */

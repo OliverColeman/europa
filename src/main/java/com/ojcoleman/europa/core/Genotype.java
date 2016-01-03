@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.reflect.TypeToken;
 
 /**
@@ -31,16 +32,16 @@ public abstract class Genotype<A extends Allele<?>> {
 	public final List<Genotype<?>> parents;
 	
 	/**
-	 * The alleles in this genotype (as an unmodifiable Collection). Each Allele references a {@link Gene}.
+	 * The alleles in this genotype. Each Allele references a {@link Gene}.
 	 */
 	protected final Collection<A> alleles;
 	
-	private final Map<Object, List<A>> allelesByGeneType; 
+	private final ArrayListMultimap<Object, A> allelesByGeneType; 
 	
 	
 	/**
 	 * Create a new Genotype instance. Sub-classes should generally call this constructor from their own constructor(s).
-	 * @param alleles The alleles (backed by {@link Gene}s) that make up the new genotype.
+	 * @param alleles The alleles (backed by {@link Gene}s) that make up the new genotype. This Collection is not copied but only stored as a reference.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only, implementations of this class
 	 * do not need to create new instances from multiple parents (this is the job of {@link Recombiner)s.
 	 */
@@ -55,21 +56,15 @@ public abstract class Genotype<A extends Allele<?>> {
 			this.parents = Collections.unmodifiableList(Arrays.asList(parents));
 		}
 		
-		allelesByGeneType = new HashMap<Object, List<A>>();
+		allelesByGeneType = ArrayListMultimap.create();
 		for (A allele : this.alleles) {
-			if (!allelesByGeneType.containsKey(allele.gene.type)){
-				allelesByGeneType.put(allele.gene.type, new ArrayList<A>());
-			}
-			allelesByGeneType.get(allele.gene.type).add(allele);
-		}
-		
-		for (Object type : allelesByGeneType.keySet()) {
-			allelesByGeneType.put(type, Collections.unmodifiableList(allelesByGeneType.get(type)));
+			updateAllelesByGeneTypeForAdd(allele);
 		}
 	}
 	
 	/**
-	 * Get the alleles of this genotype as unmodifiable collection.
+	 * Get the alleles of this genotype as an unmodifiable collection. 
+	 * The iterator of the returned collection will iterate over the alleles in the same order as the collection provided to (
 	 */
 	public Collection<A> getAlleles() {
 		return Collections.unmodifiableCollection(alleles);
@@ -86,23 +81,21 @@ public abstract class Genotype<A extends Allele<?>> {
 
 	/**
 	 * Get the list of alleles in this genotype that are for {@link Gene}s of the specified type.
+	 * Note that an allele/gene pair may have multiple types.
 	 * 
 	 * @param type Object representing the type, usually an enum constant.
 	 * @return The list of alleles in this genotype that are for {@link Gene}s of the specified type, in the same order
-	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles.
-	 * @throws IllegalArgumentException If there are no alleles of specified type present.
+	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles. If no alleles of
+	 *         the specified type exist then an empty list is returned.
 	 * @see hasAllelesOfType(String)
 	 */
 	public List<A> getAllelesOfType(Object type) {
-		if (!allelesByGeneType.containsKey(type)) {
-			throw new IllegalArgumentException("No alleles of specified type present.");
-		}
-		return allelesByGeneType.get(type);
+		return Collections.unmodifiableList(allelesByGeneType.get(type));
 	}
 
 	/**
 	 * Get the list of alleles in this genotype that are for {@link Gene}s of the specified type, or a provided default
-	 * list if there are no alleles of specified type present.
+	 * list if there are no alleles of specified type present. Note that an allele/gene pair may have multiple types.
 	 * 
 	 * @param type Object representing the type, usually an enum constant.
 	 * @param type defaultList A list of default values to return if there are no alleles of specified type present. May
@@ -116,6 +109,40 @@ public abstract class Genotype<A extends Allele<?>> {
 			return defaultList;
 		}
 		return allelesByGeneType.get(type);
+	}
+	
+	
+	/**
+	 * Add the given allele to this genotype. This method should generally only be called by {@link Mutator}s and {@link Recombiner}s.
+	 */
+	public void addAllele(A allele) {
+		alleles.add(allele);
+		updateAllelesByGeneTypeForAdd(allele);
+	}
+	
+	/**
+	 * Remove the given allele from this genotype. This method should generally only be called by {@link Mutator}s and {@link Recombiner}s.
+	 */
+	public void removeAllele(A allele) {
+		alleles.remove(allele);
+		updateAllelesByGeneTypeForRemove(allele);
+	}
+	
+	
+	private void updateAllelesByGeneTypeForAdd(A allele) {
+		if (allele.gene.types != null) {
+			for (Object type : allele.gene.types) {
+				allelesByGeneType.put(type, allele);
+			}
+		}
+	}
+	
+	private void updateAllelesByGeneTypeForRemove(A allele) {
+		if (allele.gene.types != null) {
+			for (Object type : allele.gene.types) {
+				allelesByGeneType.remove(type, allele);
+			}
+		}
 	}
 	
 	

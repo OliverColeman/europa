@@ -7,6 +7,9 @@ package com.ojcoleman.europa.core;
  * @author O. J. Coleman
  */
 public abstract class Allele<G extends Gene> {
+	/**
+	 * The gene underlying this allele.
+	 */
 	public final G gene;
 
 	/**

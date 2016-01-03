@@ -1,9 +1,9 @@
 package com.ojcoleman.europa.transcribers.nn;
 
 import com.eclipsesource.json.JsonObject;
+import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
 import com.ojcoleman.europa.configurable.ConfigurableComponent;
 import com.ojcoleman.europa.configurable.Parameter;
-import com.ojcoleman.europa.genotypes.ParametrisedGeneType;
 
 /**
  * Encapsulates the configuration for a type of {@link Gene} and/or {Allele} that defines a set of 
@@ -17,5 +17,5 @@ public class NNParametrisedGeneType extends ParametrisedGeneType {
 	}
 
 	@Parameter(description="The class of the model to use for the neural network component.")
-	protected Class<?> modelClass;	
+	protected Class<?> modelClass;
 }
