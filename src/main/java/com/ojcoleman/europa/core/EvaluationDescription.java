@@ -12,29 +12,36 @@ public class EvaluationDescription {
 	 * A name for this evaluation.
 	 */
 	public final String name;
-	
+
 	/**
 	 * The {@link Evaluator} defining this evaluation.
 	 */
 	public final Evaluator evaluator;
-	
+
 	/**
 	 * A IntervalDouble describing the minimum and maximum possible values for this evaluation.
 	 */
 	public final IntervalDouble range;
-	
+
 	/**
 	 * The optimal value achievable for this evaluation (will usually be either the minimum or maximum value).
 	 */
 	public final double optimalValue;
-	
-	public EvaluationDescription(String name, Evaluator evaluator, IntervalDouble range, double optimalValue) {
+
+	/**
+	 * If true indicates that this evaluation is a "human-readable" performance metric and is not used to evaluate an
+	 * individuals fitness.
+	 */
+	public final boolean isPerformanceIndicator;
+
+	public EvaluationDescription(String name, Evaluator evaluator, IntervalDouble range, double optimalValue, boolean isPerformanceIndicator) {
 		this.name = name;
 		this.evaluator = evaluator;
 		this.range = range;
 		this.optimalValue = optimalValue;
+		this.isPerformanceIndicator = isPerformanceIndicator;
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return evaluator.getName().hashCode();

@@ -10,8 +10,8 @@ import java.util.Set;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
-import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.IsParameter;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
@@ -35,16 +35,16 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 		ANY
 	}
 
-	@Parameter(description = "Specifies the type of limit on how many synapses may be added. May be 'fixed' (a fixed maximum number synapse may be added) or 'any' (synapses may be added anywhere a synapse can exist).", defaultValue = "fixed")
+	@IsParameter(description = "Specifies the type of limit on how many synapses may be added. May be 'fixed' (a fixed maximum number synapse may be added) or 'any' (synapses may be added anywhere a synapse can exist).", defaultValue = "fixed")
 	protected Type type;
 
-	@Parameter(description = "If type is set to 'fixed', specifies the maximum number of synapses that may be added.", defaultValue = "1", minimumValue = "1")
+	@IsParameter(description = "If type is set to 'fixed', specifies the maximum number of synapses that may be added.", defaultValue = "1", minimumValue = "1")
 	protected int fixedMaximum;
 
-	@Parameter(description = "For each synapse that may be added, specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
+	@IsParameter(description = "For each synapse that may be added, specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
 	protected double applyRate;
 
-	public NEATSynapseAddMutator(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATSynapseAddMutator(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -57,7 +57,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 	public void mutate(NEATGenotype genotype) {
 		Run run = getParentComponent(Run.class);
 		Random random = run.random;
-		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNNConfig();
+		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
 		NEATEvolver evolver = (NEATEvolver) run.getEvolver();
 
 		// Get a list of the neuron IDs.
@@ -93,7 +93,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 							} else if (nnConfig.getTopology() != Topology.RECURRENT) {
 								// If recurrent synapses are not allowed, check if adding this synapse would
 								// create a cycle.
-								if (synapseWouldCreateCycle(source, dest, synapses)) {
+								if (evolver.synapseWouldCreateCycle(source, dest, synapses)) {
 									synapsePermissible = false;
 								}
 							}
@@ -126,7 +126,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 						// If we should add a synapse here according to probabilistic apply rate.
 						if (random.nextDouble() < applyRate) {
 							// If recurrent synapses are allowed or adding this synapse wouldn't cause a cycle
-							if (nnConfig.getTopology() == Topology.RECURRENT || !synapseWouldCreateCycle(source, dest, synapses)) {
+							if (nnConfig.getTopology() == Topology.RECURRENT || !evolver.synapseWouldCreateCycle(source, dest, synapses)) {
 								// Add the synapse.
 								addSynapse(genotype, source, dest, synapses, evolver);
 							}
@@ -141,53 +141,10 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 		// We use the method on NEATEvolver as evolver keeps a record of all synapses created between any two neurons.
 		// The record allows reusing the gene from an existing synapse between the same two neurons (assuming the gene
 		// parameter values are the same, if applicable).
-		NEATSynapseAllele allele = evolver.newSynapseAllele(source, dest);
+		NEATSynapseAllele allele = evolver.newSynapseAllele(genotype, source, dest);
 		genotype.addAllele(allele);
 
 		// Update record of synapses in this network.
 		synapses.put(source, dest, Boolean.TRUE);
-	}
-
-	private boolean synapseWouldCreateCycle(Long source, Long dest, Table<Long, Long, Boolean> synapses) {
-		// Adding a synapse from source to dest will create a cycle iff there exists a path from dest to source.
-		return pathExists(dest, source, synapses, new HashSet<Long>());
-	}
-	
-	/**
-	 * Recursively searches the network for a (directed) path from <code>start</code> to <code>end</code>.
-	 * 
-	 * @param start Start vertex ID
-	 * @param end End vertex ID
-	 * @param synapses a table of synapses. The row keys are source vertex IDs and the column keys are destination
-	 *            vertex IDs (the values are a superfluous Boolean, the existence of the mapping row key/column
-	 *            key/value indicates the presence of the synapse).
-	 * @param alreadyTraversedSources The set of vertices whose outgoing synapses have already been traversed,
-	 *            maintained to avoid redundant searching.
-	 * @return returns true if neurons are the same, or a path lies between src and dest in connGenes connected graph
-	 */
-	private static boolean pathExists(long start, long end, Table<Long, Long, Boolean> synapses, Set<Long> alreadyTraversedSources) {
-		// Don't traverse synapses more than once.
-		if (alreadyTraversedSources.contains(start)) {
-			return false;
-		}
-		alreadyTraversedSources.add(start);
-
-		// If a path has been found.
-		if (start == end) {
-			return true;
-		}
-
-		// Traverse each synapse from the given star/source, check if a
-		// path exists from their destination vertices to the end vertex.
-		// Table.row(row key / source vertex ID).keySet() returns only the column
-		// keys / dest vertex IDs for that row key for which a value/synapse exists.
-		for (long dest : synapses.row(start).keySet()) {
-			if (pathExists(dest, end, synapses, alreadyTraversedSources)) {
-				return true;
-			}
-		}
-
-		// No path from the given start to end vertices.
-		return false;
 	}
 }

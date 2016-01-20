@@ -9,7 +9,7 @@ import java.util.Random;
  */
 public class IntervalDouble extends Interval<Double> {
 	private final double range;
-	
+
 	/**
 	 * The unit interval [0, 1].
 	 */
@@ -17,7 +17,7 @@ public class IntervalDouble extends Interval<Double> {
 
 	public IntervalDouble(double start, double end) {
 		super(start, end);
-		range = end-start;
+		range = end - start;
 	}
 
 	/**
@@ -33,12 +33,13 @@ public class IntervalDouble extends Interval<Double> {
 	public double translateToUnit(double p) {
 		return (p - start) / range();
 	}
-	
-	
+
 	@Override
 	public Double clamp(Double v) {
-		if (v < start) return start;
-		if (v > end) return end;
+		if (v < start)
+			return start;
+		if (v > end)
+			return end;
 		return v;
 	}
 
@@ -46,7 +47,6 @@ public class IntervalDouble extends Interval<Double> {
 	public boolean isIn(Double value) {
 		return value >= start && value <= end;
 	}
-
 
 	@Override
 	public Double range() {

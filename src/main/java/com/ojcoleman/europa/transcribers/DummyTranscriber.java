@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.transcribers;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Transcriber;
@@ -13,7 +13,7 @@ import com.ojcoleman.europa.core.Transcriber;
  */
 public class DummyTranscriber extends Transcriber<Genotype<?>, Function<?, ?>> {
 
-	public DummyTranscriber(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyTranscriber(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

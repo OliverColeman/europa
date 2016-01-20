@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.recombiners;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Recombiner;
 
@@ -12,7 +12,7 @@ import com.ojcoleman.europa.core.Recombiner;
  */
 public class DummyRecombiner extends Recombiner {
 
-	public DummyRecombiner(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyRecombiner(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

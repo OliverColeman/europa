@@ -5,8 +5,11 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class InvalidConfigurationException extends Exception {
+public class InvalidConfigurationException extends RuntimeException {
 	public InvalidConfigurationException(String string) {
 		super(string);
+	}
+	public InvalidConfigurationException(String string, Exception cause) {
+		super(string, cause);
 	}
 }

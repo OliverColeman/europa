@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.EvaluationDescription;
 import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Individual;
@@ -16,9 +16,9 @@ import com.ojcoleman.europa.core.Individual;
  */
 public class DummyEvaluator extends Evaluator {
 	/**
-	 * Constructor for {@link ConfigurableComponent}.
+	 * Constructor for {@link Component}.
 	 */
-	public DummyEvaluator(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyEvaluator(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		// TODO Auto-generated constructor stub
 	}

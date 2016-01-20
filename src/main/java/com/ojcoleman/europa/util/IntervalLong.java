@@ -37,14 +37,14 @@ public class IntervalLong extends Interval<Long> {
 	@Override
 	public Long random(Random random) {
 		// for small n use nextInt and cast
-        if ((range+1) <= Integer.MAX_VALUE) {
-            return (long) random.nextInt((int) (range+1)) + start;
-        }
+		if ((range + 1) <= Integer.MAX_VALUE) {
+			return (long) random.nextInt((int) (range + 1)) + start;
+		}
 
-        // for large n use nextInt for both high and low ints
-        int highLimit = (int) ((range+1) >> 32);
-        long high = (long) random.nextInt(highLimit) << 32;
-        long low = ((long) random.nextInt()) & 0xffffffffL;
-        return (high | low) + start;
+		// for large n use nextInt for both high and low ints
+		int highLimit = (int) ((range + 1) >> 32);
+		long high = (long) random.nextInt(highLimit) << 32;
+		long low = ((long) random.nextInt()) & 0xffffffffL;
+		return (high | low) + start;
 	}
 }

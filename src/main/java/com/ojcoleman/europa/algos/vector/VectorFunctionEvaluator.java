@@ -3,7 +3,7 @@ package com.ojcoleman.europa.algos.vector;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.EvaluationDescription;
 import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Individual;
@@ -14,19 +14,21 @@ import com.ojcoleman.europa.core.Individual;
  * @author O. J. Coleman
  */
 public abstract class VectorFunctionEvaluator extends Evaluator {
-	public VectorFunctionEvaluator(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public VectorFunctionEvaluator(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
 	/**
-	 * Primary {@link Evaluator} classes sould override this method to return the expected number of inputs to the functions to evaluate.
+	 * Primary {@link Evaluator} classes sould override this method to return the expected number of inputs to the
+	 * functions to evaluate.
 	 */
 	public int getVectorFunctionInputSize() {
 		return 0;
 	}
-	
+
 	/**
-	 * Primary {@link Evaluator} classes sould override this method to return the expected number of outputs for the functions to evaluate.
+	 * Primary {@link Evaluator} classes sould override this method to return the expected number of outputs for the
+	 * functions to evaluate.
 	 */
 	public int getVectorFunctionOutputSize() {
 		return 0;

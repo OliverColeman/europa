@@ -1,6 +1,8 @@
 package com.ojcoleman.europa.algos.neat;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
@@ -8,7 +10,8 @@ import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.core.DefaultEvolver;
 import com.ojcoleman.europa.core.Evolver;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
@@ -22,7 +25,7 @@ import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
  * 
  * @author O. J. Coleman
  */
-public class NEATEvolver extends Evolver {
+public class NEATEvolver extends DefaultEvolver {
 	// Central store mapping all innovation ID/gene parameter pairs to genes.
 	// private Table<Long, Vector, NEATGene> innovationIDToGene;
 
@@ -37,7 +40,8 @@ public class NEATEvolver extends Evolver {
 	private Run run;
 	private NNConfig nnConfig;
 
-	public NEATEvolver(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	
+	public NEATEvolver(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		// innovationIDToGene = HashBasedTable.create();
@@ -45,20 +49,16 @@ public class NEATEvolver extends Evolver {
 		synapseIDToNeuronGene = HashBasedTable.create();
 
 		run = getParentComponent(Run.class);
-		nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNNConfig();
+	}
+	
+	private NNConfig getNNConfig() {
+		if (nnConfig == null) {
+			nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
+		}
+		return nnConfig;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see com.ojcoleman.europa.core.Evolver#evolvePopulation(com.ojcoleman.europa.core.Population, java.util.List)
-	 */
-	@Override
-	public void evolvePopulation(Population pop, List<List<Individual>> species) {
-		// TODO Auto-generated method stub
-
-	}
-
+	
 	/**
 	 * Create a new neuron allele for a neuron that is replacing the given synapse (see {@link NEATNeuronAddMutator}).
 	 * If a previous mutation added a neuron by splitting this synapse then the gene from that neuron will be reused.
@@ -67,18 +67,22 @@ public class NEATEvolver extends Evolver {
 	 * 
 	 * @param synapseID The innovation ID of the synapse that is being split to add the new neuron.
 	 */
-	public NEATNeuronAllele newNeuronAllele(long synapseID) {
+	public NEATNeuronAllele newNeuronAllele(NEATGenotype genotype, long synapseID) {
 		// If gene parameters are not used then this will be an empty vector.
-		Vector geneParams = nnConfig.neuron().createGeneVector();
+		Vector geneParams = getNNConfig().neuron().createGeneVector(run.random);
 
 		// If we have already added the same neuron replacing the same synapse in another genotype reuse the gene from
 		// it.
 		NEATNeuronGene gene = synapseIDToNeuronGene.get(synapseID, geneParams);
 		if (gene == null) {
-			gene = new NEATNeuronGene(NNPart.NEURON_HIDDEN, run.getNextID(), geneParams);
+			//new NEATNeuronGene(gene, NNPart.NEURON_INPUT, run.getNextID(), geneParams);
+			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, run.getNextID(), geneParams);
+
 			synapseIDToNeuronGene.put(synapseID, geneParams, gene);
 		}
-		return new NEATNeuronAllele(gene, nnConfig.neuron().createAlleleVector());
+
+		NEATNeuronAllele allele = genotype.neuronAllelePrototype.newInstance(gene, getNNConfig().neuron().createAlleleVector());
+		return allele;
 	}
 
 	/**
@@ -90,19 +94,74 @@ public class NEATEvolver extends Evolver {
 	 * @param destinationID the innovation ID of the destination neuron.
 	 * @return the new allele.
 	 */
-	public NEATSynapseAllele newSynapseAllele(long sourceID, long destinationID) {
+	public NEATSynapseAllele newSynapseAllele(NEATGenotype genotype, long sourceID, long destinationID) {
 		// If gene parameters are not used then this will be an empty vector.
-		Vector geneParams = nnConfig.synapse().createGeneVector();
+		Vector geneParams = getNNConfig().synapse().createGeneVector(run.random);
 
 		ImmutablePair<Long, Long> neuronIDs = ImmutablePair.of(sourceID, destinationID);
 
 		// If we have already added the same connection in another genotype reuse the gene from it.
 		NEATSynapseGene gene = connectionToGene.get(neuronIDs, geneParams);
 		if (gene == null) {
-			gene = new NEATSynapseGene(run.getNextID(), geneParams, sourceID, destinationID);
+			// new NEATSynapseGene(genotype.synapseGenePrototype, run.getNextID(), sourceID, destinationID, geneParams);
+			gene = genotype.synapseGenePrototype.newInstance(run.getNextID(), sourceID, destinationID, geneParams);
+
 			connectionToGene.put(neuronIDs, geneParams, gene);
 		}
+		// new NEATSynapseAllele(genotype.synapseAllelePrototype, gene, nnConfig.synapse().createAlleleVector());
+		return genotype.synapseAllelePrototype.newInstance(gene, getNNConfig().synapse().createAlleleVector());
+	}
 
-		return new NEATSynapseAllele(gene, nnConfig.synapse().createAlleleVector());
+	/**
+	 * Utility method to check if adding the specified synapse would create a cycle.
+	 * 
+	 * @param sourceID The source neuron ID of the proposed synapse.
+	 * @param destinationID The destination neuron ID of the proposed synapse.
+	 * @param synapses a table of synapses. The row keys are source neuron IDs and the column keys are destination
+	 *            neuron IDs (the values are a superfluous Boolean, the existence of the mapping row key/column
+	 *            key/value indicates the presence of the synapse).
+	 * @return returns true iff adding the specified synapse would create a cycle.
+	 */
+	public boolean synapseWouldCreateCycle(Long sourceID, Long destinationID, Table<Long, Long, Boolean> synapses) {
+		// Adding a synapse from source to dest will create a cycle iff there exists a path from dest to source.
+		return pathExists(destinationID, sourceID, synapses, new HashSet<Long>());
+	}
+
+	/**
+	 * Recursively searches the network for a (directed) path from <code>start</code> to <code>end</code>.
+	 * 
+	 * @param start Start vertex ID
+	 * @param end End vertex ID
+	 * @param synapses a table of synapses. The row keys are source vertex IDs and the column keys are destination
+	 *            vertex IDs (the values are a superfluous Boolean, the existence of the mapping row key/column
+	 *            key/value indicates the presence of the synapse).
+	 * @param alreadyTraversedSources The set of vertices whose outgoing synapses have already been traversed,
+	 *            maintained to avoid redundant searching.
+	 * @return returns true if neurons are the same, or a path lies between src and dest in connGenes connected graph
+	 */
+	private static boolean pathExists(long start, long end, Table<Long, Long, Boolean> synapses, Set<Long> alreadyTraversedSources) {
+		// Don't traverse synapses more than once.
+		if (alreadyTraversedSources.contains(start)) {
+			return false;
+		}
+		alreadyTraversedSources.add(start);
+
+		// If a path has been found.
+		if (start == end) {
+			return true;
+		}
+
+		// Traverse each synapse from the given star/source, check if a
+		// path exists from their destination vertices to the end vertex.
+		// Table.row(row key / source vertex ID).keySet() returns only the column
+		// keys / dest vertex IDs for that row key for which a value/synapse exists.
+		for (long dest : synapses.row(start).keySet()) {
+			if (pathExists(dest, end, synapses, alreadyTraversedSources)) {
+				return true;
+			}
+		}
+
+		// No path from the given start to end vertices.
+		return false;
 	}
 }

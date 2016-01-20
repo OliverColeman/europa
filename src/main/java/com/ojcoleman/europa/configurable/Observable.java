@@ -4,8 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Simple implementation of the Subject part of the Observer pattern.
- * Sub-classes should override {@link EventType}.
+ * Simple implementation of the Subject part of the Observer pattern. Sub-classes should override {@link EventType}.
+ * 
  * @see Observer
  * 
  * @author O. J. Coleman
@@ -18,18 +18,18 @@ public abstract class Observable {
 		/**
 		 * An event type indicating the the Observable subject did not specify an event type.
 		 */
-		Unspecified 
+		Unspecified
 	}
-	
+
 	private List<Observer> listeners = new ArrayList<Observer>();
-	
+
 	/**
 	 * Add the given observer to this subject.
 	 */
 	public void addEventListener(Observer listener) {
 		listeners.add(listener);
 	}
-	
+
 	/**
 	 * Remove the given observer from this subject.
 	 */
@@ -40,7 +40,7 @@ public abstract class Observable {
 	/**
 	 * Notifies all observers of the given event or change.
 	 * 
-	 * @param type The type of event or change. This should be tied to a constant defined in the Subject sub-class. 
+	 * @param type The type of event or change. This should be tied to a constant defined in the Subject sub-class.
 	 * 
 	 * @see Observer
 	 * @see #addEventListener(Observer)

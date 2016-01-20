@@ -11,17 +11,27 @@ import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
 
 /**
- * A Vector stores
+ * A Vector stores an array of double-precision floating point values. The meta-data for each element are defined by a
+ * {@link VectorMetadata} (which may be shared among many Vectors). Although the values are stored as doubles, the
+ * meta-data specifies whether an element is intended to represent a floating-point or integer value. The magnitude of
+ * the maximum value that may be stored is 2^53, see {@link #maximumIntegerValue}. Attempts to store values larger than
+ * this in elements intended to store integer values results in an IllegalArgumentException.
  * 
  * @author O. J. Coleman
  */
 public class Vector {
 	/**
-	 * Metadata for an empty (zero length/size) vector.
-	 */ 
+	 * The largest magnitude (positive or negative) integer that may be stored in a Vector. This is determined by the
+	 * largest integer value for which it and all smaller integer values can be accurately represented by a (IEEE 754)
+	 * double. The value is 2^53 (between an int (2^31) and long (2^63)).
+	 */
+	public final double maximumIntegerValue = 1L << 53;
+
+	/**
+	 * An empty (zero length/size) vector.
+	 */
 	public final static Vector EMPTY = new Vector(VectorMetadata.EMPTY);
-	
-	
+
 	/**
 	 * Information about each element of the vector.
 	 */
@@ -52,14 +62,18 @@ public class Vector {
 	 * @param mutable Whether the values may be modified.
 	 * 
 	 * @throws IllegalArgumentException If the meta data does not contain the same number of elements as that for the
-	 *             values.
+	 *             values or if a value in the given array for an element intended to store an integer has magnitude
+	 *             greater than {@link #maximumIntegerValue}.
+	 * @throws UnsupportedOperationException if the values in this vector are not {@link #mutable}.
+	 * 
 	 */
 	public Vector(VectorMetadata info, double[] values, boolean mutable) {
 		if (info.size() != values.length) {
 			throw new IllegalArgumentException("The meta data for a Vector must contain the same number of elements as that for the values given.");
 		}
+		this.values = new double[values.length];
+		setValues(values);
 		this.metadata = info;
-		this.values = Arrays.copyOf(values, values.length);
 		this.mutable = mutable;
 	}
 
@@ -99,23 +113,95 @@ public class Vector {
 	}
 
 	/**
-	 * Get the value at the specified index.
+	 * Get the value at the specified index. If the element at the specified index is intended to hold an integer value
+	 * then it may be safely cast to a long without losing precision.
 	 */
 	public double get(int index) {
 		return values[index];
 	}
 
 	/**
-	 * Set the value at the specified index. If the value at index should be an integer then the given value will be
-	 * rounded.
+	 * Get the value at the specified index cast as an int.
+	 */
+	public int getInt(int index) {
+		return (int) values[index];
+	}
+
+	/**
+	 * Get the value at the specified index cast as a long.
+	 */
+	public long getLong(int index) {
+		return (long) values[index];
+	}
+
+	/**
+	 * Set the value at the specified index. If the element at the given index is intended to store an integer then the
+	 * given value will be rounded.
 	 * 
-	 * @throws UnsupportedOperationException if the values are not {@link #mutable}.
+	 * @throws UnsupportedOperationException if the values are not {@link #mutable} or if the value at the specified
+	 *             index is intended to store an integer and a value with magnitude greater than
+	 *             {@link #maximumIntegerValue} was given.
 	 */
 	public void set(int index, double value) {
 		if (!mutable) {
 			throw new UnsupportedOperationException("The values of this Vector may not be modified.");
 		}
-		values[index] = metadata.isInteger(index) ? Math.round(value) : value;
+		if (metadata.isInteger(index)) {
+			if (value > maximumIntegerValue || value < -maximumIntegerValue) {
+				throw new UnsupportedOperationException("The value at the specified index, " + index + ", is intended to hold an integer value, the largest integer that may be stored is (-)2^53 but a value larger than this was given.");
+			}
+			values[index] = Math.round(value);
+		} else {
+			values[index] = value;
+		}
+	}
+
+	/**
+	 * Copy the values from the given vector to this vector. For any elements intended to store integers, the
+	 * corresponding values from the given vector will be rounded if necessary.
+	 * 
+	 * @param vector the vector whose values should be copied.
+	 * 
+	 * @throws UnsupportedOperationException if the values in this vector are not {@link #mutable}.
+	 * @throws IllegalArgumentException If the given vector does not contain the same number of elements as this vector
+	 *             or if a value in the given vector for an element intended to store an integer has magnitude greater
+	 *             than {@link #maximumIntegerValue}.
+	 */
+	public void setValues(Vector vector) {
+		// If this and the given vector share the same metadata object then we don't need to perform any checks.
+		if (metadata == vector.metadata) {
+			System.arraycopy(vector.values, 0, values, 0, values.length);
+			return;
+		}
+
+		if (vector.values.length != values.length) {
+			throw new IllegalArgumentException("The source and destination Vectors must be of equal length.");
+		}
+
+		for (int i = 0; i < values.length; i++) {
+			set(i, vector.values[i]);
+		}
+	}
+
+	/**
+	 * Copy the values from the given array to this vector. For any elements intended to store integers, the
+	 * corresponding values from the given array will be rounded if necessary.
+	 * 
+	 * @param newValues the array whose values should be copied.
+	 * 
+	 * @throws UnsupportedOperationException if the values in this vector are not {@link #mutable}.
+	 * @throws IllegalArgumentException If the given array does not contain the same number of elements as this vector
+	 *             or if a value in the given array for an element intended to store an integer has magnitude greater
+	 *             than {@link #maximumIntegerValue}.
+	 */
+	public void setValues(double[] newValues) {
+		if (newValues.length != values.length) {
+			throw new IllegalArgumentException("The source values array and the Vector must be of equal length.");
+		}
+
+		for (int i = 0; i < values.length; i++) {
+			set(i, newValues[i]);
+		}
 	}
 
 	/**
@@ -123,6 +209,14 @@ public class Vector {
 	 */
 	public List<Double> getValues() {
 		return Collections.unmodifiableList(Doubles.asList(values));
+	}
+
+	/**
+	 * Creates and returns a copy of this Vector, the values in the new Vector are independent of the values in this
+	 * vector but the metadata (which is immutable) is copied by reference.
+	 */
+	public Vector copy() {
+		return new Vector(this);
 	}
 
 	/**

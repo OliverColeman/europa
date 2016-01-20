@@ -1,9 +1,8 @@
 package com.ojcoleman.europa.algos.neat;
 
-import java.util.Set;
-
+import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.algos.vector.VectorMetadata;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
@@ -18,25 +17,35 @@ public class NEATSynapseGene extends NEATGene {
 	 * The NEAT ID of the source neuron gene.
 	 */
 	public final long sourceID;
-	
+
 	/**
 	 * The NEAT ID of the destination neuron gene.
 	 */
 	public final long destinationID;
-	
 
 	/**
-	 * Create a new NEATSynapseGene based on a specified neural network configuration.
-	 * The parameter values, if any, are initialised with random values.
+	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 */
+	public NEATSynapseGene(JsonObject config) {
+		super(config);
+		sourceID = -1;
+		destinationID = -1;
+	}
+
+	/**
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are initialised
+	 * with random values.
 	 * 
-	 * @param id The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the NEAT algorithm.
-	 * @param paramVector The parameter vector for this synapse.
+	 * @param prototype The prototype gene to copy.
+	 * @param geneID The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the
+	 *            NEAT algorithm.
 	 * @param sourceID The NEAT ID of the source neuron gene.
 	 * @param destinationID The NEAT ID of the destination neuron gene.
-	 * 
+	 * @param paramVector The parameter vector for this synapse.
 	 */
-	NEATSynapseGene( long id, Vector paramVector, long sourceID, long destinationID) {
-		super(Gene.typeSet(NNPart.SYNAPSE), id, paramVector);
+	NEATSynapseGene(NEATSynapseGene prototype, long geneID, long sourceID, long destinationID, Vector paramVector) {
+		super(prototype, Gene.typeSet(NNPart.SYNAPSE), geneID, paramVector);
 		this.sourceID = sourceID;
 		this.destinationID = destinationID;
 	}

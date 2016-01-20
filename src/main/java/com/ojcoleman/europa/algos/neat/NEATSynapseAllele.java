@@ -1,7 +1,9 @@
 package com.ojcoleman.europa.algos.neat;
 
+import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
 import com.ojcoleman.europa.algos.vector.VectorMetadata;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.core.Allele;
 import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
@@ -14,30 +16,44 @@ import com.ojcoleman.europa.transcribers.nn.NNPart;
  */
 public class NEATSynapseAllele extends NEATAllele<NEATSynapseGene> {
 	/**
-	 * @see Allele#Allele(Allele)
+	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
-	public NEATSynapseAllele(NEATSynapseAllele allele) {
-		super(allele);
+	public NEATSynapseAllele(JsonObject config) {
+		super(config);
 	}
-
+	
 	/**
-	 * Create a NEATSynapseAllele with the specified parameter values.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATSynapseAllele referencing the same underlying Gene but storing an independent copy of the original parameter Vector.
 	 * 
-	 * @param gene The gene this allele is for.
-	 * @param paramVector The parameter values for this synapse.
+	 * @param prototype The allele to copy.
 	 */
-	public NEATSynapseAllele(NEATSynapseGene gene, Vector paramVector) {
-		super(gene, paramVector);
+	public NEATSynapseAllele(NEATSynapseAllele prototype) {
+		super(prototype);
+	}
+
+
+	/**
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATSynapseAllele with the specified underlying Gene and storing the specified parameter Vector.
+	 * 
+	 * @param prototype The allele to copy.
+	 * @param gene the underlying gene for the new allele.
+	 * @param paramVector The parameter vector for the new allele, copied by reference.
+	 */
+	public NEATSynapseAllele(NEATSynapseAllele prototype, NEATSynapseGene gene, Vector paramVector) {
+		super(prototype, gene, paramVector);
 	}
 
 	/**
-	 * Create a new NEATSynapseAllele based on a specified neural network configuration and with parameter values
-	 * initialised to 0.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATSynapseAllele with the specified underlying Gene and with parameters based on a specified neural network
+	 * configuration (and initialised to 0).
 	 * 
 	 * @param gene The gene to underlie the new allele.
 	 * @param nnConfig The configuration parameters for the neural network.
 	 */
-	private NEATSynapseAllele(NEATSynapseGene gene, NNConfig nnConfig) {
-		super(gene, new Vector(nnConfig.synapse().getParamsAllele()));
+	private NEATSynapseAllele(NEATSynapseAllele prototype, NEATSynapseGene gene, NNConfig nnConfig) {
+		super(prototype, gene, nnConfig.neuron().createAlleleVector());
 	}
 }

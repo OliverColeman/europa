@@ -1,11 +1,9 @@
 package com.ojcoleman.europa.algos.neat;
 
+import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.algos.vector.VectorMetadata;
-import com.ojcoleman.europa.core.Allele;
-import com.ojcoleman.europa.core.Gene;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
-import com.ojcoleman.europa.transcribers.nn.NNPart;
 
 /**
  * Represents the mutable parameters of a neuron in a NEAT neural network.
@@ -14,30 +12,46 @@ import com.ojcoleman.europa.transcribers.nn.NNPart;
  */
 public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	/**
-	 * @see Allele#Allele(Allele)
+	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
-	public NEATNeuronAllele(NEATNeuronAllele allele) {
-		super(allele);
+	public NEATNeuronAllele(JsonObject config) {
+		super(config);
 	}
 
 	/**
-	 * Create a NEATNeuronAllele with values initialised to 0.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATNeuronAllele referencing the same underlying Gene but storing an independent copy of the original parameter Vector.
 	 * 
-	 * @param gene The gene this allele is for.
-	 * @param paramVector The parameter values for this synapse.
+	 * @param prototype The allele to copy.
+	 * 
+	 * @throws IllegalArgumentException if the Vector is not set as mutable.
 	 */
-	public NEATNeuronAllele(NEATNeuronGene gene, Vector paramVector) {
-		super(gene, paramVector);
+	public NEATNeuronAllele(NEATNeuronAllele prototype) {
+		super(prototype);
 	}
 
 	/**
-	 * Create a new NEATNeuronAllele based on a specified neural network configuration and with parameter values
-	 * initialised to 0.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATNeuronAllele with the specified underlying Gene and storing the specified parameter Vector.
+	 * 
+	 * @param prototype The allele to copy.
+	 * @param gene the underlying gene for the new allele.
+	 * @param paramVector The parameter vector for the new allele, copied by reference.
+	 * 
+	 * @throws IllegalArgumentException if the Vector is not set as mutable.
+	 */
+	public NEATNeuronAllele(NEATNeuronAllele prototype, NEATNeuronGene gene, Vector paramVector) {
+		super(prototype, gene, paramVector);
+	}
+
+	/**
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * NEATNeuronAllele based on a specified neural network configuration and with parameter values initialised to 0.
 	 * 
 	 * @param gene The gene to underlie the new allele.
 	 * @param nnConfig The configuration parameters for the neural network.
 	 */
-	private NEATNeuronAllele(NEATNeuronGene gene, NNConfig nnConfig) {
-		super(gene, new Vector(nnConfig.neuron().getParamsAllele()));
+	private NEATNeuronAllele(NEATNeuronAllele prototype, NEATNeuronGene gene, NNConfig nnConfig) {
+		super(prototype, gene, nnConfig.neuron().createAlleleVector());
 	}
 }

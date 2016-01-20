@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.mutators;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Mutator;
 
@@ -12,7 +12,7 @@ import com.ojcoleman.europa.core.Mutator;
  */
 public class DummyMutator extends Mutator {
 
-	public DummyMutator(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyMutator(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

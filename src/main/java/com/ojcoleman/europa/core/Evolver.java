@@ -8,9 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
-import com.ojcoleman.europa.configurable.Parameter;
-import com.ojcoleman.europa.configurable.SubComponent;
+import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.IsComponent;
 import com.ojcoleman.europa.mutators.DummyMutator;
 import com.ojcoleman.europa.recombiners.DummyRecombiner;
 
@@ -21,40 +21,33 @@ import com.ojcoleman.europa.recombiners.DummyRecombiner;
  * 
  * @author O. J. Coleman
  */
-public abstract class Evolver extends ConfigurableComponent {
+public abstract class Evolver extends Component {
 	private final Logger logger = LoggerFactory.getLogger(Evolver.class);
-	
+
 	/**
 	 * The set of mutators used to mutate genotypes.
 	 */
-	@SubComponent(description = "Sub-component(s) used to mutate genotypes.", defaultImplementation=DummyMutator.class)
-	protected Mutator[] mutators;
+	@IsComponent(description = "Component(s) used to mutate genotypes.", defaultClass = DummyMutator.class)
+	protected Mutator<?>[] mutators;
 
 	/**
 	 * The set of recombiners, if applicable, used to generate children genotypes. This is optional as some algorithms,
 	 * for example, swarm or colony based do not use recombination.
 	 */
-	@SubComponent(description = "Sub-component(s) used to recombine genotypes to produce child genotypes.", optional = true)
-	protected Recombiner[] recombiners = new Recombiner[] {};
+	@IsComponent(description = "Component(s) used to recombine genotypes to produce child genotypes.", optional = true)
+	protected Recombiner<?>[] recombiners;
 
 	/**
 	 * The relative proportion of children to produce by cloning (relative to the proportions set for recombiners, if
 	 * any)
 	 */
-	@Parameter(description = "The relative proportion of children to produce by cloning (relative to the proportions set for recombiners, if any).", defaultValue = "1")
+	@IsParameter(description = "The relative proportion of children to produce by cloning (relative to the proportions set for recombiners, if any).", defaultValue = "1")
 	protected double relativeCloneProportion;
 
 	/**
-	 * The class to use for the {@link Genotype}.
+	 * Constructor for {@link Component}.
 	 */
-	@Parameter(description = "The class to use for the Genotype.", defaultValue="com.ojcoleman.europa.genotypes.DummyGenotype")
-	protected Class<? extends Genotype<?>> genotypeClass;
-	
-	
-	/**
-	 * Constructor for {@link ConfigurableComponent}.
-	 */
-	public Evolver(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public Evolver(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -83,32 +76,30 @@ public abstract class Evolver extends ConfigurableComponent {
 	public abstract void evolvePopulation(Population pop, List<List<Individual>> species);
 
 	/**
-	 * Add {@link Individual}s to the given empty Population. {@link Population#getDesiredSize()} individuals will be 
+	 * Add {@link Individual}s to the given empty Population. {@link Population#getDesiredSize()} individuals will be
 	 * added.
 	 */
 	public void createPopulation(Population pop) {
 		Run run = this.getParentComponent(Run.class);
-		
+
 		Genotype seed = getParentComponent(Run.class).getTranscriber().getTemplateGenotype();
-		
+
 		pop.addGenotype(seed);
 
 		for (int i = 0; i < pop.getDesiredSize() - 1; i++) {
-			Genotype g = seed.createNew(run.getNextID(), seed.alleles, seed);
+			Genotype g = seed.newInstance(run.getNextID(), seed.alleles, seed);
 			mutateGenotype(g, true);
 			pop.addGenotype(g);
 		}
 	}
+
 	/*
-	protected <T extends Genotype<?>> Constructor<T> getGenotypeCopyConstructor(Class<T> clazz) {
-		try {
-			return clazz.getConstructor(long.class, clazz, Array.newInstance(clazz, 0).getClass());
-		} catch (NoSuchMethodException ex) {
-			String name = this.getClass().getSimpleName();
-			throw new RuntimeException("The Genotype class " + this.getClass().getName() + " must provide a constructor with signature \"public " + name + "(long id,  genotype, )\").");
-		}
-	}
-	*/
+	 * protected <T extends Genotype<?>> Constructor<T> getGenotypeCopyConstructor(Class<T> clazz) { try { return
+	 * clazz.getConstructor(long.class, clazz, Array.newInstance(clazz, 0).getClass()); } catch (NoSuchMethodException
+	 * ex) { String name = this.getClass().getSimpleName(); throw new RuntimeException("The Genotype class " +
+	 * this.getClass().getName() + " must provide a constructor with signature \"public " + name +
+	 * "(long id,  genotype, )\")."); } }
+	 */
 	/**
 	 * Mutate the given genotype. This default implementation calls {@link Mutator#mutate(Genotype)} for each of the
 	 * {@link #mutators} on the given genotype.

@@ -3,7 +3,7 @@
 <suite guice-stage="DEVELOPMENT" name="Failed suite [Suite]" parallel="tests">
   <test name="Test(failed)" parallel="tests">
     <classes>
-      <class name="com.ojcoleman.europa.ConfigurableComponentParamsTest">
+      <class name="com.ojcoleman.europa.ConfigurableTestSetParams">
         <methods>
           <include name="paramsDefaultArrayValues"/>
           <include name="paramsMaxValidation"/>
@@ -16,7 +16,7 @@
           <include name="setObjectParamNoGoodConstructor"/>
           <include name="paramsMissingRequired"/>
         </methods>
-      </class> <!-- com.ojcoleman.europa.ConfigurableComponentParamsTest -->
+      </class> <!-- com.ojcoleman.europa.ConfigurableTestSetParams -->
     </classes>
   </test> <!-- Test(failed) -->
 </suite> <!-- Failed suite [Suite] -->

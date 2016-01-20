@@ -1,34 +1,34 @@
 package com.ojcoleman.europa.transcribers.nn;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
-import com.ojcoleman.europa.configurable.Parameter;
-import com.ojcoleman.europa.configurable.SubComponent;
+import com.ojcoleman.europa.configurable.Configurable;
+import com.ojcoleman.europa.configurable.IsConfigurable;
+import com.ojcoleman.europa.configurable.IsParameter;
 
 /**
- * A component describing essential configuration information for a neural network.
+ * A component describing essential configuration information for a neural network for which the configuration is defined by {@link NNParametrisedGeneType}s.
  * 
  * @author O. J. Coleman
  */
-public class NNConfig extends ConfigurableComponent {
-	@SubComponent (description="Configuration for the neurons.", defaultImplementation=NNParametrisedGeneType.class)
+public class NNConfig extends Configurable {
+	@IsConfigurable(description = "Configuration for the neurons.")
 	protected NNParametrisedGeneType neuron;
 
-	@SubComponent (description="Configuration for the synapses.", defaultImplementation=NNParametrisedGeneType.class)
+	@IsConfigurable(description = "Configuration for the synapses.")
 	protected NNParametrisedGeneType synapse;
-	
-	@Parameter (description="The basic allowable topology type of the networks, \"recurrent\" or \"feed_forward\"", defaultValue="feed_forward")
+
+	@IsParameter(description = "The basic allowable topology type of the networks, \"recurrent\" or \"feed_forward\"", defaultValue = "feed_forward")
 	protected Topology topology;
-	
-	@Parameter (description="For recurrent neural networks, the number of simulation steps to perform for each application of the input and reading of the output.", defaultValue="5") 
+
+	@IsParameter(description = "For recurrent neural networks, the number of simulation steps to perform for each application of the input and reading of the output.", defaultValue = "5")
 	protected int simulationStepsPerStep;
+
 	
-	
-	public NNConfig(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
-		super(parentComponent, componentConfig);
+	public NNConfig(JsonObject config) throws Exception {
+		super(config);
 	}
 	
-	
+
 	/**
 	 * @return the configuration for the neurons.
 	 */
@@ -42,7 +42,7 @@ public class NNConfig extends ConfigurableComponent {
 	public NNParametrisedGeneType synapse() {
 		return synapse;
 	}
-	
+
 	/**
 	 * @return the basic allowable topology type of the networks.
 	 */
@@ -51,7 +51,8 @@ public class NNConfig extends ConfigurableComponent {
 	}
 
 	/**
-	 * @return for recurrent neural networks, the number of simulation steps to perform for each application of the input and reading of the output.
+	 * @return for recurrent neural networks, the number of simulation steps to perform for each application of the
+	 *         input and reading of the output.
 	 */
 	public int getSimulationStepsPerStep() {
 		return simulationStepsPerStep;

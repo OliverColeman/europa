@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Speciator;
@@ -16,9 +16,9 @@ import com.ojcoleman.europa.core.Speciator;
  */
 public class NoSpeciation extends Speciator {
 	/**
-	 * Constructor for {@link ConfigurableComponent}.
+	 * Constructor for {@link Component}.
 	 */
-	public NoSpeciation(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public NoSpeciation(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -26,10 +26,10 @@ public class NoSpeciation extends Speciator {
 	public List<List<Individual>> speciate(Population pop) {
 		List<Individual> speciesOne = new ArrayList<Individual>();
 		speciesOne.addAll(pop.getMembers());
-		
+
 		List<List<Individual>> species = new ArrayList<List<Individual>>();
 		species.add(speciesOne);
-		
+
 		return species;
 	}
 }

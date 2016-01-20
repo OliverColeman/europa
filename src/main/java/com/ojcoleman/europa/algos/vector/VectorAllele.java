@@ -5,11 +5,23 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.core.Allele;
+import com.ojcoleman.europa.core.Gene;
 
 /**
- * Interface for Alleles represented by a vector of (double precision) floating-point values.
+ * <p>
+ * Class for Alleles represented by a vector of (double precision) floating-point values.
+ * </p>
+ * <p>
+ * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
+ * and which should generally just call <em>super()</em> with the allele to copy.</strong> See
+ * {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}.
+ * <p>
+ * 
+ * @see Vector
  * 
  * @author O. J. Coleman
  */
@@ -18,39 +30,53 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	 * The vector stored by this allele. The values are {@link Vector#mutable}.
 	 */
 	public final Vector vector;
-	
-	
+
 	/**
-	 * @see Allele#Allele(Allele)
+	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
-	public VectorAllele(VectorAllele<G> allele) {
-		super(allele.gene);
-		vector = new Vector(allele.vector);
+	public VectorAllele(JsonObject config) {
+		super(config);
+		vector = Vector.EMPTY;
 	}
-	
+
 	/**
-	 * Create a VectorAllele with values initialised to 0.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * VectorAllele referencing the same underlying Gene but storing an independent copy of the Vector in the original allele.
 	 * 
-	 * @param gene The gene this allele is for.
-	 * @param paramVector The vector for this allele.
+	 * @param paramVector The vector for the new allele, copied by reference.
+	 * 
 	 * @throws IllegalArgumentException if the Vector is not set as mutable.
 	 */
-	public VectorAllele(G gene, Vector paramVector) {
-		super(gene);
+	public VectorAllele(VectorAllele<G> prototype) {
+		super(prototype);
+		this.vector = prototype.vector.copy();
+	}
+
+	/**
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * VectorAllele with the specified underlying Gene and storing the specified Vector.
+	 * 
+	 * @param allele The allele to copy.
+	 * @param gene the underlying gene for the new allele.
+	 * @param paramVector The vector for the new allele, copied by reference.
+	 * 
+	 * @throws IllegalArgumentException if the Vector is not set as mutable.
+	 */
+	public VectorAllele(VectorAllele<G> prototype, G gene, Vector paramVector) {
+		super(prototype, gene);
 		if (!paramVector.mutable) {
 			throw new IllegalArgumentException("The Vector for a VectorAllele must be set as mutable.");
 		}
 		this.vector = paramVector;
 	}
-	
-	
+
 	/**
 	 * Get the values from this allele and its underlying gene as a map from the vector element labels to their values.
 	 */
 	public Map<String, Double> getAllValuesAsMap() {
 		return getAllValuesAsMap(new HashMap<String, Double>());
 	}
-	
+
 	/**
 	 * Get the values from this allele and its underlying gene as a map from the vector element labels to their values.
 	 */

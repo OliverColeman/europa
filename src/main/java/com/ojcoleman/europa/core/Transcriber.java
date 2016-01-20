@@ -1,18 +1,18 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Component;
 
 /**
  * A Transcriber transcribes a {@link Genotype} to a "phenotype" {@link Function}. It must also determine the class of
  * the Genotype and the Function, and be able to produce a template genotype. Typically a Transcriber will query the
  * primary {@link Evaluator} to determine some aspects of the Genotype and phenotype Function.
  */
-public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends ConfigurableComponent {
+public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends Component {
 	/**
-	 * Constructor for {@link ConfigurableComponent}.
+	 * Constructor for {@link Component}.
 	 */
-	public Transcriber(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
+	public Transcriber(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -27,7 +27,7 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 *            first calls to this method).
 	 */
 	public abstract F transcribe(G genotype, F function);
-	
+
 	/**
 	 * Generate and return a template genotype that this Transcriber knows how to transcribe. The template is used to
 	 * seed an evolutionary run.

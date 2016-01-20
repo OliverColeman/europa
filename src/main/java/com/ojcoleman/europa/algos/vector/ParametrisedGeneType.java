@@ -5,9 +5,10 @@ import java.util.Random;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.ConfigurableComponent;
+import com.ojcoleman.europa.configurable.Configurable;
+import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.configurable.InvalidConfigurationException;
-import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.IsParameter;
 import com.ojcoleman.europa.core.Run;
 
 /**
@@ -16,14 +17,14 @@ import com.ojcoleman.europa.core.Run;
  * 
  * @author O. J. Coleman
  */
-public class ParametrisedGeneType extends ConfigurableComponent {
-	@Parameter(description = "The available parameters, and associated properties, whose values should be\n" + "fixed when a gene of this type is added. Example format:\n" + "{\n" + "  \"_defaults\" : {\"min\": -1, \"max\": 2, \"int\": true}\n" + "  \"myParam\" : {\"min\": -1}\n" + "  \"myOtherParam\" : {\"min\": -2, \"max\": 3, \"int\": false}\n" + " }\n" + "The \"_defaults\" specify default values to use if values are not specified\n" + "for a specific parameter. This is optional, as is any of the keys within the\n" + "defaults. If, for a given parameter, no value is specified for the \"min\", \n" + "\"max\" or \"int\" keys either explicitly or in the defaults then 0, 1 or false\n" + "are used respectively.\n", defaultValue = "{}")
+public class ParametrisedGeneType extends Configurable {
+	@IsParameter(description = "The available parameters, and associated properties, whose values should be fixed when a gene of this type is added.", defaultValue = "{}")
 	protected VectorMetadata paramsGene;
 
-	@Parameter(description = "The available parameters, and associated properties, whose value is an allele\n" + "and so may change after this type of gene is added. See paramsGene for format.", defaultValue = "{}")
+	@IsParameter(description = "The available parameters, and associated properties, whose value is an allele and so may change after this type of gene is added.", defaultValue = "{}")
 	protected VectorMetadata paramsAllele;
 
-	@Parameter(description = "Similar to paramsAllele, however the parameters specified here are intended\n" + "to be referenced from other genes or alleles, instead of those parameters\n" + "being set or evolved individually in each gene or allele. If this is set to\n" + "a non-empty value then an integer parameter labeled \"typeReference\" must be\n" + "added to one of paramsGene or paramsAllele; this is used as the reference to\n" + "the type. The minimum value for the typeReference must be 0 and the maximum\n" + "value must be one less than the number of types that should be allowed.", defaultValue = "{}")
+	@IsParameter(description = "Similar to paramsAllele, however the parameters specified here are intended to be referenced from other genes or alleles, instead of those parameters being set or evolved individually in each gene or allele. If this is set to a non-empty value then an integer parameter labeled \"typeReference\" must be added to one of paramsGene or paramsAllele; this is used as the reference to the type. The minimum value for the typeReference must be 0 and the maximum value must be one less than the number of types that should be allowed.", defaultValue = "{}")
 	protected VectorMetadata paramsType;
 
 	/**
@@ -37,11 +38,9 @@ public class ParametrisedGeneType extends ConfigurableComponent {
 	 */
 	public final int paramsTypeCount;
 
-	// Used when generating new parameter Vectors.
-	private final Random random;
 
-	public ParametrisedGeneType(ConfigurableComponent parentComponent, JsonObject componentConfig) throws Exception {
-		super(parentComponent, componentConfig);
+	public ParametrisedGeneType(JsonObject config) throws Exception {
+		super(config);
 
 		if (!paramsType.isEmpty()) {
 			boolean refGene = paramsGene.hasLabel("typeReference");
@@ -70,13 +69,6 @@ public class ParametrisedGeneType extends ConfigurableComponent {
 		params.addAll(paramsType.getLabels());
 		if (params.size() < paramsGene.size() + paramsAllele.size() + paramsType.size()) {
 			throw new InvalidConfigurationException("One or more parameters in paramsGene, paramsAllele or paramsType have the same label.");
-		}
-
-		Run run = this.getParentComponent(Run.class);
-		if (run == null) {
-			random = new Random();
-		} else {
-			random = run.random;
 		}
 	}
 
@@ -110,7 +102,7 @@ public class ParametrisedGeneType extends ConfigurableComponent {
 	 * Returns an immutable Vector with metadata set to {@link #getParamsGene()} and with random values distributed
 	 * uniformly between their minimum and maximum values (inclusive).
 	 */
-	public Vector createGeneVector() {
+	public Vector createGeneVector(Random random) {
 		return new Vector(paramsGene, false, random);
 	}
 
@@ -118,7 +110,7 @@ public class ParametrisedGeneType extends ConfigurableComponent {
 	 * Returns a mutable Vector with metadata set to {@link #getParamsAllele()} and with values initialised to zero.
 	 */
 	public Vector createAlleleVector() {
-		return new Vector(paramsGene);
+		return new Vector(paramsAllele);
 	}
 
 	/**
