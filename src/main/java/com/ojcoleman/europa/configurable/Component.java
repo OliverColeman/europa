@@ -11,8 +11,10 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -96,13 +98,21 @@ import com.google.common.collect.Multimap;
  */
 public abstract class Component extends Configurable {
 	private static Logger logger = LoggerFactory.getLogger(Component.class);
+	
+	// Key is the field defining the sub-component, value is the component requesting the field (if being initialised via getSubComponent()).
+	private static Map<Field, Component> subComponentBeingInitialised = new HashMap<>();
 
 	/**
 	 * The parent component of this component.
 	 */
 	public final Component parentComponent;
+	
+	private JsonObject componentConfig;
 
-	private Map<Class<?>, Component> parentClassMap = new HashMap<Class<?>, Component>();
+	private Map<Class<?>, Component> parentClassMap = new HashMap<>();
+	
+	// If the field name for a component is contained then it indicates the component has been initialised.
+	private Set<String> componentInitialised = new HashSet<>();
 
 	/**
 	 * Creates and configures this component and any Components with the given configuration. Sub-classes must implement
@@ -116,6 +126,8 @@ public abstract class Component extends Configurable {
 	 */
 	public Component(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(componentConfig);
+		
+		this.componentConfig = componentConfig;
 
 		this.parentComponent = parentComponent;
 
@@ -135,18 +147,32 @@ public abstract class Component extends Configurable {
 		for (Field field : getComponentFields()) {
 			JsonValue subCompConfig = componentConfig != null ? componentConfig.get(field.getName()) : null;
 
-			processComponentField(this, field, subCompConfig);
+			subComponentBeingInitialised.put(field, null);
+			
+			processComponentField(field, subCompConfig);
+			
+			componentInitialised.add(field.getName());
+			
+			subComponentBeingInitialised.remove(field);
 		}
+		
+		this.componentConfig = null;
 	}
 
 	protected List<Field> getComponentFields() {
 		List<Field> fields = new ArrayList<>();
+		Set<String> fieldNames = new HashSet<>();
 
-		// Get all super-classes too so that we can set their fields.
+		// Get all super-classes too so that we can get their fields.
+		// (Class.getFields() only returns public fields). 
 		for (Class<?> clazz : getSuperClasses()) {
 			for (Field field : clazz.getDeclaredFields()) {
 				if (field.isAnnotationPresent(IsComponent.class)) {
+					if (fieldNames.contains(field.getName())) {
+						throw new InvalidComponentFieldException("A field with the same name, " + field.getName() + ", is declared in a super-class of " + clazz.getCanonicalName());
+					}
 					fields.add(field);
+					fieldNames.add(field.getName());
 				}
 			}
 		}
@@ -242,6 +268,62 @@ public abstract class Component extends Configurable {
 
 		return config;
 	}
+	
+
+	/**
+	 * Returns the instance for a sub-Component of this Component (referenced via a field annotated with {@link @IsComponent}), initialising it if necessary. This method should be
+	 * called from the Constructors of other components when they require access to another Component (which may not have been initialised yet).
+	 * This method should not typically be used outside of the constructor for a Component as it is not very efficient; sub-Components
+	 * should typically be accessed via get methods defined on the parent Component.
+	 * 
+	 * @param field The name of the field referencing the sub-Component.
+	 * @param requestingComponent The component making the request. This is used for detecting and reporting initialisation loops.
+	 * 
+	 * @return The requested Component or array of Components, depending on the Component field type.
+	 */
+	public Object getSubComponent(String fieldName, Component requestingComponent) {
+		try {
+			Field field = this.getClass().getDeclaredField(fieldName);
+			if (field.getAnnotation(IsComponent.class) == null) {
+				throw new InvalidComponentFieldException("The requested Component field " + fieldName + " in Class " + this.getClass().getCanonicalName() + " is not annotated with @IsComponent.");
+			}
+			
+			// If this field was already in the process of being initialised we have a loop.
+			if (subComponentBeingInitialised.containsKey(field)) {
+				String message = "Two or more components are requesting access to each other during their initialisation.\n    The Component fields currently being initialised (and the requesting component if applicable) are:\n";
+				for (Map.Entry<Field, Component> fieldComp : subComponentBeingInitialised.entrySet()) {
+					Field f = fieldComp.getKey();
+					Component c = fieldComp.getValue();
+					message += "        " + f.getDeclaringClass().getCanonicalName() + "#" + f.getName();
+					if (c != null) {
+						message += " (" + c.getClass().getCanonicalName() + ")";
+					}
+					message += "\n";
+				}
+				throw new ComponentInitialisationLoopException(message);
+			}
+			
+			// If the component hasn't been initialised already, initialise it.
+			if (!componentInitialised.contains(fieldName)) {
+				JsonValue subCompConfig = componentConfig != null ? componentConfig.get(field.getName()) : null;
+	
+				subComponentBeingInitialised.put(field, requestingComponent);
+
+				processComponentField(field, subCompConfig);
+				
+				componentInitialised.add(field.getName());
+				
+				subComponentBeingInitialised.remove(field);
+			}
+			
+			return (Component) field.get(this);
+		} catch (NoSuchFieldException e) {
+			throw new InvalidComponentFieldException("The requested Component field " + fieldName + " does not exist in Class " + this.getClass().getCanonicalName() + " or any of its super-classes.", e);
+		} catch (IllegalArgumentException | IllegalAccessException | SecurityException e) {
+			throw new RuntimeException("Reflection error.", e);
+		}
+	}
+
 
 	/**
 	 * Returns the instance for the parent component with the given class, or null if no such parent component exists.
@@ -256,7 +338,12 @@ public abstract class Component extends Configurable {
 	/**
 	 * Populate the given Component field in the given Component using the given JsonValue.
 	 */
-	private void processComponentField(Component component, Field field, JsonValue jsonValue) {
+	private void processComponentField(Field field, JsonValue jsonValue) {
+		// Already initialised, probably via getSubComponent().
+		if (componentInitialised.contains(field.getName())) {
+			return;
+		}
+		
 		Class<?> definingClass = field.getDeclaringClass();
 
 		boolean isArray = field.getType().isArray();
@@ -264,16 +351,21 @@ public abstract class Component extends Configurable {
 
 		// In case it's private or protected.
 		field.setAccessible(true);
-
+		
 		Constructor<?> constructor;
 		try {
+			// Check if the current value is null.
+			if (field.get(this) != null) {
+				logger.warn("The Component field " + field.getName() + " in " + definingClass.getCanonicalName() + " is set to a non-null value in its declaring line, this should be avoided for Component.getSubComponent() to function properly.");
+			}
+			
 			Object value;
 
 			if (isArray) {
 				// If we're creating a dummy instance, try to initialise an example using the default or field type
 				// class. Otherwise if no config provided and this field is optional then an empty array will be
 				// created.
-				if (jsonValue == null && component.isDummy) {
+				if (jsonValue == null && isDummy) {
 					try {
 						// If we can get a valid constructor with an empty config, set the jsonValue to empty so we
 						// create one example instance, otherwise just create an empty array.
@@ -305,12 +397,12 @@ public abstract class Component extends Configurable {
 				for (JsonValue configJsonVal : configArray) {
 					constructor = getComponentConstructor(definingClass, this, field, configJsonVal, isArray);
 
-					if (component.isDummy) {
+					if (isDummy) {
 						// Mark the configuration as being for a dummy instance.
 						configJsonVal.asObject().add("_isDummy", true);
 					}
 
-					Object val = constructor.newInstance(component, configJsonVal.asObject());
+					Object val = constructor.newInstance(this, configJsonVal.asObject());
 
 					Array.set(value, idx++, val);
 				}
@@ -318,7 +410,7 @@ public abstract class Component extends Configurable {
 				// If no value given.
 				if (jsonValue == null) {
 					// If optional and this is not a dummy instance then do nothing.
-					if (annotation.optional() && !component.isDummy) {
+					if (annotation.optional() && !isDummy) {
 						return;
 					} else {
 						// If not optional or this is a dummy instance, try to initialise with default values.
@@ -328,15 +420,15 @@ public abstract class Component extends Configurable {
 
 				constructor = getComponentConstructor(definingClass, this, field, jsonValue, isArray);
 
-				if (component.isDummy) {
+				if (isDummy) {
 					// Mark the configuration as being for a dummy instance
 					jsonValue.asObject().add("_isDummy", true);
 				}
 
-				value = constructor.newInstance(component, jsonValue.asObject());
+				value = constructor.newInstance(this, jsonValue.asObject());
 			}
 
-			field.set(component, value);
+			field.set(this, value);
 
 		} catch (InvocationTargetException | InstantiationException | IllegalAccessException ex) {
 			Throwable cause = ex.getCause();

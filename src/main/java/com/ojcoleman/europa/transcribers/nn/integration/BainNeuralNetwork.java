@@ -30,7 +30,7 @@ public class BainNeuralNetwork extends NeuralNetwork {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
 	 * 
 	 * Create a Bain neural network with the given base configuration and instance configuration.
 	 * @param prototype The prototype neural network instance to copy.

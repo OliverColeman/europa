@@ -108,7 +108,7 @@ public class Run extends Component {
 	@IsComponent(description = "Component(s) for the fitness evaluator(s). By default the first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultClass = DummyEvaluator.class)
 	protected Evaluator[] evaluators;
 
-		@IsComponent(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
+	@IsComponent(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
 	protected Ranker ranker;
 
 	@IsComponent(description = "Component for dividing the population into species.", defaultClass = NoSpeciation.class)

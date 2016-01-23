@@ -120,7 +120,7 @@ public class Configurable extends Observable {
 	 * Creates a copy of the given Configurable. The copy is essentially a shallow copy: calls to
 	 * {@link #getSingleton(Class)} on the copy and the original will return exactly the same result. The rationale for
 	 * this behaviour is that this copy constructor is primarily intended to support the
-	 * {@link IsPrototype#Prototype(IsPrototype)} copy constructor, which is intended to efficiently create many copies
+	 * {@link IsPrototype#Prototype(Prototype)} copy constructor, which is intended to efficiently create many copies
 	 * of the same prototype object. Performing deep copies of the contained singleton and prototype objects and
 	 * associated internal supporting data structures would incur a generally undesirable and unnecessary performance
 	 * cost.

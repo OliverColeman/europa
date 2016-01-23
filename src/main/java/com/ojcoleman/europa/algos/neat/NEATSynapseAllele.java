@@ -23,7 +23,7 @@ public class NEATSynapseAllele extends NEATAllele<NEATSynapseGene> {
 	}
 	
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATSynapseAllele referencing the same underlying Gene but storing an independent copy of the original parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
@@ -34,7 +34,7 @@ public class NEATSynapseAllele extends NEATAllele<NEATSynapseGene> {
 
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATSynapseAllele with the specified underlying Gene and storing the specified parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
@@ -46,7 +46,7 @@ public class NEATSynapseAllele extends NEATAllele<NEATSynapseGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATSynapseAllele with the specified underlying Gene and with parameters based on a specified neural network
 	 * configuration (and initialised to 0).
 	 * 

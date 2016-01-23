@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.core;
 
+import com.ojcoleman.europa.configurable.Prototype;
+
 /**
  * Represents an individual in the {@link Population} used in the evolutionary algorithm. An individual is a container
  * for a {@link Genotype}, The {@link Function} to be evaluated (transcribed from the Genotype if the Genotype is not
@@ -7,7 +9,7 @@ package com.ojcoleman.europa.core;
  * 
  * @author O. J. Coleman
  */
-public class Individual<G extends Genotype<?>> {
+public class Individual<G extends Genotype<?>> extends Prototype {
 	/**
 	 * The genotype represented by this individual.
 	 */
@@ -29,10 +31,14 @@ public class Individual<G extends Genotype<?>> {
 	protected Function<?, ?> function;
 
 	/**
-	 * <strong>NOTE: All Individuals should be created via {@link Population#newIndividual(Object...)}.</strong> Creates
-	 * a new Individual with the given genotype.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * 
+	 * @param prototype The (prototype) instance to copy.
+	 * @param gene the underlying Gene for the new Allele.
 	 */
-	public Individual(G genotype) {
+	public Individual(Individual<G> prototype, G genotype) {
+		super(prototype);
+		
 		this.genotype = genotype;
 		evaluationData = new EvaluationData();
 	}

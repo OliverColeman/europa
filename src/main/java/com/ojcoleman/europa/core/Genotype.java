@@ -22,7 +22,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * Represents the inheritable genetic material of an {@link Individual}.
  * </p>
  * <p>
- * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)} type
+ * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)} type
  * copy-constructor accepting only the allele to copy, which should generally just call <em>super()</em> with the given
  * allele.</strong>
  * </p>
@@ -64,7 +64,7 @@ public abstract class Genotype<A extends Allele<?>> extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a Genotype
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
 	 * with the given ID (should generally be unique) and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -90,7 +90,7 @@ public abstract class Genotype<A extends Allele<?>> extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a Genotype
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
 	 * with the given ID (should generally be unique), alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

@@ -38,7 +38,7 @@ public class Gene extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param type The type(s) of the gene. Usually these are enum constants. May be empty. The given Set is passed
@@ -53,7 +53,7 @@ public class Gene extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Creates a Gene
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Creates a Gene
 	 * with no {@link #types}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

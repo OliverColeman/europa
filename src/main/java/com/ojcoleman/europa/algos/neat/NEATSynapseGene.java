@@ -33,7 +33,7 @@ public class NEATSynapseGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are initialised
 	 * with random values.
 	 * 

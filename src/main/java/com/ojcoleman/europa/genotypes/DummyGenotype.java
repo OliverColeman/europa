@@ -23,7 +23,7 @@ public class DummyGenotype extends Genotype<Allele<?>> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param id The ID for the new Genotype.

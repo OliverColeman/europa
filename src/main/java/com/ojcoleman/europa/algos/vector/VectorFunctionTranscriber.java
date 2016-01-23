@@ -20,17 +20,25 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 	 * The number of inputs for the function to transcribe. By default this is determined from the primary evaluator
 	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
-	private int functionInputSize = -1;
+	private int functionInputSize;
 
 	/**
 	 * The number of outputs for the function to transcribe. By default this is determined from the primary evaluator
 	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
-	private int functionOutputSize = -1;
+	private int functionOutputSize;
 
 	
 	public VectorFunctionTranscriber(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
+		
+		// Ordinarily we'd used Run.getPrimaryEvaluator() however we should use getSubComponent in Component constructors.
+		Evaluator[] evaluators = (Evaluator[]) getParentComponent(Run.class).getSubComponent("evaluators", this);
+		Evaluator primaryEvaluator = evaluators[0];
+		if (primaryEvaluator instanceof VectorFunctionEvaluator) {
+			functionInputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionInputSize();
+			functionOutputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionOutputSize();
+		}
 	}
 
 	/**
@@ -38,12 +46,6 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
 	public int getFunctionInputSize() {
-		if (functionInputSize == -1) {
-			Evaluator primaryEvaluator = getParentComponent(Run.class).getPrimaryEvaluator();
-			if (primaryEvaluator instanceof VectorFunctionEvaluator) {
-				functionInputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionInputSize();
-			}
-		}
 		return functionInputSize;
 	}
 
@@ -52,12 +54,6 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
 	public int getFunctionOutputSize() {
-		if (functionOutputSize == -1) {
-			Evaluator primaryEvaluator = getParentComponent(Run.class).getPrimaryEvaluator();
-			if (primaryEvaluator instanceof VectorFunctionEvaluator) {
-				functionOutputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionOutputSize();
-			}
-		}
 		return functionOutputSize;
 	}
 }

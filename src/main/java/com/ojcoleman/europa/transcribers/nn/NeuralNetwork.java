@@ -42,7 +42,7 @@ public abstract class NeuralNetwork extends Prototype implements VectorFunction 
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
 	 * 
 	 * Create a neural network with the given instance configuration.
 	 *

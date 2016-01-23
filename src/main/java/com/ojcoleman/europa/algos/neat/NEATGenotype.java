@@ -66,7 +66,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a Genotype
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
 	 * with the given ID (should generally be unique) and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

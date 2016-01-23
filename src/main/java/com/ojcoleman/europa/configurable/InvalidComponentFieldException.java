@@ -9,4 +9,7 @@ public class InvalidComponentFieldException extends RuntimeException {
 	public InvalidComponentFieldException(String message) {
 		super(message);
 	}
+	public InvalidComponentFieldException(String message, Exception cause) {
+		super(message, cause);
+	}
 }

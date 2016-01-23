@@ -24,7 +24,7 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a Genotype
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
 	 * with the given ID (should generally be unique), alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -39,7 +39,7 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a Genotype
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
 	 * with the given ID (should generally be unique) and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

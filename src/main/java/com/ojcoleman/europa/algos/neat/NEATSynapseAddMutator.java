@@ -57,8 +57,9 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 	public void mutate(NEATGenotype genotype) {
 		Run run = getParentComponent(Run.class);
 		Random random = run.random;
-		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
-		NEATEvolver evolver = (NEATEvolver) run.getEvolver();
+		NeuralNetworkTranscriber<?> transcriber = (NeuralNetworkTranscriber<?>) run.getSubComponent("transcriber", this);
+		NNConfig nnConfig = transcriber.getNeuralNetworkPrototype().getConfig();
+		NEATEvolver evolver = (NEATEvolver) run.getSubComponent("evolver", this);
 
 		// Get a list of the neuron IDs.
 		List<Long> neuronIDs = new ArrayList<>(genotype.getNeurons().keySet());

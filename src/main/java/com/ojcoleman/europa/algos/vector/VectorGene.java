@@ -30,7 +30,7 @@ public abstract class VectorGene extends Gene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * VectorGene with specified type(s) and Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -50,7 +50,7 @@ public abstract class VectorGene extends Gene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * VectorGene with the specified Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.

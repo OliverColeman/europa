@@ -23,7 +23,7 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATNeuronGene with specified type and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -38,7 +38,7 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(IsPrototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
 	 * NEATNeuronGene with same type as the prototype and the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
