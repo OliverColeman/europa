@@ -7,7 +7,7 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.InvalidComponentFieldException;
+import com.ojcoleman.europa.configurable.InvalidConfigurableFieldException;
 import com.ojcoleman.europa.configurable.IsParameter;
 import com.ojcoleman.europa.configurable.RequiredComponentDefinitionMissingException;
 import com.ojcoleman.europa.configurable.IsComponent;
@@ -50,8 +50,8 @@ public class ConfigurableComponentSubcomponentsTest {
 			BaseComponentInvalidSub base = new BaseComponentInvalidSub(null, new JsonObject());
 			Assert.fail("No exception thrown for a field annotated as a sub-component when the field type doesn't extend Component.");
 		} catch (Exception ex) {
-			if (!InvalidComponentFieldException.class.equals(ex.getClass())) {
-				Assert.fail("Field annotated as a sub-component but type doesn't extend Component should throw InvalidComponentFieldException but " + ex.getClass().getSimpleName() + " thrown.");
+			if (!InvalidConfigurableFieldException.class.equals(ex.getClass())) {
+				Assert.fail("Field annotated as a sub-component but type doesn't extend Component should throw InvalidConfigurableFieldException but " + ex.getClass().getSimpleName() + " thrown.");
 			}
 		}
 	}

@@ -2,6 +2,9 @@ package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.IsComponent;
+import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.populations.SimplePopulation;
 
 /**
  * A Transcriber transcribes a {@link Genotype} to a "phenotype" {@link Function}. It must also determine the class of
@@ -9,6 +12,10 @@ import com.ojcoleman.europa.configurable.Component;
  * primary {@link Evaluator} to determine some aspects of the Genotype and phenotype Function.
  */
 public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends Component {
+	@IsComponent(description = "Component for the population of individuals.", defaultClass = SimplePopulation.class)
+	protected Population<G, F> population;
+	
+	
 	/**
 	 * Constructor for {@link Component}.
 	 */
@@ -33,4 +40,8 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 * seed an evolutionary run.
 	 */
 	public abstract G getTemplateGenotype();
+
+	public Population<G, F> getPopulation() {
+		return population;
+	}
 }

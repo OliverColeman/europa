@@ -34,7 +34,7 @@ public abstract class NeuralNetwork extends Prototype implements VectorFunction 
 	
 	
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NeuralNetwork(JsonObject config) {
 		super(config);

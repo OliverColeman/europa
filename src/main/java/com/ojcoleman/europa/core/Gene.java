@@ -30,7 +30,7 @@ public class Gene extends Prototype {
 	public final Set<Object> types;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public Gene(JsonObject config) {
 		super(config);

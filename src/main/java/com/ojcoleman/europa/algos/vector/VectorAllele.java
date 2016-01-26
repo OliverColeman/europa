@@ -32,7 +32,7 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	public final Vector vector;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public VectorAllele(JsonObject config) {
 		super(config);

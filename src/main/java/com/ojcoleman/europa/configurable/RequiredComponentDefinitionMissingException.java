@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class RequiredComponentDefinitionMissingException extends RuntimeException {
+public class RequiredComponentDefinitionMissingException extends ConfigurableException {
 	public RequiredComponentDefinitionMissingException(String message) {
 		super(message);
 	}

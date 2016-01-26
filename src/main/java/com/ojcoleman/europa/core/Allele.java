@@ -31,7 +31,7 @@ public class Allele<G extends Gene> extends Prototype {
 	protected Genotype<?> genotype;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public Allele(JsonObject config) {
 		super(config);

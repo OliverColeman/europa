@@ -12,7 +12,7 @@ import com.ojcoleman.europa.transcribers.nn.NNConfig;
  */
 public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NEATNeuronAllele(JsonObject config) {
 		super(config);

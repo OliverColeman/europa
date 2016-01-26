@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class RequiredParameterValueMissingException extends RuntimeException {
+public class RequiredParameterValueMissingException extends ConfigurableException {
 	public RequiredParameterValueMissingException(String message) {
 		super(message);
 	}

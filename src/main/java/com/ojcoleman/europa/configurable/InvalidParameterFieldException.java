@@ -5,7 +5,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class InvalidParameterFieldException extends RuntimeException {
+public class InvalidParameterFieldException extends ConfigurableException {
 	public InvalidParameterFieldException(String message) {
 		super(message);
 	}

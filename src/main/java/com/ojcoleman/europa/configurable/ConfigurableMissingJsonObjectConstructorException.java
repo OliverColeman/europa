@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class ConfigurableMissingJsonObjectConstructorException extends RuntimeException {
+public class ConfigurableMissingJsonObjectConstructorException extends ConfigurableException {
 	public ConfigurableMissingJsonObjectConstructorException(String message) {
 		super(message);
 	}

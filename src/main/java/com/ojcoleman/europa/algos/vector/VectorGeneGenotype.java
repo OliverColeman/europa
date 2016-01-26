@@ -17,7 +17,7 @@ import com.ojcoleman.europa.core.Genotype;
  */
 public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Genotype<A> {
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public VectorGeneGenotype(JsonObject config) {
 		super(config);

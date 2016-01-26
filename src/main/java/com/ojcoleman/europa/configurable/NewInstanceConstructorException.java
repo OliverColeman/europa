@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class NewInstanceConstructorException extends RuntimeException {
+public class NewInstanceConstructorException extends ConfigurableException {
 	public NewInstanceConstructorException(String message) {
 		super(message);
 	}

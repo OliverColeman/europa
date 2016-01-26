@@ -1,9 +1,7 @@
-package com.ojcoleman.europa.mutators;
+package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.core.Genotype;
-import com.ojcoleman.europa.core.Mutator;
 
 /**
  * Dummy mutator used for printing configuration options.

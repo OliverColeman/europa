@@ -20,6 +20,7 @@ import com.ojcoleman.europa.transcribers.nn.NNParametrisedGeneType;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
 import com.ojcoleman.europa.transcribers.nn.NeuralNetwork;
 import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
+import com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork;
 
 /**
  * Transcriber for the NEAT algorithm.
@@ -30,7 +31,7 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 	@IsPrototype(description = "The prototype configuration for the NEATGenotype. This is only useful if a custom sub-class of NEATGenotype is to be used.")
 	protected NEATGenotype genotype;
 	
-	@IsPrototype(description = "The neural network prototype.")
+	@IsPrototype(description = "The neural network prototype.", defaultClass = BainNeuralNetwork.class)
 	protected NeuralNetwork neuralNetwork;
 
 	

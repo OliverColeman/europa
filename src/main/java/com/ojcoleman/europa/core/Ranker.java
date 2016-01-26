@@ -17,16 +17,8 @@ public abstract class Ranker extends Component {
 	}
 
 	/**
-	 * Sub-classes should select from the given speciated (if applicable) population:
-	 * <ul>
-	 * <li>a set of parents that are used to produce the children in the next generation (for example via cloning or
-	 * recombination); and</li>
-	 * <li>optionally a set of elites that will survive to the next generation unchanged</li>
-	 * </ul>
 	 * 
-	 * @param pop The speciated (if applicable) population.
-	 * @param parents Selected parents should be added to this.
-	 * @param parents Selected elites should be added to this.
+	 * @param population The speciated (if applicable) population.
 	 */
-	public abstract void rank(Population pop);
+	public abstract void rank(Population<?, ?> population);
 }

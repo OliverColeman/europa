@@ -10,9 +10,8 @@ import org.slf4j.LoggerFactory;
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.IsPrototype;
 import com.ojcoleman.europa.configurable.IsComponent;
-import com.ojcoleman.europa.mutators.DummyMutator;
-import com.ojcoleman.europa.recombiners.DummyRecombiner;
 
 /**
  * Base class for classes that generate the (@link Individual)s for an initial {@link Population} and then produce new
@@ -21,21 +20,26 @@ import com.ojcoleman.europa.recombiners.DummyRecombiner;
  * 
  * @author O. J. Coleman
  */
-public abstract class Evolver extends Component {
+public abstract class Evolver<G extends Genotype<?>> extends Component {
 	private final Logger logger = LoggerFactory.getLogger(Evolver.class);
-
+	
+	
+	@IsPrototype (description="The configuration for the prototype Genotype.", defaultClass=DummyGenotype.class)
+	protected G genotypePrototype;
+	
+	
 	/**
 	 * The set of mutators used to mutate genotypes.
 	 */
 	@IsComponent(description = "Component(s) used to mutate genotypes.", defaultClass = DummyMutator.class)
-	protected Mutator<?>[] mutators;
+	protected Mutator<G>[] mutators;
 
 	/**
 	 * The set of recombiners, if applicable, used to generate children genotypes. This is optional as some algorithms,
 	 * for example, swarm or colony based do not use recombination.
 	 */
 	@IsComponent(description = "Component(s) used to recombine genotypes to produce child genotypes.", optional = true)
-	protected Recombiner<?>[] recombiners;
+	protected Recombiner<G>[] recombiners;
 
 	/**
 	 * The relative proportion of children to produce by cloning (relative to the proportions set for recombiners, if
@@ -50,7 +54,8 @@ public abstract class Evolver extends Component {
 	public Evolver(Component parentComponent, JsonObject componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
-
+	
+	
 	/**
 	 * Add {@link Individual}s to the given Population based on the current members and optionally species groupings.
 	 * <p>
@@ -73,33 +78,10 @@ public abstract class Evolver extends Component {
 	 * </ul>
 	 * </p>
 	 */
-	public abstract void evolvePopulation(Population pop, List<List<Individual>> species);
+	public abstract void evolve(Population<G, ?> population);
+	
 
-	/**
-	 * Add {@link Individual}s to the given empty Population. {@link Population#getDesiredSize()} individuals will be
-	 * added.
-	 */
-	public void createPopulation(Population pop) {
-		Run run = this.getParentComponent(Run.class);
 
-		Genotype seed = getParentComponent(Run.class).getTranscriber().getTemplateGenotype();
-
-		pop.addGenotype(seed);
-
-		for (int i = 0; i < pop.getDesiredSize() - 1; i++) {
-			Genotype g = seed.newInstance(run.getNextID(), seed.alleles, seed);
-			mutateGenotype(g, true);
-			pop.addGenotype(g);
-		}
-	}
-
-	/*
-	 * protected <T extends Genotype<?>> Constructor<T> getGenotypeCopyConstructor(Class<T> clazz) { try { return
-	 * clazz.getConstructor(long.class, clazz, Array.newInstance(clazz, 0).getClass()); } catch (NoSuchMethodException
-	 * ex) { String name = this.getClass().getSimpleName(); throw new RuntimeException("The Genotype class " +
-	 * this.getClass().getName() + " must provide a constructor with signature \"public " + name +
-	 * "(long id,  genotype, )\")."); } }
-	 */
 	/**
 	 * Mutate the given genotype. This default implementation calls {@link Mutator#mutate(Genotype)} for each of the
 	 * {@link #mutators} on the given genotype.
@@ -109,8 +91,8 @@ public abstract class Evolver extends Component {
 	 *            will be applied only if their implementation of {@link Mutator#shouldMutate(Genotype)} returns true
 	 *            for the given Genotype.
 	 */
-	public void mutateGenotype(Genotype<?> genotype, boolean applyAllMutators) {
-		for (Mutator m : mutators) {
+	public void mutateGenotype(G genotype, boolean applyAllMutators) {
+		for (Mutator<G> m : mutators) {
 			if (applyAllMutators || m.shouldMutate(genotype)) {
 				m.mutate(genotype);
 			}

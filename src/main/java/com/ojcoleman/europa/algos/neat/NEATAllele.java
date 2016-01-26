@@ -27,7 +27,7 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	protected boolean enabled = true;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NEATAllele(JsonObject config) {
 		super(config);

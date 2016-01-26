@@ -53,7 +53,7 @@ public abstract class Genotype<A extends Allele<?>> extends Prototype {
 	private final ArrayListMultimap<Object, A> allelesByGeneType;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public Genotype(JsonObject config) {
 		super(config);

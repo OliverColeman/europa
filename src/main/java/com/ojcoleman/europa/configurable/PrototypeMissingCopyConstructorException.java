@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class PrototypeMissingCopyConstructorException extends RuntimeException {
+public class PrototypeMissingCopyConstructorException extends ConfigurableException {
 	public PrototypeMissingCopyConstructorException(String message) {
 		super(message);
 	}

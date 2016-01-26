@@ -90,15 +90,18 @@ public class Main {
 	private synchronized void launchFromSaved(String configOrSavedRun) throws Exception {
 		XStream xstream = new XStream();
 		xstream.setMarshallingStrategy(null);
+		
 		Base Base = (Base) xstream.fromXML(new FileReader(configOrSavedRun));
 		Base.run.run();
 	}
 
 	private synchronized void launchFromConfig(String configOrSavedRun) throws Exception {
-		JsonObject config = Json.parse(new FileReader(configOrSavedRun)).asObject();
-
+		List<String> configLines = Files.readAllLines(Paths.get(configOrSavedRun), StandardCharsets.UTF_8);
+		String configStr = stripComments(configLines);
+		JsonObject config = Json.parse(configStr).asObject();
+		
 		config.add("configFilePath", configOrSavedRun);
-
+		
 		Base base = new Base(null, config);
 		base.run.run();
 	}
@@ -129,23 +132,15 @@ public class Main {
 		XStream xstream = new XStream();
 		xstream.setMarshallingStrategy(null);
 		Base base = (Base) xstream.fromXML(new FileReader(configOrSavedRun));
-		JsonObject config = base.getConfiguration(false);
-		System.out.println(config.toString(WriterConfig.PRETTY_PRINT));
+		printConfig(base);
+		//JsonObject config = base.getConfiguration(false);
+		//System.out.println(config.toString(WriterConfig.PRETTY_PRINT));
 
 	}
 
 	private void printConfigOptionsFromConfig(String configFile) throws Exception {
 		List<String> configLines = Files.readAllLines(Paths.get(configFile), StandardCharsets.UTF_8);
-		StringBuffer config = new StringBuffer();
-		for (String line : configLines) {
-			if (!line.matches("^\\s*//.*$")) {
-				config.append(line);
-			}
-		}
-		String configStr = config.toString();
-
-		// Remove commas before closing brace (occurs as an artifact of the commenting process).
-		configStr = Pattern.compile(",\\s*}").matcher(configStr).replaceAll(" }");
+		String configStr = stripComments(configLines);
 		
 		JsonObject configObject = Json.parse(configStr).asObject();
 		configObject.add("_isDummy", true);
@@ -157,6 +152,7 @@ public class Main {
 	private void printConfigOptionsFromDefault() throws Exception {
 		JsonObject configObject = new JsonObject();
 		configObject.add("_isDummy", true);
+		
 		Base base = new Base(null, configObject);
 		printConfig(base);
 	}
@@ -172,7 +168,39 @@ public class Main {
 			// Blank lines.
 			configOut = Pattern.compile("^\\s*//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll(""); 
 		}
+		
+		// Replace \" with " in commment lines.
+		StringBuilder configOutSB = new StringBuilder(configOut.length());
+		Pattern comment = Pattern.compile("^\\s*//.*");
+		for (String line : configOut.split("\n")) {
+			if (comment.matcher(line).matches()) {
+				configOutSB.append(line.replace("\\\"", "\""));
+			} else {
+				configOutSB.append(line);
+			}
+			configOutSB.append("\n");
+		}
+		
+		System.out.println(configOutSB.toString());
+	}
+	
+	private String stripComments(String jsonWithComments) {
+		List<String> jsonLines = Arrays.asList(jsonWithComments.split("\n"));
+		return stripComments(jsonLines);
+	}
+	
+	private String stripComments(List<String> jsonWithComments) {
+		StringBuffer config = new StringBuffer();
+		for (String line : jsonWithComments) {
+			if (!line.matches("^\\s*//.*$")) {
+				config.append(line);
+			}
+		}
+		String json = config.toString();
 
-		System.out.println(configOut);
+		// Remove commas before closing brace (occurs as an artifact of the commenting process).
+		json = Pattern.compile(",\\s*}").matcher(json).replaceAll(" }");
+		
+		return json;
 	}
 }

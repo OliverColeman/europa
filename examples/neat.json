@@ -1,85 +1,60 @@
 {
   "configFilePath": "<no default value>",
   "saveFrequency": 1000,
-  "savePath": "europa_20160120_162402",
+  "savePath": "europa_20160126_072402",
   "numRuns": 1,
   "run": {
     "class": "com.ojcoleman.europa.core.Run",
-    "name": "europa_20160120_162402",
-    "outputDirectory": "/home/data/ai/PhD/software/europa/europa_20160120_162402",
-    "randomSeed": 1453251866395,
+    "name": "europa_20160126_072402",
+    "outputDirectory": "/home/data/ai/PhD/software/europa/europa_20160126_072402",
+    "randomSeed": 1453753442100,
     "randomClass": "java.util.Random",
     "maximumIterations": 0,
-    "parallelThreads": 8,
-    "evolver": {
-      "class": "com.ojcoleman.europa.algos.neat.NEATEvolver",
-      "relativeCloneProportion": 1.0,
-      "parentsProportion": 0.2,
-      "elitismProportion": 0.05,
-      "speciesFitnessSharing": true,
-      "mutators": [
-        {
-          "class": "com.ojcoleman.europa.mutators.DummyMutator",
-          "applyPercentageClones": 1.0,
-          "applyPercentageChildren": 0.25
-        }
-      ],
-      "recombiners": [
-        
-      ]
-    },
-    "population": {
-      "class": "com.ojcoleman.europa.populations.SimplePopulation",
-      "desiredSize": 100,
-      "individualClass": "com.ojcoleman.europa.core.Individual"
-    },
     "transcriber": {
       "class": "com.ojcoleman.europa.algos.neat.NEATTranscriber",
-      "genotype": {
-        "class": "com.ojcoleman.europa.algos.neat.NEATGenotype",
-        "genePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATGene"
+      "population": {
+        "class": "com.ojcoleman.europa.populations.SimplePopulation",
+        "desiredSize": 100,
+        "parallelThreads": 8,
+        "individualPrototype": {
+          "class": "com.ojcoleman.europa.core.Individual"
         },
-        "allelePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATAllele"
+        "evolver": {
+          "class": "com.ojcoleman.europa.core.DefaultEvolver",
+          "relativeCloneProportion": 1.0,
+          "parentsProportion": 0.2,
+          "elitismProportion": 0.05,
+          "speciesFitnessSharing": true,
+          "genotypePrototype": {
+            "class": "com.ojcoleman.europa.core.DummyGenotype"
+          },
+          "mutators": [
+            {
+              "class": "com.ojcoleman.europa.core.DummyMutator",
+              "applyPercentageClones": 1.0,
+              "applyPercentageChildren": 0.25
+            }
+          ],
+          "recombiners": [
+            
+          ]
         },
-        "neuronGenePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATNeuronGene"
-        },
-        "neuronAllelePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATNeuronAllele"
-        },
-        "synapseGenePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATSynapseGene"
-        },
-        "synapseAllelePrototype": {
-          "class": "com.ojcoleman.europa.algos.neat.NEATSynapseAllele"
-        }
-      },
-      "neuralNetwork": {
-        "class": "com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork",
-        "config": {
-          "class": "com.ojcoleman.europa.transcribers.nn.integration.BainNNConfig",
-          "neuron": "<no default value>",
-          "synapse": "<no default value>",
-          "topology": "FEED_FORWARD",
-          "simulationStepsPerStep": 5,
-          "simulationResolution": 1000,
-          "aparapiExecutionMode": "SEQ"
+        "speciator": {
+          "class": "com.ojcoleman.europa.speciators.NoSpeciation",
+          "speciesPrototype": {
+            "class": "com.ojcoleman.europa.core.Species"
+          }
         }
       }
     },
     "evaluators": [
       {
-        "class": "com.ojcoleman.europa.evaluators.DummyEvaluator",
+        "class": "com.ojcoleman.europa.core.DummyEvaluator",
         "name": "DummyEvaluator"
       }
     ],
     "ranker": {
       "class": "com.ojcoleman.europa.rankers.DefaultRanker"
-    },
-    "speciator": {
-      "class": "com.ojcoleman.europa.speciators.NoSpeciation"
     },
     "history": {
       "class": "com.ojcoleman.europa.core.History"

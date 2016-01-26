@@ -99,8 +99,8 @@ Configuration files are in JSON format. The structure of these files reflects th
           // description: "Sub-component for transcribing a genotype to a 'phenotype' function to be evaluated (these may be one and the same)."
           // optional: false
           // multiple: false
-          // defaultImplementation: "com.ojcoleman.europa.transcribers.DummyTranscriber"
-          "componentClass": "com.ojcoleman.europa.transcribers.DummyTranscriber",
+          // defaultImplementation: "com.ojcoleman.europa.core.DummyTranscriber"
+          "componentClass": "com.ojcoleman.europa.core.DummyTranscriber",
 
         },
         "evolver": {
@@ -127,8 +127,8 @@ Configuration files are in JSON format. The structure of these files reflects th
 
           // description: "The class to use for the Genotype."
           // type: "java.lang.Class"
-          // defaultValue: "com.ojcoleman.europa.genotypes.DummyGenotype"
-          "genotypeClass": "com.ojcoleman.europa.genotypes.DummyGenotype",
+          // defaultValue: "com.ojcoleman.europa.core.DummyGenotype"
+          "genotypeClass": "com.ojcoleman.europa.core.DummyGenotype",
 
           // description: "If speciation is used, whether to use fitness sharing for a species when determining the relative number of children to produce from a species."
           // type: "boolean"
@@ -141,8 +141,8 @@ Configuration files are in JSON format. The structure of these files reflects th
                 // description: "Sub-component(s) used to mutate genotypes."
                 // optional: false
                 // multiple: true
-                // defaultImplementation: "com.ojcoleman.europa.mutators.DummyMutator"
-                "componentClass": "com.ojcoleman.europa.mutators.DummyMutator",
+                // defaultImplementation: "com.ojcoleman.europa.core.DummyMutator"
+                "componentClass": "com.ojcoleman.europa.core.DummyMutator",
 
                 // description: "The percentage of children (produced by a recombiner) to apply this mutator to."
                 // type: "double"
@@ -174,8 +174,8 @@ Configuration files are in JSON format. The structure of these files reflects th
             // description: "Sub-component(s) for the fitness evaluator(s). The first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed."
             // optional: false
             // multiple: true
-            // defaultImplementation: "com.ojcoleman.europa.evaluators.DummyEvaluator"
-            "componentClass": "com.ojcoleman.europa.evaluators.DummyEvaluator",
+            // defaultImplementation: "com.ojcoleman.europa.core.DummyEvaluator"
+            "componentClass": "com.ojcoleman.europa.core.DummyEvaluator",
 
           }
         ],

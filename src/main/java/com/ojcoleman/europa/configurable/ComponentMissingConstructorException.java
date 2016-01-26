@@ -5,7 +5,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class ComponentMissingConstructorException extends RuntimeException {
+public class ComponentMissingConstructorException extends ConfigurableException {
 	public ComponentMissingConstructorException(String message) {
 		super(message);
 	}

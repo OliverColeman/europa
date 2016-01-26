@@ -22,11 +22,9 @@ import com.ojcoleman.europa.Base;
 import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.configurable.IsParameter;
 import com.ojcoleman.europa.configurable.IsComponent;
-import com.ojcoleman.europa.evaluators.DummyEvaluator;
 import com.ojcoleman.europa.populations.SimplePopulation;
 import com.ojcoleman.europa.rankers.DefaultRanker;
 import com.ojcoleman.europa.speciators.NoSpeciation;
-import com.ojcoleman.europa.transcribers.DummyTranscriber;
 
 /**
  * <p>
@@ -93,15 +91,6 @@ public class Run extends Component {
 	@IsParameter(description = "The maximum number of iterations/generations to perform. Values <= 0 indicate no limit.", defaultValue = "0")
 	protected int maximumIterations;
 
-	@IsParameter(description = "How many threads to use to transcribe and evaluate individuals simultaneously. If <= 0 given then this defaults to the number of CPU cores.", defaultValue = "0")
-	protected int parallelThreads;
-
-	@IsComponent(description = "Component for creating the initial population and new individuals from existing individuals via genetic operators.", defaultClass = DefaultEvolver.class)
-	protected Evolver evolver;
-
-	@IsComponent(description = "Component for the population of individuals.", defaultClass = SimplePopulation.class)
-	protected Population population;
-
 	@IsComponent(description = "Component for transcribing a genotype to a 'phenotype' function to be evaluated (these may be one and the same).", defaultClass = DummyTranscriber.class)
 	protected Transcriber transcriber;
 
@@ -110,9 +99,6 @@ public class Run extends Component {
 
 	@IsComponent(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
 	protected Ranker ranker;
-
-	@IsComponent(description = "Component for dividing the population into species.", defaultClass = NoSpeciation.class)
-	protected Speciator speciator;
 
 	@IsComponent(description = "Component for maintaining pertinent bits of evolution history.", defaultClass = History.class)
 	protected History history;
@@ -175,10 +161,6 @@ public class Run extends Component {
 
 		currentIteration = 0;
 
-		if (parallelThreads <= 0) {
-			parallelThreads = Runtime.getRuntime().availableProcessors();
-		}
-
 		// history = new History();
 		// evolver = new Evolver();
 	}
@@ -203,86 +185,27 @@ public class Run extends Component {
 	}
 
 	protected void mainLoop() {
+		Population<?, ?> population = transcriber.getPopulation();
+		
 		// If this is the first iteration.
 		if (currentIteration == 0) {
 			// Create initial population.
-			evolver.createPopulation(population);
+			population.generate();
 		}
-
-		// A thread pool for transcription and evaluation.
-		ExecutorService threadPool = Executors.newFixedThreadPool(parallelThreads);
-
-		// A list of transcription and evaluation tasks.
-		List<Future<?>> taskList = new ArrayList<Future<?>>();
-
-		// Pool of functions to provide to transcriber in case it can re-use them.
-		final ConcurrentLinkedDeque<Function<?, ?>> functionPool = new ConcurrentLinkedDeque<Function<?, ?>>();
-
-		// Final reference to evaluators for use in anonymous runnable class.
-		final Evaluator[] evaluators = this.evaluators;
 
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
 
-			for (final Individual individual : population.getMembers()) {
-				// Don't re-evaluate if already evaluated.
-				if (individual.isEvaluated()) {
-					continue;
-				}
-
-				Runnable runnable = new Runnable() {
-					@Override
-					public void run() {
-						Function<?, ?> functionExisting = functionPool.pollLast();
-
-						// Transcribe a function from the genotype. If there's an available function in the function
-						// pool it will be provided (otherwise null is passed).
-						Function<?, ?> function = transcriber.transcribe(individual.genotype, functionExisting);
-
-						// If we couldn't get a function from the pool, we could probably use more functions in there,
-						// so chuck it in.
-						if (functionExisting == null) {
-							functionPool.add(function);
-						}
-
-						individual.setFunction(function);
-
-						for (Evaluator evaluator : evaluators) {
-							// Allow for thread cancellation.
-							if (Thread.currentThread().isInterrupted()) {
-								return;
-							}
-
-							// Perform the evaluation(s) defined by this evaluator.
-							evaluator.evaluate(individual);
-
-							// Make sure evaluator set a result for each evaluation type it defines.
-							for (EvaluationDescription evalDesc : evaluator.getEvaluationDescriptions()) {
-								if (!individual.evaluationData.getResults().containsKey(evalDesc)) {
-									throw new RuntimeException("The evaluator " + evaluator.getClass().getName() + " did not set a result for the evaluation type \"" + evalDesc.name + "\" that it defines.");
-								}
-							}
-						}
-					}
-				};
-
-				Future<?> task = threadPool.submit(runnable);
-
-				taskList.add(task);
-			}
-
-			// Wait for them all to finish.
-			for (Future<?> task : taskList) {
-				try {
-					task.get();
-				} catch (InterruptedException e) {
-				} catch (ExecutionException e) {
-					logger.error("Error occurred in task to transcribe and evaluate individual.", e);
-					e.printStackTrace();
-					// This is almost certainly a fatal error, don't go any further.
-					return;
-				}
-			}
+			population.evaluate();
+			
+			// Produce a ranking over the population, if applicable.
+			ranker.rank(population);
+			
+			// Speciate population if applicable.
+			population.speciate();
+			
+			// Evolve population.
+			//evolver.evolvePopulation(population, );
 
 			currentIteration++;
 		}
@@ -292,20 +215,9 @@ public class Run extends Component {
 		return transcriber;
 	}
 
-	public Population getPopulation() {
-		return population;
-	}
 
 	public Ranker getRanker() {
 		return ranker;
-	}
-
-	public Speciator getSpeciator() {
-		return speciator;
-	}
-
-	public Evolver getEvolver() {
-		return evolver;
 	}
 
 	public History getHistory() {

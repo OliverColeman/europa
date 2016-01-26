@@ -48,10 +48,10 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 	@Override
 	public NEATGenotype recombine(NEATGenotype... parents) {
 		Run run = this.getParentComponent(Run.class);
-		NEATEvolver evolver = (NEATEvolver) run.getEvolver();
+		NEATEvolver evolver = this.getParentComponent(NEATEvolver.class);
 		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
 		Random random = run.random;
-		Population population = run.getPopulation();
+		Population<NEATGenotype, ?> population = this.getParentComponent(Population.class);
 
 		NEATGenotype child = null;
 

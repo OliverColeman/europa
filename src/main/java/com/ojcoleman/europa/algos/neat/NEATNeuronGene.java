@@ -16,7 +16,7 @@ import com.ojcoleman.europa.transcribers.nn.NNPart;
  */
 public class NEATNeuronGene extends NEATGene {
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NEATNeuronGene(JsonObject config) {
 		super(config);

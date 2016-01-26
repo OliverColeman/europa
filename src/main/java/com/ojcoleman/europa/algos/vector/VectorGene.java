@@ -22,7 +22,7 @@ public abstract class VectorGene extends Gene {
 	public final Vector vector;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public VectorGene(JsonObject config) {
 		super(config);

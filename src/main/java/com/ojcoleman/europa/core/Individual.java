@@ -1,5 +1,10 @@
 package com.ojcoleman.europa.core;
 
+import java.util.ArrayList;
+import java.util.Collections;
+
+import com.eclipsesource.json.JsonObject;
+import com.google.common.collect.ArrayListMultimap;
 import com.ojcoleman.europa.configurable.Prototype;
 
 /**
@@ -9,7 +14,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * 
  * @author O. J. Coleman
  */
-public class Individual<G extends Genotype<?>> extends Prototype {
+public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends Prototype {
 	/**
 	 * The genotype represented by this individual.
 	 */
@@ -28,7 +33,18 @@ public class Individual<G extends Genotype<?>> extends Prototype {
 	/**
 	 * The {@link Function} to be evaluated (transcribed from the Genotype if the Genotype is not also the Function).
 	 */
-	protected Function<?, ?> function;
+	protected F function;
+
+	
+	/**
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 */
+	public Individual(JsonObject config) {
+		super(config);
+		genotype = null;
+		evaluationData = null;
+	}
+
 
 	/**
 	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
@@ -36,7 +52,7 @@ public class Individual<G extends Genotype<?>> extends Prototype {
 	 * @param prototype The (prototype) instance to copy.
 	 * @param gene the underlying Gene for the new Allele.
 	 */
-	public Individual(Individual<G> prototype, G genotype) {
+	public Individual(Individual<G, F> prototype, G genotype) {
 		super(prototype);
 		
 		this.genotype = genotype;
@@ -60,7 +76,7 @@ public class Individual<G extends Genotype<?>> extends Prototype {
 	/**
 	 * Sets the function transcribed from the genotype of this individual.
 	 */
-	public void setFunction(Function<?, ?> function) {
+	public void setFunction(F function) {
 		this.function = function;
 	}
 
@@ -74,7 +90,7 @@ public class Individual<G extends Genotype<?>> extends Prototype {
 	}
 
 	/**
-	 * Sets the rank of this individual within the {@link Population}. Generally speaking only a {@link Ranker} should
+	 * Sets the rank of this individual within the {@link Population}. Generally only a {@link Ranker} should
 	 * call this.
 	 */
 	public void setRank(double rank) {

@@ -6,7 +6,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class ComponentConstructorException extends RuntimeException {
+public class ComponentConstructorException extends ConfigurableException {
 	public ComponentConstructorException(String message) {
 		super(message);
 	}

@@ -19,7 +19,7 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	public final long id;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NEATGene(JsonObject config) {
 		super(config);

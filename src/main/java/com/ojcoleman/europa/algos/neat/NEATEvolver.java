@@ -25,7 +25,7 @@ import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
  * 
  * @author O. J. Coleman
  */
-public class NEATEvolver extends DefaultEvolver {
+public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 	// Central store mapping all innovation ID/gene parameter pairs to genes.
 	// private Table<Long, Vector, NEATGene> innovationIDToGene;
 

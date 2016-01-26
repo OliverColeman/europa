@@ -11,7 +11,7 @@ import com.ojcoleman.europa.configurable.IsParameter;
  * each species if applicable, and produces new members via recombination and/or cloning and mutation to replace the
  * current members. If elitism is used, some number of members may be maintained to the next generation unchanged.
  */
-public class DefaultEvolver extends Evolver {
+public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 	@IsParameter(description = "The proportion of parents to select from the population or each species, used to generate new genotypes.", defaultValue = "0.2", minimumValue = "0", maximumValue = "1")
 	double parentsProportion;
 
@@ -28,7 +28,10 @@ public class DefaultEvolver extends Evolver {
 		super(parentComponent, componentConfig);
 	}
 
+
 	@Override
-	public void evolvePopulation(Population pop, List<List<Individual>> species) {
+	public void evolve(Population<G, ?> population) {
+		// TODO Auto-generated method stub
+		
 	}
 }

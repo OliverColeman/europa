@@ -9,6 +9,7 @@ import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
@@ -18,8 +19,8 @@ import com.ojcoleman.europa.core.Population;
  * 
  * @author O. J. Coleman
  */
-public class SimplePopulation extends Population {
-	private final Map<Long, Individual<?>> members;
+public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> extends Population<G, F> {
+	private final Map<Long, Individual<G, F>> members;
 
 	/**
 	 * Constructor for {@link Component}.
@@ -30,21 +31,21 @@ public class SimplePopulation extends Population {
 	}
 
 	@Override
-	public Collection<Individual<?>> getMembers() {
+	public Collection<Individual<G, F>> getMembers() {
 		return Collections.unmodifiableCollection(members.values());
 	}
 
 	@Override
-	public void addIndividual(Individual<?> individual) {
+	public void addIndividual(Individual<G, F> individual) {
 		members.put(individual.genotype.id, individual);
 	}
 
 	@Override
-	public void removeIndividual(Individual<?> individual) {
+	public void removeIndividual(Individual<G, F> individual) {
 		members.remove(individual);
 	}
 
-	public Individual<?> getIndividual(long genotypeID) {
+	public Individual<G, F> getIndividual(long genotypeID) {
 		return members.get(genotypeID);
 	}
 }

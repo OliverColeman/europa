@@ -1,10 +1,7 @@
-package com.ojcoleman.europa.transcribers;
+package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.core.Function;
-import com.ojcoleman.europa.core.Genotype;
-import com.ojcoleman.europa.core.Transcriber;
 
 /**
  * Dummy evaluator used for printing configuration options.

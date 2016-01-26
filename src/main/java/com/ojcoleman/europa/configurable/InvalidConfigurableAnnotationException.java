@@ -5,7 +5,7 @@ package com.ojcoleman.europa.configurable;
  * 
  * @author O. J. Coleman
  */
-public class InvalidConfigurableAnnotationException extends RuntimeException {
+public class InvalidConfigurableAnnotationException extends ConfigurableException {
 	public InvalidConfigurableAnnotationException(String message) {
 		super(message);
 	}

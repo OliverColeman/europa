@@ -1,13 +1,10 @@
-package com.ojcoleman.europa.genotypes;
+package com.ojcoleman.europa.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Prototype;
-import com.ojcoleman.europa.core.Allele;
-import com.ojcoleman.europa.core.Gene;
-import com.ojcoleman.europa.core.Genotype;
 
 /**
  * Dummy genotype used for printing configuration options.
@@ -16,7 +13,7 @@ import com.ojcoleman.europa.core.Genotype;
  */
 public class DummyGenotype extends Genotype<Allele<?>> {
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public DummyGenotype(JsonObject config) {
 		super(config);

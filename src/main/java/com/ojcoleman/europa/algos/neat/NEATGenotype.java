@@ -59,7 +59,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	SortedMap<Long, NEATSynapseAllele> synapses;
 
 	/**
-	 * IsPrototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
 	 */
 	public NEATGenotype(JsonObject config) {
 		super(config);
