@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates that the element values for an {@link @IsParameter} annotation are invalid.
+ * Indicates that the element values for an {@link @Parameter} annotation are invalid.
  * 
  * @author O. J. Coleman
  */

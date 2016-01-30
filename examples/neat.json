@@ -39,7 +39,10 @@
             
           ]
         },
-        "speciator": {
+        "ranker": {
+	      "class": "com.ojcoleman.europa.rankers.DefaultRanker"
+	    },
+	    "speciator": {
           "class": "com.ojcoleman.europa.speciators.NoSpeciation",
           "speciesPrototype": {
             "class": "com.ojcoleman.europa.core.Species"
@@ -53,9 +56,6 @@
         "name": "DummyEvaluator"
       }
     ],
-    "ranker": {
-      "class": "com.ojcoleman.europa.rankers.DefaultRanker"
-    },
     "history": {
       "class": "com.ojcoleman.europa.core.History"
     }

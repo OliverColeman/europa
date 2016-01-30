@@ -2,7 +2,8 @@ package com.ojcoleman.europa.algos.neat;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
@@ -24,16 +25,16 @@ public class NEATSynapseGene extends NEATGene {
 	public final long destinationID;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public NEATSynapseGene(JsonObject config) {
+	public NEATSynapseGene(Configuration config) {
 		super(config);
 		sourceID = -1;
 		destinationID = -1;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are initialised
 	 * with random values.
 	 * 

@@ -2,7 +2,7 @@ package com.ojcoleman.europa.configurable;
 
 /**
  * Indicates that an exception occurred in the constructor of an object being instantiated by
- * {@link Component#newInstance(Class, Object...)}.
+ * {@link ComponentBase#newInstance(Class, Object...)}.
  * 
  * @author O. J. Coleman
  */

@@ -10,8 +10,9 @@ import java.util.Set;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
@@ -35,16 +36,16 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 		ANY
 	}
 
-	@IsParameter(description = "Specifies the type of limit on how many synapses may be added. May be 'fixed' (a fixed maximum number synapse may be added) or 'any' (synapses may be added anywhere a synapse can exist).", defaultValue = "fixed")
+	@Parameter(description = "Specifies the type of limit on how many synapses may be added. May be 'fixed' (a fixed maximum number synapse may be added) or 'any' (synapses may be added anywhere a synapse can exist).", defaultValue = "fixed")
 	protected Type type;
 
-	@IsParameter(description = "If type is set to 'fixed', specifies the maximum number of synapses that may be added.", defaultValue = "1", minimumValue = "1")
+	@Parameter(description = "If type is set to 'fixed', specifies the maximum number of synapses that may be added.", defaultValue = "1", minimumValue = "1")
 	protected int fixedMaximum;
 
-	@IsParameter(description = "For each synapse that may be added, specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
+	@Parameter(description = "For each synapse that may be added, specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
 	protected double applyRate;
 
-	public NEATSynapseAddMutator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATSynapseAddMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

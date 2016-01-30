@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates an invalid configuration for a field annotated with {@link IsParameter}, {@link IsConfigurable}, {@link IsPrototype} or {@link IsComponent}.
+ * Indicates an invalid configuration for a field annotated with {@link Parameter}, {@link Configurable}, {@link Prototype} or {@link Component}.
  * 
  * @author O. J. Coleman
  */

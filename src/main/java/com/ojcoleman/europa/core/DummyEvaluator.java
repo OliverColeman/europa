@@ -4,7 +4,8 @@ import java.util.Collection;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 
 /**
  * Dummy evaluator used for printing configuration options.
@@ -13,9 +14,9 @@ import com.ojcoleman.europa.configurable.Component;
  */
 public class DummyEvaluator extends Evaluator {
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public DummyEvaluator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyEvaluator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

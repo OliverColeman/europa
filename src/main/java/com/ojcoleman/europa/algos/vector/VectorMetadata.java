@@ -12,10 +12,12 @@ import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonObject.Member;
 import com.google.common.collect.BiMap;
+import com.ojcoleman.europa.configurable.ConfigurableBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.DefaultIDFactory;
 import com.ojcoleman.europa.configurable.Configurable;
-import com.ojcoleman.europa.configurable.IsConfigurable;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.util.Interval;
 import com.ojcoleman.europa.util.IntervalDouble;
 import com.ojcoleman.europa.util.IntervalLong;
@@ -25,16 +27,16 @@ import com.ojcoleman.europa.util.IntervalLong;
  * 
  * @author O. J. Coleman
  */
-public class VectorMetadata extends Configurable {
+public class VectorMetadata extends ConfigurableBase {
 	/**
 	 * Metadata for an empty (zero length/size) vector.
 	 */
-	public final static VectorMetadata EMPTY = new VectorMetadata(Json.parse("{\"elements\":[]}").asObject());
+	public final static VectorMetadata EMPTY = new VectorMetadata(new Configuration(Json.parse("{\"elements\":[]}").asObject(), false, new DefaultIDFactory()));
 
-	@IsConfigurable(description = "The default meta-data for the elements of the Vector.")
+	@Configurable(description = "The default meta-data for the elements of the Vector.")
 	protected ElementDefaults elementDefaults;
 
-	@IsConfigurable(description = "The meta-data for each element of the Vector.")
+	@Configurable(description = "The meta-data for each element of the Vector.")
 	protected Element[] elements;
 
 	private Map<String, Element> labelMap;
@@ -56,7 +58,7 @@ public class VectorMetadata extends Configurable {
 	 * optional, as is any of the keys within the defaults. If, for a given parameter, no value is specified for the
 	 * "min, "max" or "int" keys either explicitly or in the defaults then 0, 1 or false are used respectively.
 	 */
-	public VectorMetadata(JsonObject config) {
+	public VectorMetadata(Configuration config) {
 		super(config);
 		
 		// Set default bounds if necessary.
@@ -74,7 +76,7 @@ public class VectorMetadata extends Configurable {
 			labelMap.put(elements[i].label, elements[i]);
 		}
 	}
-
+	
 
 	/**
 	 * Returns the size of the vector(s) this VectorMetadata is intended to contain information about.
@@ -134,14 +136,14 @@ public class VectorMetadata extends Configurable {
 	/**
 	 * Stores meta-data for the default settings for the Elements of a Vector.
 	 */
-	public static class ElementDefaults extends Configurable {
-		@IsParameter(description = "The lower bound for this Vector Element, inclusive.", optional = true)
+	public static class ElementDefaults extends ConfigurableBase {
+		@Parameter(description = "The lower bound for this Vector Element, inclusive.", optional = true)
 		protected double min = Double.NaN;
 
-		@IsParameter(description = "The upper bound for this Vector Element, inclusive.", optional = true)
+		@Parameter(description = "The upper bound for this Vector Element, inclusive.", optional = true)
 		protected double max = Double.NaN;
 
-		@IsParameter(description = "Indicates if this Vector Element stores an integer value.", optional = true)
+		@Parameter(description = "Indicates if this Vector Element stores an integer value.", optional = true)
 		protected boolean isInteger;
 
 		/**
@@ -149,7 +151,7 @@ public class VectorMetadata extends Configurable {
 		 */
 		protected Interval<?> bounds;
 
-		public ElementDefaults(JsonObject config) {
+		public ElementDefaults(Configuration config) {
 			super(config);
 		}
 		
@@ -182,10 +184,10 @@ public class VectorMetadata extends Configurable {
 	 * Stores meta-data for a Vector element.
 	 */
 	public static class Element extends ElementDefaults {
-		@IsParameter(description = "The label for this Vector Element.", optional = true)
+		@Parameter(description = "The label for this Vector Element.", optional = true)
 		protected String label;
 
-		public Element(JsonObject config) {
+		public Element(Configuration config) {
 			super(config);
 		}
 

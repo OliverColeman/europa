@@ -1,7 +1,8 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 
 /**
  * Dummy mutator used for printing configuration options.
@@ -10,7 +11,7 @@ import com.ojcoleman.europa.configurable.Component;
  */
 public class DummyMutator extends Mutator {
 
-	public DummyMutator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public DummyMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

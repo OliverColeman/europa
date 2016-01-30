@@ -2,7 +2,10 @@ package com.ojcoleman.europa.core;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
@@ -15,11 +18,16 @@ import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Observable;
+import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsComponent;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.rankers.DefaultRanker;
 import com.ojcoleman.europa.speciators.NoSpeciation;
 
 /**
@@ -27,52 +35,66 @@ import com.ojcoleman.europa.speciators.NoSpeciation;
  * 
  * @author O. J. Coleman
  */
-public abstract class Population <G extends Genotype<?>, F extends Function<?, ?>> extends Component {
+public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase implements Observer {
 	private final Logger logger = LoggerFactory.getLogger(Population.class);
 
-	
-	@IsParameter(description = "The desired population size.", defaultValue = "100", minimumValue = "1")
+	@Parameter(description = "The desired population size.", defaultValue = "100", minimumValue = "1")
 	protected int desiredSize;
-	
-	@IsParameter(description = "How many threads to use to transcribe and evaluate individuals simultaneously. If <= 0 given then this defaults to the number of CPU cores.", defaultValue = "0")
+
+	@Parameter(description = "How many threads to use to transcribe and evaluate individuals simultaneously. If <= 0 given then this defaults to the number of CPU cores.", defaultValue = "0")
 	protected int parallelThreads;
 
-	
-	@IsPrototype (description="The configuration for the prototype Indivudual.", defaultClass=Individual.class)
+	@Prototype(description = "The configuration for the prototype Individual.", defaultClass = Individual.class)
 	protected Individual<G, F> individualPrototype;
-	
-	@IsComponent(description = "Component for creating the initial population and new individuals from existing individuals via genetic operators.", defaultClass = DefaultEvolver.class)
-	protected Evolver<G> evolver;
-	
-	@IsComponent(description = "Optional component for speciating the population.", defaultClass = NoSpeciation.class)
+
+	@Component(description = "Component for creating the initial population and new individuals from existing individuals via genetic operators.", defaultClass = DefaultEvolver.class)
+	protected Evolver<G, F> evolver;
+
+	@Component(description = "Optional component for speciating the population.", defaultClass = NoSpeciation.class)
 	protected Speciator<G, F> speciator;
+
+	@Component(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
+	protected Ranker<G, F> ranker;
+
 	
-	
-	protected ArrayListMultimap<Species<G, F>, Individual<G, F>> speciesMap;
-	
+	/**
+	 * List of Species associated with this population, in order of oldest to newest.
+	 */
+	protected List<Species<G, F>> species;
+
 	
 	// A thread pool for transcription and evaluation.
 	private ExecutorService threadPool;
-	
+
 	// Pool of functions to provide to transcriber in case it can re-use them.
 	private final ConcurrentLinkedDeque<F> functionPool;
-	
-	
+
+	// Final reference to evaluators and transcriber for use in anonymous runnable class.
+	final Evaluator[] evaluators;
+	final Transcriber<G, F> transcriber;
+
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Population(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Population(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		if (parallelThreads <= 0) {
 			parallelThreads = Runtime.getRuntime().availableProcessors();
 		}
-		
+
 		threadPool = Executors.newFixedThreadPool(parallelThreads);
-		
+
 		functionPool = new ConcurrentLinkedDeque<>();
+
+		species = new LinkedList<>();
+
+		Run run = this.getParentComponent(Run.class);
+		transcriber = this.getParentComponent(Transcriber.class);
+		evaluators = run.getEvaluators();
 		
-		speciesMap = ArrayListMultimap.create();
+		// We listen for iteration complete events so we can update age of Species.
+		run.addEventListener(this);
 	}
 
 	/**
@@ -83,6 +105,12 @@ public abstract class Population <G extends Genotype<?>, F extends Function<?, ?
 	public int getDesiredSize() {
 		return desiredSize;
 	}
+	
+
+	/**
+	 * Return the number of individuals in this Population.
+	 */
+	public abstract int size();
 
 	/**
 	 * Should return all the members of this population.
@@ -93,11 +121,16 @@ public abstract class Population <G extends Genotype<?>, F extends Function<?, ?
 	 * Add the given Individual to this population.
 	 */
 	public abstract void addIndividual(Individual<G, F> individual);
-
+	
 	/**
-	 * Remove the given Individual from this population.
+	 * Remove the given Individual from this population. Overriding methods should call this method.
 	 */
-	public abstract void removeIndividual(Individual<G, F> individual);
+	public void removeIndividual(Individual<G, F> individual) {
+		if (individual.species != null) {
+			// Remove the individual from its species (this also clears the Individual.species field).
+			individual.species.removeMember(individual);
+		}
+	}
 
 	/**
 	 * Returns the individual with the given {@link Genotype#id}.
@@ -107,19 +140,18 @@ public abstract class Population <G extends Genotype<?>, F extends Function<?, ?
 	/**
 	 * Add the given genotype as an Individual to this population.
 	 * 
-	 * @param genotypeAndOptionalArgs The first argument should be the {@link Genotype} of the
-	 *            {@link Individual} to add. If a custom class has been set for {@link #individualPrototype} then more
-	 *            arguments can be supplied that match the constructor of that class.
+	 * @param genotypeAndOptionalArgs The first argument should be the {@link Genotype} of the {@link Individual} to
+	 *            add. If a custom class has been set for {@link #individualPrototype} then more arguments can be
+	 *            supplied that match the constructor of that class.
 	 */
 	public void addGenotype(Object... genotypeAndOptionalArgs) {
 		Individual<G, F> individual = individualPrototype.newInstance(genotypeAndOptionalArgs);
 		this.addIndividual(individual);
 	}
-	
-	
+
 	/**
-	 * Generates and adds {@link Individual}s to this Population. {@link Population#getDesiredSize()} individuals will be
-	 * added. A seed Genotype is generated with {@link Transcriber#getTemplateGenotype()}, and the genetic material 
+	 * Generates and adds {@link Individual}s to this Population. {@link Population#getDesiredSize()} individuals will
+	 * be added. A seed Genotype is generated with {@link Transcriber#getTemplateGenotype()}, and the genetic material
 	 * for each individual is created by running {@link Evolver#mutateGenotype(Genotype, boolean)} on the seed Genotype.
 	 */
 	public void generate() {
@@ -130,111 +162,115 @@ public abstract class Population <G extends Genotype<?>, F extends Function<?, ?
 		addGenotype(seed);
 
 		for (int i = 0; i < getDesiredSize() - 1; i++) {
-			G g = seed.newInstance(run.getNextID(), seed.alleles, seed);
+			G g = seed.newInstance(seed.alleles, seed);
 			evolver.mutateGenotype(g, true);
 			addGenotype(g);
 		}
 	}
-	
+
+	/**
+	 * <p>
+	 * Evaluate all the individuals in this Population with the Evaluators in {@link Run#evaluators}. Prior to
+	 * evaluation an Individual will be {@link Transcriber#transcribe(Genotype, Function)}d.
+	 * </p>
+	 * <p>
+	 * Individuals are transcribed and evaluated in parallel using {@link #parallelThreads} threads.
+	 * </p>
+	 */
 	public void evaluate() {
-		// A list of transcription and evaluation tasks.
-		List<Future<?>> taskList = new ArrayList<Future<?>>();
+		// Evaluate each member.
+		this.getParentComponent(Run.class).parallel.foreach(getMembers(), new Parallel.Operation<Individual<G, F>>() {
+			public void perform(Individual<G, F> individual) {
+				// Don't re-evaluate if already evaluated.
+				if (individual.isEvaluated()) {
+					return;
+				}
+				
+				F functionExisting = functionPool.pollLast();
 	
-		final Transcriber<G, F> transcriber = this.getParentComponent(Transcriber.class);
-		
-		// Final reference to evaluators for use in anonymous runnable class.
-		final Evaluator[] evaluators = this.getParentComponent(Run.class).getEvaluators();
-
-		for (final Individual<G, F> individual : getMembers()) {
-			// Don't re-evaluate if already evaluated.
-			if (individual.isEvaluated()) {
-				continue;
-			}
-
-			Runnable runnable = new Runnable() {
-				@Override
-				public void run() {
-					F functionExisting = functionPool.pollLast();
-
-					// Transcribe a function from the genotype. If there's an available function in the function
-					// pool it will be provided (otherwise null is passed).
-					F function = transcriber.transcribe(individual.genotype, functionExisting);
-					
-					// If we couldn't get a function from the pool, we could probably use more functions in there,
-					// so chuck it in.
-					if (functionExisting == null) {
-						functionPool.add(function);
+				// Transcribe a function from the genotype. If there's an available function in the function
+				// pool it will be provided (otherwise null is passed).
+				F function = transcriber.transcribe(individual.genotype, functionExisting);
+	
+				// If we couldn't get a function from the pool, we could probably use more functions in there,
+				// so chuck it in.
+				if (functionExisting == null) {
+					functionPool.add(function);
+				}
+	
+				for (Evaluator evaluator : evaluators) {
+					// Allow for thread cancellation.
+					if (Thread.currentThread().isInterrupted()) {
+						return;
 					}
-
-					for (Evaluator evaluator : evaluators) {
-						// Allow for thread cancellation.
-						if (Thread.currentThread().isInterrupted()) {
-							return;
-						}
-
-						// Perform the evaluation(s) defined by this evaluator.
-						evaluator.evaluate(individual);
-
-						// Make sure evaluator set a result for each evaluation type it defines.
-						for (EvaluationDescription evalDesc : evaluator.getEvaluationDescriptions()) {
-							if (!individual.evaluationData.getResults().containsKey(evalDesc)) {
-								throw new RuntimeException("The evaluator " + evaluator.getClass().getName() + " did not set a result for the evaluation type \"" + evalDesc.name + "\" that it defines.");
-							}
+	
+					// Perform the evaluation(s) defined by this evaluator.
+					evaluator.evaluate(individual);
+	
+					// Make sure evaluator set a result for each evaluation type it defines.
+					for (EvaluationDescription evalDesc : evaluator.getEvaluationDescriptions()) {
+						if (!individual.evaluationData.getResults().containsKey(evalDesc)) {
+							throw new RuntimeException("The evaluator " + evaluator.getClass().getName() + " did not set a result for the evaluation type \"" + evalDesc.name + "\" that it defines.");
 						}
 					}
 				}
-			};
-
-			Future<?> task = threadPool.submit(runnable);
-
-			taskList.add(task);
-		}
-
-		// Wait for all transcription and evaluation tasks to finish.
-		for (Future<?> task : taskList) {
-			try {
-				task.get();
-			} catch (InterruptedException e) {
-			} catch (ExecutionException e) {
-				logger.error("Error occurred in task to transcribe and evaluate individual.", e);
-				e.printStackTrace();
-				// This is almost certainly a fatal error, don't go any further.
-				return;
 			}
-		}
-	}
-	
-	
-	public void evolve() {
-		evolver.evolve(this);
+		});
 	}
 
 	
 	/**
 	 * Returns the Evolver that is used to create new genetic material for this population based on existing members.
 	 */
-	public Evolver<G> getEvoler() {
+	public Evolver<G, F> getEvoler() {
 		return evolver;
 	}
 
+	
 	/**
-	 * Speciates this population with {@link Speciator#speciate(Population, ArrayListMultimap)}.
+	 * Produces a ranking over this population with {@link Ranker#rank(Population)}.
+	 * @see Individual#getRank()
+	 */
+	public void rank() {
+		ranker.rank(this);
+	}
+
+	
+	/**
+	 * Speciates this population with {@link Speciator#speciate(Population, List<Species<G, F>>}.
+	 * {@link #getSpecies()} and {@link #getSpeciesMembers(Species)} may be called subsequently.
 	 */
 	public void speciate() {
-		speciesMap = speciator.speciate(this, speciesMap);
+		speciator.speciate(this, species);
 	}
 	
-	/**
-	 * Returns the Set of Species in this Population.
-	 */
-	public Set<Species<G, F>> getSpecies() {
-		return speciesMap.keySet();
-	}
 	
 	/**
-	 * Get the Individuals associated with the specified Species.
+	 * Performs an evolutionary iteration/generation with {@link Evolver#evolve(Population)}.
+	 * In a generational algorithm this will typically replace the "least fit" members of the population with
+	 * new members based on genetic material from the "most fit". 
 	 */
-	public List<Individual<G, F>> getSpeciesMembers(Species<G, F> species) {
-		return speciesMap.get(species);
+	public void evolve() {
+		evolver.evolve(this);
+	}
+	
+	
+	/**
+	 * Returns the Species in this Population.
+	 */
+	public List<Species<G, F>> getSpecies() {
+		return Collections.unmodifiableList(species);
+	}
+
+	
+	@Override
+	public void eventOccurred(Observable observed, Object event) {
+		if (observed instanceof Run) {
+			if (event == Run.Event.IterationComplete) {
+				for (Species<G, F> species : getSpecies()) {
+					species.incrementAge();
+				}
+			}
+		}
 	}
 }

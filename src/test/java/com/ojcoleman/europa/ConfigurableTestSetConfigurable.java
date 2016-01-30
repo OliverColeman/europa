@@ -5,14 +5,16 @@ import org.testng.Assert;
 
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
+import com.ojcoleman.europa.configurable.ConfigurableBase;
+import com.ojcoleman.europa.configurable.ConfigurableMissingConfigurationConstructorException;
 import com.ojcoleman.europa.configurable.Configurable;
-import com.ojcoleman.europa.configurable.IsConfigurable;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.configurable.PrototypeMissingCopyConstructorException;
 import com.ojcoleman.europa.configurable.PrototypeMissingCopyMethodException;
-import com.ojcoleman.europa.configurable.ConfigurableMissingJsonObjectConstructorException;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.DefaultIDFactory;
 
 public class ConfigurableTestSetConfigurable {
 	@Test
@@ -21,7 +23,7 @@ public class ConfigurableTestSetConfigurable {
 		json.add("customConfigurableParam", Json.parse("{\"intVal\":1,\"stringVal\":\"two\"}"));
 		json.add("customPrototypeParam", Json.parse("{\"intVal\":31,\"stringVal\":\"thirty seven\"}"));
 		
-		TestConfigurable cc = new TestConfigurable(json);
+		TestConfigurable cc = new TestConfigurable(new Configuration(json, false, new DefaultIDFactory()));
 		
 		Assert.assertEquals(cc.customConfigurableParam.intVal, 1);
 		Assert.assertEquals(cc.customConfigurableParam.stringVal, "two");
@@ -48,9 +50,9 @@ public class ConfigurableTestSetConfigurable {
 
 		try {
 			proto.newInstance(1); // No constructor accepting (CustomPrototype, int).
-			Assert.fail("IsPrototype class with no matching constructor for parameters given for newInstance but no exception thrown.");
+			Assert.fail("Prototype class with no matching constructor for parameters given for newInstance but no exception thrown.");
 		} catch (Exception ex) {
-			Assert.assertEquals(ex.getClass(), IllegalArgumentException.class, "IsPrototype class with no matching constructor for parameters given for newInstance but wrong exception thrown.");
+			Assert.assertEquals(ex.getClass(), IllegalArgumentException.class, "Prototype class with no matching constructor for parameters given for newInstance but wrong exception thrown.");
 		}
 	}
 
@@ -60,51 +62,51 @@ public class ConfigurableTestSetConfigurable {
 		JsonObject json = new JsonObject();
 		json.add("customPrototypeParam", Json.parse("{\"intVal\":31,\"stringVal\":\"thirty seven\"}"));
 
-		TestConfigurable cc = new TestConfigurable(json);
+		TestConfigurable cc = new TestConfigurable(new Configuration(json, false, new DefaultIDFactory()));
 		
 		Object singleton = cc.getSingleton(CustomClass.class);
 		Object singleton2 = cc.getSingleton(CustomClass.class);
 
-		Assert.assertTrue(singleton == singleton2, "Singleton instances from separate calls to Configurable.getSingleton did not provide same object.");
+		Assert.assertTrue(singleton == singleton2, "Singleton instances from separate calls to ConfigurableBase.getSingleton did not provide same object.");
 	}
 
 	
 	@Test
 	public void missingJsonObjectConstructor() {
 		try {
-			new TestConfigurablePrototypeMissingJsonObjectConstructor(null);
-			Assert.fail("Configurable containing IsPrototype class with missing JsonObject constructor but no exception thrown.");
+			new TestConfigurablePrototypeMissingConfigurationConstructor(new Configuration(new JsonObject(), false, new DefaultIDFactory()));
+			Assert.fail("ConfigurableBase containing Prototype class with missing JsonObject constructor but no exception thrown.");
 		} catch (Exception ex) {
-			Assert.assertEquals(ex.getClass(), ConfigurableMissingJsonObjectConstructorException.class, "Configurable containing IsPrototype class with missing JsonObject constructor but wrong exception thrown.");
+			Assert.assertEquals(ex.getCause().getClass(), ConfigurableMissingConfigurationConstructorException.class, "ConfigurableBase containing PrototypeBase class with missing Configuration constructor but wrong exception thrown.");
 		}
 	}
 
 	
-	static public class TestConfigurable extends Configurable {
-		@IsConfigurable(description = "Test prototype parameter.")
+	static public class TestConfigurable extends ConfigurableBase {
+		@Configurable(description = "Test prototype parameter.")
 		CustomConfigurable customConfigurableParam;
 
-		@IsPrototype(description = "Test prototype parameter.")
+		@Prototype(description = "Test prototype parameter.")
 		CustomPrototype customPrototypeParam;
 
-		public TestConfigurable(JsonObject config) throws Exception {
+		public TestConfigurable(Configuration config) throws Exception {
 			super(config);
 		}
 	}
 	
 	
-	static public class CustomConfigurable extends Configurable {
-		@IsParameter(description = "Test int param.", defaultValue="-123")
+	static public class CustomConfigurable extends ConfigurableBase {
+		@Parameter(description = "Test int param.", defaultValue="-123")
 		int intVal;
-		@IsParameter(description = "Test String param.", defaultValue="Elephant")
+		@Parameter(description = "Test String param.", defaultValue="Elephant")
 		String stringVal;
 
-		public CustomConfigurable(JsonObject config) throws Exception {
+		public CustomConfigurable(Configuration config) throws Exception {
 			super(config);
 		}
 
 		public CustomConfigurable(Integer intVal, String stringVal) throws Exception {
-			super((JsonObject) null);
+			super(new Configuration(new JsonObject(), false, new DefaultIDFactory()));
 			this.intVal = intVal;
 			this.stringVal = stringVal;
 		}
@@ -119,18 +121,18 @@ public class ConfigurableTestSetConfigurable {
 	}
 
 	
-	static public class CustomPrototype extends Prototype {
-		@IsParameter(description = "Test int param.")
+	static public class CustomPrototype extends PrototypeBase {
+		@Parameter(description = "Test int param.", defaultValue="-1")
 		int intVal;
-		@IsParameter(description = "Test String param.")
+		@Parameter(description = "Test String param.", defaultValue="blah")
 		String stringVal;
 
-		public CustomPrototype(JsonObject config) throws Exception {
+		public CustomPrototype(Configuration config) throws Exception {
 			super(config);
 		}
 
 		public CustomPrototype(Integer intVal, String stringVal) throws Exception {
-			super((JsonObject) null);
+			super(new Configuration(new JsonObject(), false, new DefaultIDFactory()));
 			this.intVal = intVal;
 			this.stringVal = stringVal;
 		}
@@ -163,18 +165,18 @@ public class ConfigurableTestSetConfigurable {
 	}
 
 	
-	static public class TestConfigurablePrototypeMissingJsonObjectConstructor extends Configurable {
-		@IsPrototype(description = "Test prototype parameter.")
-		PrototypeMissingJsonObjectConstructor prototype;
+	static public class TestConfigurablePrototypeMissingConfigurationConstructor extends ConfigurableBase {
+		@Prototype(description = "Test prototype parameter.")
+		PrototypeMissingConfigurationConstructor prototype;
 
-		public TestConfigurablePrototypeMissingJsonObjectConstructor(JsonObject config) throws Exception {
+		public TestConfigurablePrototypeMissingConfigurationConstructor(Configuration config) throws Exception {
 			super(config);
 		}
 	}
 
 	
-	static public class PrototypeMissingJsonObjectConstructor extends Prototype {
-		public PrototypeMissingJsonObjectConstructor(PrototypeMissingJsonObjectConstructor prototype) {
+	static public class PrototypeMissingConfigurationConstructor extends PrototypeBase {
+		public PrototypeMissingConfigurationConstructor(PrototypeMissingConfigurationConstructor prototype) {
 			super(prototype);
 		}
 	}

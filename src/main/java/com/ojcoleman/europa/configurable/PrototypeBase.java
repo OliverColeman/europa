@@ -18,13 +18,13 @@ import com.ojcoleman.europa.core.Allele;
  * <a href="http://vyazelenko.com/2013/10/30/clone-vs-copy-constructor-a-closer-look/">this</a>). However a good
  * argument can be made that <a href="http://www.artima.com/intv/bloch13.html">Java's clone should be avoided</a>.
  * Additionally the clone approach is less flexible than the copy constructor approach, for example setting the value of
- * final fields to a new value in the copy is impossible. Thus IsPrototype employs the copy constructor approach to create
+ * final fields to a new value in the copy is impossible. Thus Prototype employs the copy constructor approach to create
  * new instances.
  * </p>
  * <p>
- * Because IsPrototype extends {@link Configurable}, if a IsPrototype class contains fields with {@link IsParameter}
+ * Because Prototype extends {@link ConfigurableBase}, if a Prototype class contains fields with {@link Parameter}
  * annotations then the values for those fields will be automatically set from the values supplied in the JsonObject
- * when the IsPrototype is instantiated. This is described in more detail in the class documentation for Configurable.
+ * when the Prototype is instantiated. This is described in more detail in the class documentation for ConfigurableBase.
  * </p>
  * <p>
  * One or more copy constructors must be implemented, optionally accepting additional parameters besides the prototype
@@ -33,9 +33,9 @@ import com.ojcoleman.europa.core.Allele;
  * {@link Allele#gene} field (which is final and so could not be set after instantiating the copy instance).
  * </p>
  * <p>
- * New instances of prototypes may be created with {@link #newInstance(Object...)}, or if defined by {@link IsParameter}
- * fields in {@link Configurable}s (including {@link Component} and IsPrototype itself) with
- * {@link Configurable#newPrototypeInstance(Class, Object...)}.
+ * New instances of prototypes may be created with {@link #newInstance(Object...)}, or if defined by {@link Prototype}
+ * fields in {@link ConfigurableBase}s (including {@link ComponentBase} and Prototype itself) with
+ * {@link ConfigurableBase#newPrototypeInstance(Class, Object...)}.
  * </p>
  * <p>
  * All sub-classes must:
@@ -46,7 +46,7 @@ import com.ojcoleman.europa.core.Allele;
  * to copy.</li>
  * </ul>
  * Example: <code>
-    public Allele(JsonObject config) {
+    public Allele(Configuration config) {
 		super(config);
 	}
 	public Allele(Allele<G> allele, Gene gene) {
@@ -72,23 +72,24 @@ import com.ojcoleman.europa.core.Allele;
  * 
  * @author O. J. Coleman
  */
-public abstract class Prototype extends Configurable {
+public abstract class PrototypeBase extends ConfigurableBase {
 	/**
-	 * Cache for Prototype constructors for {@link #newInstance(Object...)}.
+	 * Cache for PrototypeBase constructors for {@link #newInstance(Object...)}.
 	 */
-	private Map<String, Constructor<? extends Prototype>> prototypeConstructors;
-
+	private Map<String, Constructor<? extends PrototypeBase>> prototypeConstructors;
+	
+	
 	/**
 	 * Constructor to initialise the prototype object from which all other instances should be copied. Sub-classes must
 	 * implement a constructor accepting the same parameters and call <code>super(config)</code>. <strong>Overriding
 	 * implementations of this constructor should return after calling super() if <em>null</em> is provided</strong>
 	 * (null is used to create dummy instances when printing the available default configuration options).
 	 * 
-	 * @param config The configuration for this Configurable.
+	 * @param config The configuration for this ConfigurableBase.
 	 */
-	public Prototype(JsonObject config) {
+	public PrototypeBase(Configuration config) {
 		super(config);
-
+		
 		prototypeConstructors = new HashMap<>();
 	}
 
@@ -103,9 +104,9 @@ public abstract class Prototype extends Configurable {
 	 * being deep copied, for example if the class references objects which should be shared with other instances.
 	 * </p>
 	 */
-	public Prototype(Prototype prototype) {
+	public PrototypeBase(PrototypeBase prototype) {
 		super(prototype);
-
+		
 		// Copy the prototype constructor cache by reference since it's for the same prototype class.
 		prototypeConstructors = prototype.prototypeConstructors;
 	}
@@ -123,7 +124,7 @@ public abstract class Prototype extends Configurable {
 	 * @throws IllegalArgumentException If this prototype class does not declare a copy constructor accepting the
 	 *             required parameters.
 	 */
-	public <T extends Prototype> T newInstance(Object... newInstanceParameters) {
+	public <T extends PrototypeBase> T newInstance(Object... newInstanceParameters) {
 		// Build the constructor parameters and get the constructor.
 		Object[] constructorParams = new Object[newInstanceParameters.length + 1];
 		constructorParams[0] = this;
@@ -151,18 +152,18 @@ public abstract class Prototype extends Configurable {
 					prototypeConstructors.put(constructorParamTypesAsString.toString(), constructor);
 				}
 			} catch (NoSuchMethodException e) {
-				throw new IllegalArgumentException("Could not instantiate a new instance of prototype " + getClass().getCanonicalName() + " via Configurable.newInstance() because there is no copy constructor for this prototype class matching the given argument types: " + constructorParamTypesAsString);
+				throw new IllegalArgumentException("Could not instantiate a new instance of prototype " + getClass().getCanonicalName() + " via ConfigurableBase.newInstance() because there is no copy constructor for this prototype class matching the given argument types: " + constructorParamTypesAsString);
 			}
 		}
 
 		try {
 			return constructor.newInstance(constructorParams);
 		} catch (IllegalAccessException ex) {
-			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via Configurable.newInstance() the constructor " + constructor.toString() + " was found to not be accessible.");
+			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via ConfigurableBase.newInstance() the constructor " + constructor.toString() + " was found to not be accessible.");
 		} catch (InvocationTargetException ex) {
-			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via Configurable.newInstance() the constructor " + constructor.toString() + " threw an exception.", ex);
+			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via ConfigurableBase.newInstance() the constructor " + constructor.toString() + " threw an exception.", ex);
 		} catch (ReflectiveOperationException ex) {
-			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via Configurable.newInstance() using the constructor " + constructor.toString() + " an exception occurred.", ex);
+			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via ConfigurableBase.newInstance() using the constructor " + constructor.toString() + " an exception occurred.", ex);
 		}
 	}
 }

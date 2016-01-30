@@ -8,7 +8,8 @@ import java.util.Map;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Individual;
@@ -23,9 +24,9 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 	private final Map<Long, Individual<G, F>> members;
 
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public SimplePopulation(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public SimplePopulation(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		members = new HashMap<>();
 	}
@@ -47,5 +48,10 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 
 	public Individual<G, F> getIndividual(long genotypeID) {
 		return members.get(genotypeID);
+	}
+
+	@Override
+	public int size() {
+		return members.size();
 	}
 }

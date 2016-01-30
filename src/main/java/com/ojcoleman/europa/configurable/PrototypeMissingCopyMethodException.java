@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates that a sub-class of {@link IsPrototype} does not override {@link IsPrototype#copy()}.
+ * Indicates that a sub-class of {@link Prototype} does not override {@link Prototype#copy()}.
  * 
  * @author O. J. Coleman
  */

@@ -5,8 +5,11 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.EvaluationDescription;
+import com.ojcoleman.europa.core.Function;
+import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Ranker;
@@ -16,16 +19,16 @@ import com.ojcoleman.europa.core.Ranker;
  * 
  * @author O. J. Coleman
  */
-public class DefaultRanker extends Ranker {
+public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> extends Ranker<G, F> {
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public DefaultRanker(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public DefaultRanker(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
 	@Override
-	public void rank(Population<?, ?> population) {
+	public void rank(Population<G, F> population) {
 		Set<EvaluationDescription> evDescs = population.getMembers().iterator().next().evaluationData.getFitnessResults().keySet();
 		if (evDescs.size() != 1) {
 			throw new IllegalArgumentException("The DefaultRanker can only be used when a single fitness evaluation is defined.");

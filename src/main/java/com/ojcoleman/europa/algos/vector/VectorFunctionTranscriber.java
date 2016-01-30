@@ -1,7 +1,8 @@
 package com.ojcoleman.europa.algos.vector;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
@@ -29,7 +30,7 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 	private int functionOutputSize;
 
 	
-	public VectorFunctionTranscriber(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public VectorFunctionTranscriber(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		
 		// Ordinarily we'd used Run.getPrimaryEvaluator() however we should use getSubComponent in Component constructors.

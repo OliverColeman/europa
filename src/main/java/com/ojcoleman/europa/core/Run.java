@@ -19,9 +19,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.eclipsesource.json.*;
 import com.ojcoleman.europa.Base;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configurable;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.IDFactory;
+import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.IsComponent;
 import com.ojcoleman.europa.populations.SimplePopulation;
 import com.ojcoleman.europa.rankers.DefaultRanker;
 import com.ojcoleman.europa.speciators.NoSpeciation;
@@ -34,7 +37,7 @@ import com.ojcoleman.europa.speciators.NoSpeciation;
  * </p>
  * <p>
  * The stages of the cycle are implemented by various components whose implementation and parameters can be specified by
- * a JSON configuration file (see {@link com.ojcoleman.europa.configurable.Component and
+ * a JSON configuration file (see {@link com.ojcoleman.europa.configurable.ComponentBase and
  * {@link com.ojcoleman.europa.Main}). The specific steps of the initialisation and evolutionary cycle, and their
  * corresponding (abstract) classes or interfaces and methods, are:
  * <ul>
@@ -53,10 +56,8 @@ import com.ojcoleman.europa.speciators.NoSpeciation;
  * 
  * @author O. J. Coleman
  */
-public class Run extends Component {
+public class Run extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Run.class);
-
-	private static long nextID;
 
 	// private static Run singleton;
 
@@ -76,32 +77,32 @@ public class Run extends Component {
 		Stopping
 	}
 
-	@IsParameter(description = "The name of the run. DefaultEvolver is the name of the configuration file appended with the current date and time.", optional = true)
+	@Parameter(description = "The name of the run. DefaultEvolver is the name of the configuration file appended with the current date and time.", optional = true)
 	protected String name;
 
-	@IsParameter(description = "File output directory. DefaultEvolver is run name (with an integer appended to make it unique if necessary).", optional = true)
+	@Parameter(description = "File output directory. DefaultEvolver is run name (with an integer appended to make it unique if necessary).", optional = true)
 	protected String outputDirectory;
 
-	@IsParameter(description = "The random seed. DefaultEvolver value is the system time.", optional = true)
+	@Parameter(description = "The random seed. DefaultEvolver value is the system time.", optional = true)
 	protected long randomSeed;
 
-	@IsParameter(description = "The class to use to generate random numbers. It must extend Java.util.Random.", defaultValue = "java.util.Random")
+	@Parameter(description = "The class to use to generate random numbers. It must extend Java.util.Random.", defaultValue = "java.util.Random")
 	protected Class<? extends Random> randomClass;
 
-	@IsParameter(description = "The maximum number of iterations/generations to perform. Values <= 0 indicate no limit.", defaultValue = "0")
+	@Parameter(description = "The maximum number of iterations/generations to perform. Values <= 0 indicate no limit.", defaultValue = "0")
 	protected int maximumIterations;
 
-	@IsComponent(description = "Component for transcribing a genotype to a 'phenotype' function to be evaluated (these may be one and the same).", defaultClass = DummyTranscriber.class)
-	protected Transcriber transcriber;
+	@Component(description = "Component for transcribing a genotype to a 'phenotype' function to be evaluated (these may be one and the same).", defaultClass = DummyTranscriber.class)
+	protected Transcriber<?, ?> transcriber;
 
-	@IsComponent(description = "Component(s) for the fitness evaluator(s). By default the first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultClass = DummyEvaluator.class)
+	@Component(description = "Component(s) for the fitness evaluator(s). By default the first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultClass = DummyEvaluator.class)
 	protected Evaluator[] evaluators;
 
-	@IsComponent(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
-	protected Ranker ranker;
-
-	@IsComponent(description = "Component for maintaining pertinent bits of evolution history.", defaultClass = History.class)
+	@Component(description = "Component for maintaining pertinent bits of evolution history.", defaultClass = History.class)
 	protected History history;
+	
+	@Configurable(description = "Configuration for utility class to perform operations in parallel.", defaultClass = Parallel.class)
+	protected Parallel parallel;
 	
 	
 	/**
@@ -123,9 +124,9 @@ public class Run extends Component {
 	protected boolean stop;
 
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Run(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Run(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		// if (singleton != null) {
@@ -160,14 +161,7 @@ public class Run extends Component {
 		random = this.newGenericInstance(randomClass);
 
 		currentIteration = 0;
-
-		// history = new History();
-		// evolver = new Evolver();
 	}
-
-	// public static final Run get() {
-	// return singleton;
-	// }
 
 	/**
 	 * Execute the run.
@@ -175,16 +169,11 @@ public class Run extends Component {
 	 * @throws Exception
 	 */
 	public final synchronized void run() throws Exception {
-		// if (singleton != null && singleton != this) {
-		// throw new Exception("There is another Run instance already running.");
-		// }
-
 		mainLoop();
-
-		// singleton = null;
 	}
 
 	protected void mainLoop() {
+		// Get a reference to the Population Component.
 		Population<?, ?> population = transcriber.getPopulation();
 		
 		// If this is the first iteration.
@@ -195,46 +184,40 @@ public class Run extends Component {
 
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
-
+			// Evaluate the population (transcribing from genotype to phenotype as necessary).
 			population.evaluate();
 			
 			// Produce a ranking over the population, if applicable.
-			ranker.rank(population);
+			population.rank();
 			
 			// Speciate population if applicable.
 			population.speciate();
 			
 			// Evolve population.
-			//evolver.evolvePopulation(population, );
+			population.evolve();
 
+			this.fireEvent(Event.IterationComplete);
+			
 			currentIteration++;
 		}
 	}
 
-	public Transcriber getTranscriber() {
+	
+	public Transcriber<?, ?> getTranscriber() {
 		return transcriber;
 	}
 
-
-	public Ranker getRanker() {
-		return ranker;
-	}
-
+	
 	public History getHistory() {
 		return history;
 	}
 
+	
 	public Evaluator[] getEvaluators() {
 		return evaluators;
 	}
 
-	/**
-	 * Get the next Run-wide ID. This is useful when IDs must be unique across an entire Run.
-	 */
-	public long getNextID() {
-		return ++nextID;
-	}
-
+	
 	/**
 	 * If set then this Run will stop when the current cycle is complete.
 	 */
@@ -250,6 +233,7 @@ public class Run extends Component {
 		return stop;
 	}
 
+	
 	/**
 	 * Returns the current iteration/generation.
 	 */

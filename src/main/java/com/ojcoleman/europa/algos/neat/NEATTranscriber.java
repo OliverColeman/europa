@@ -1,5 +1,6 @@
 package com.ojcoleman.europa.algos.neat;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -9,10 +10,12 @@ import java.util.TreeSet;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.core.Gene;
+import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 import com.ojcoleman.europa.transcribers.nn.NNInstanceConfig;
@@ -28,14 +31,11 @@ import com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork;
  * @author O. J. Coleman
  */
 public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
-	@IsPrototype(description = "The prototype configuration for the NEATGenotype. This is only useful if a custom sub-class of NEATGenotype is to be used.")
-	protected NEATGenotype genotype;
-	
-	@IsPrototype(description = "The neural network prototype.", defaultClass = BainNeuralNetwork.class)
+	@Prototype(description = "The neural network prototype.", defaultClass = BainNeuralNetwork.class)
 	protected NeuralNetwork neuralNetwork;
 
 	
-	public NEATTranscriber(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATTranscriber(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -129,14 +129,14 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 		// Add genes and alleles for neuron and synapse types first as applicable.
 		if (neuronConfig.paramsTypeCount > 0) {
 			for (int gi = 0; gi < neuronConfig.paramsTypeCount; gi++) {
-				NEATGene gene = genotype.genePrototype.newInstance(Gene.typeSet(NNPart.NEURON_TYPE), run.getNextID(), Vector.EMPTY);
+				NEATGene gene = genotype.genePrototype.newInstance(Gene.typeSet(NNPart.NEURON_TYPE), Vector.EMPTY);
 				NEATAllele<NEATGene> allele = genotype.allelePrototype.newInstance(gene, neuronConfig.createTypeVector());
 				alleles.add(allele);
 			}
 		}
 		if (synapseConfig.paramsTypeCount > 0) {
 			for (int gi = 0; gi < synapseConfig.paramsTypeCount; gi++) {
-				NEATGene gene = genotype.genePrototype.newInstance(Gene.typeSet(NNPart.SYNAPSE_TYPE), run.getNextID(), Vector.EMPTY);
+				NEATGene gene = genotype.genePrototype.newInstance(Gene.typeSet(NNPart.SYNAPSE_TYPE), Vector.EMPTY);
 				NEATAllele<NEATGene> allele = genotype.allelePrototype.newInstance(gene, synapseConfig.createTypeVector());
 				alleles.add(allele);
 			}
@@ -144,16 +144,16 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 
 		// Add genes for input and output neurons.
 		for (int gi = 0; gi < getFunctionInputSize(); gi++) {
-			NEATNeuronGene gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, run.getNextID(), neuronConfig.createGeneVector(run.random));
+			NEATNeuronGene gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, neuronConfig.createGeneVector(run.random));
 			NEATNeuronAllele allele = genotype.neuronAllelePrototype.newInstance(gene, neuronConfig.createAlleleVector());
 			alleles.add(allele);
 		}
 		for (int gi = 0; gi < getFunctionOutputSize(); gi++) {
-			NEATNeuronGene gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_OUTPUT, run.getNextID(), neuronConfig.createGeneVector(run.random));
+			NEATNeuronGene gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_OUTPUT, neuronConfig.createGeneVector(run.random));
 			NEATNeuronAllele allele = genotype.neuronAllelePrototype.newInstance(gene, neuronConfig.createAlleleVector());
 			alleles.add(allele);
 		}
 
-		return genotype.newInstance(run.getNextID(), alleles);
+		return genotype.newInstance(alleles, new ArrayList<Genotype<?>>());
 	}
 }

@@ -7,20 +7,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link Configurable}, this annotation indicates that the field is 
+ * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is 
  * for a user configurable object, e.g. via a JSON configuration file. The field must be of a type
- * that extends  {@link com.ojcoleman.europa.configurable.Configurable}. See {@link Configurable} for more information.
+ * that extends  {@link com.ojcoleman.europa.configurable.ConfigurableBase}. See {@link ConfigurableBase} for more information.
  * 
- * @see IsParameter
- * @see IsPrototype
- * @see IsComponent
+ * @see Parameter
+ * @see Prototype
+ * @see Component
  * 
  * @author O. J. Coleman
  */
 @Documented
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IsConfigurable {
+public @interface Configurable {
 	/**
 	 * Description for the prototype.
 	 */

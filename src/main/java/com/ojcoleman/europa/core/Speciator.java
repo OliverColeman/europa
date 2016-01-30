@@ -4,22 +4,23 @@ import java.util.List;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Prototype;
 
 /**
  * Base class of classes that divide a {@link Population} into {@link Species}. 
  * 
  * @author O. J. Coleman
  */
-public abstract class Speciator<G extends Genotype<?>, F extends Function<?, ?>> extends Component {
-	@IsPrototype (description="The common (prototype) configuration for Species.", defaultClass=Species.class)
+public abstract class Speciator<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase {
+	@Prototype (description="The common (prototype) configuration for Species.", defaultClass=Species.class)
 	protected Species<G, F> speciesPrototype;
 	
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Speciator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Speciator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -27,9 +28,7 @@ public abstract class Speciator<G extends Genotype<?>, F extends Function<?, ?>>
 	 * Divide the given Population into species.
 	 * 
 	 * @param population The population to speciate.
-	 * @param currentSpeciesMap The current mapping from Species to the members of the Species.
-	 * 
-	 * @return A mapping from Species to the members of the Species.
+	 * @param species The current set of Species.
 	 */
-	public abstract ArrayListMultimap<Species<G, F>, Individual<G, F>> speciate(Population<G, F> population, ArrayListMultimap<Species<G, F>, Individual<G, F>> currentSpeciesMap);
+	public abstract void speciate(Population<G, F> population, List<Species<G, F>> species);
 }

@@ -6,9 +6,10 @@ import java.util.Map;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.IsConfigurable;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configurable;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
 import com.ojcoleman.europa.transcribers.nn.NNInstanceConfig;
@@ -18,19 +19,19 @@ import com.ojcoleman.europa.transcribers.nn.NeuralNetwork;
  * A wrapper for Bain neural networks.
  */
 public class BainNeuralNetwork extends NeuralNetwork {
-	@IsConfigurable (description="The general or base configuration for the neural networks.")
+	@Configurable (description="The general or base configuration for the neural networks.")
 	protected BainNNConfig config;
 	
 	
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public BainNeuralNetwork(JsonObject config) {
+	public BainNeuralNetwork(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * Create a Bain neural network with the given base configuration and instance configuration.
 	 * @param prototype The prototype neural network instance to copy.

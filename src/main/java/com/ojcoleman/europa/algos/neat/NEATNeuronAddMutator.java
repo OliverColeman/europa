@@ -10,8 +10,9 @@ import java.util.Set;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Evolver;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
@@ -26,13 +27,13 @@ import com.ojcoleman.europa.transcribers.nn.Topology;
  * @author O. J. Coleman
  */
 public class NEATNeuronAddMutator extends Mutator<NEATGenotype> {
-	@IsParameter(description = "Specifies the maximum number of neurons that may be added.", defaultValue = "1", minimumValue = "1")
+	@Parameter(description = "Specifies the maximum number of neurons that may be added.", defaultValue = "1", minimumValue = "1")
 	protected int maximum;
 
-	@IsParameter(description = "For each neuron that may be added (see 'maximum'), specifies the probability of adding the neuron. ", defaultValue = "0.01", minimumValue = "0", maximumValue = "1")
+	@Parameter(description = "For each neuron that may be added (see 'maximum'), specifies the probability of adding the neuron. ", defaultValue = "0.01", minimumValue = "0", maximumValue = "1")
 	protected double applyRate;
 
-	public NEATNeuronAddMutator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATNeuronAddMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

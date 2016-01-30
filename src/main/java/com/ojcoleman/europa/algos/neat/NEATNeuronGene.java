@@ -4,7 +4,8 @@ import java.util.Random;
 
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
@@ -16,14 +17,14 @@ import com.ojcoleman.europa.transcribers.nn.NNPart;
  */
 public class NEATNeuronGene extends NEATGene {
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public NEATNeuronGene(JsonObject config) {
+	public NEATNeuronGene(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * NEATNeuronGene with specified type and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -38,7 +39,7 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * NEATNeuronGene with same type as the prototype and the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.

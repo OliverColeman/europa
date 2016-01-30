@@ -3,7 +3,8 @@ package com.ojcoleman.europa.algos.vector;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.EvaluationDescription;
 import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Individual;
@@ -14,7 +15,7 @@ import com.ojcoleman.europa.core.Individual;
  * @author O. J. Coleman
  */
 public abstract class VectorFunctionEvaluator extends Evaluator {
-	public VectorFunctionEvaluator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public VectorFunctionEvaluator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 

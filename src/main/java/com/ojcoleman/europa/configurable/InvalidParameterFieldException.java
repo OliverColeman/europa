@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates an error with a field annotated {@link @IsParameter}. 
+ * Indicates an error with a field annotated {@link @Parameter}. 
  * 
  * @author O. J. Coleman
  */

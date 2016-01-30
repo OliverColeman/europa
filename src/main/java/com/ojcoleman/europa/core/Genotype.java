@@ -15,14 +15,15 @@ import java.util.Set;
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.reflect.TypeToken;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * <p>
  * Represents the inheritable genetic material of an {@link Individual}.
  * </p>
  * <p>
- * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)} type
+ * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)} type
  * copy-constructor accepting only the allele to copy, which should generally just call <em>super()</em> with the given
  * allele.</strong>
  * </p>
@@ -34,12 +35,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * 
  * @author O. J. Coleman
  */
-public abstract class Genotype<A extends Allele<?>> extends Prototype {
-	/**
-	 * A unique identifier for this genotype.
-	 */
-	public final long id;
-
+public abstract class Genotype<A extends Allele<?>> extends PrototypeBase {
 	/**
 	 * The parent(s) of this Genotype (as an unmodifiable List).
 	 */
@@ -50,72 +46,61 @@ public abstract class Genotype<A extends Allele<?>> extends Prototype {
 	 */
 	protected final Collection<A> alleles;
 
-	private final ArrayListMultimap<Object, A> allelesByGeneType;
+	private ArrayListMultimap<Object, A> allelesByGeneType;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public Genotype(JsonObject config) {
+	public Genotype(Configuration config) {
 		super(config);
-		id = 0;
+		
 		parents = Collections.unmodifiableList(new ArrayList<Genotype<?>>());
 		alleles = newAlleleCollection();
 		allelesByGeneType = ArrayListMultimap.create();
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
-	 * with the given ID (should generally be unique) and parents.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
+	 * with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
-	 * @param id The ID for the new Genotype.
-	 * @param parents The parents that were used to create this genotype (this is for record keeping only,
-	 *            implementations of this class do not need to create new instances from multiple parents (this is the
-	 *            job of {@link Recombiner)s.
 	 */
-	@SafeVarargs
-	public Genotype(Genotype<A> prototype, long id, Genotype<?>... parents) {
+	public Genotype(Genotype<A> prototype) {
 		super(prototype);
-		this.id = id;
 
-		this.alleles = newAlleleCollection();
-
-		if (parents == null) {
-			this.parents = Collections.unmodifiableList(new ArrayList<Genotype<?>>());
-		} else {
-			this.parents = Collections.unmodifiableList(Arrays.asList(parents));
-		}
-
-		allelesByGeneType = ArrayListMultimap.create();
+		List<Genotype<?>> p = new ArrayList<>();
+		p.add(prototype);
+		this.parents = Collections.unmodifiableList(p);
+		
+		alleles = newAlleleCollection();
+		
+		init(prototype.alleles);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a Genotype
-	 * with the given ID (should generally be unique), alleles and parents.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
+	 * with the given alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
-	 * @param id The ID for the new Genotype.
 	 * @param alleles The Alleles (backed by {@link Gene}s) that make up the new Genotype. A copy of each allele is made
 	 *            and put into a new collection.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only,
 	 *            implementations of this class do not need to create new instances from multiple parents (this is the
 	 *            job of {@link Recombiner)s.
 	 */
-	@SafeVarargs
-	public Genotype(Genotype<A> prototype, long id, Collection<A> alleles, Genotype<?>... parents) {
+	public Genotype(Genotype<A> prototype, Collection<A> alleles, List<Genotype<?>> parents) {
 		super(prototype);
-		this.id = id;
-
+		
+		this.parents = Collections.unmodifiableList(new ArrayList<>(parents));
 		this.alleles = newAlleleCollection();
+		
+		init(alleles);
+	}
+	
+	private void init(Collection<A> alleles) {
 		for (A allele : alleles) {
 			A newAllele = allele.newInstance();
 			this.alleles.add(newAllele);
-		}
-
-		if (parents == null) {
-			this.parents = Collections.unmodifiableList(new ArrayList<Genotype<?>>());
-		} else {
-			this.parents = Collections.unmodifiableList(Arrays.asList(parents));
 		}
 
 		allelesByGeneType = ArrayListMultimap.create();

@@ -4,22 +4,23 @@ import java.util.Collection;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
 
 /**
  * Base class for classes used to evaluate the fitness of {@link Individual}s in the evolutionary algorithm.
  * 
  * @author O. J. Coleman
  */
-public abstract class Evaluator extends Component {
-	@IsParameter(description = "A name for the evaluator, used in logging. Default is the evaluators class name.", optional = true)
+public abstract class Evaluator extends ComponentBase {
+	@Parameter(description = "A name for the evaluator, used in logging. Default is the evaluators class name.", optional = true)
 	private String name;
 
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Evaluator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Evaluator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		if (name == null) {

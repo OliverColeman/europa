@@ -7,16 +7,16 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link Component}, this annotation indicates that the field is 
- * for a user configurable {@link Component} object or array of objects, e.g. via a JSON configuration file.
- * See {@link Component} for more information.
+ * For fields in sub-classes of {@link ComponentBase}, this annotation indicates that the field is 
+ * for a user configurable {@link ComponentBase} object or array of objects, e.g. via a JSON configuration file.
+ * See {@link ComponentBase} for more information.
  * 
  * @author O. J. Coleman
  */
 @Documented
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IsComponent {
+public @interface Component {
 	/**
 	 * Description for the sub-component.
 	 */

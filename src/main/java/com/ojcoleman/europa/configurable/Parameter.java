@@ -7,19 +7,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link Configurable}, this annotation indicates that the field is user
- * configurable, e.g. via a JSON configuration file. See {@link Configurable} for more information.
+ * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user
+ * configurable, e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.
  * 
- * @see IsConfigurable
- * @see IsPrototype
- * @see IsComponent
+ * @see Configurable
+ * @see Prototype
+ * @see Component
  * 
  * @author O. J. Coleman
  */
 @Documented
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface IsParameter {
+public @interface Parameter {
 	/**
 	 * Description for the sub-component.
 	 */

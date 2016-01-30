@@ -1,23 +1,24 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Parameter;
 
 /**
  * Base class for all classes that mutate a {@link Genotype}.
  */
-public abstract class Mutator<G extends Genotype<?>> extends Component {
-	@IsParameter(description = "The percentage of clones to apply this mutator to.", defaultValue = "1", minimumValue = "0", maximumValue = "1")
+public abstract class Mutator<G extends Genotype<?>> extends ComponentBase {
+	@Parameter(description = "The percentage of clones to apply this mutator to.", defaultValue = "1", minimumValue = "0", maximumValue = "1")
 	protected double applyPercentageClones;
 
-	@IsParameter(description = "The percentage of children (produced by a recombiner) to apply this mutator to.", defaultValue = "0.25", minimumValue = "0", maximumValue = "1")
-	protected double applyPercentageChildren;
+	@Parameter(description = "The percentage of children (produced by a recombiner) to apply this mutator to.", defaultValue = "0.25", minimumValue = "0", maximumValue = "1")
+	protected double applyPercentageRecombined;
 
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Mutator(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Mutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -30,14 +31,14 @@ public abstract class Mutator<G extends Genotype<?>> extends Component {
 	 * Determine if this mutator should be applied to the given genotype. This may be influenced by randomised processes
 	 * so can not be relied upon to return the same value for the same genotype. This default implementation checks if
 	 * the genotype is a clone of a single parent or a child of multiple parents and then compares either
-	 * {@link #applyPercentageClones} or {@link #applyPercentageChildren} accordingly to a randomly generated number to
+	 * {@link #applyPercentageClones} or {@link #applyPercentageRecombined} accordingly to a randomly generated number to
 	 * determine if this mutator should be applied.
 	 */
 	public boolean shouldMutate(G genotype) {
 		if (genotype.parents.size() == 1) {
 			return getParentComponent(Run.class).random.nextDouble() < applyPercentageClones;
 		} else {
-			return getParentComponent(Run.class).random.nextDouble() < applyPercentageChildren;
+			return getParentComponent(Run.class).random.nextDouble() < applyPercentageRecombined;
 		}
 	}
 
@@ -52,6 +53,6 @@ public abstract class Mutator<G extends Genotype<?>> extends Component {
 	 * Get the percentage of children (produced by a {@link Recombiner}) to apply this mutator to, [0, 1].
 	 */
 	public double getApplyPercentageChildren() {
-		return applyPercentageChildren;
+		return applyPercentageRecombined;
 	}
 }

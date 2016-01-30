@@ -31,31 +31,32 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Primitives;
+import com.google.common.reflect.TypeToken;
 
 /**
  * <p>
- * A base class for classes that are configurable via a JSON configuration file. {@link IsPrototype} and
- * {@link Component} are based on this class.
+ * A base class for classes that are configurable via a JSON configuration file. {@link Prototype} and
+ * {@link ComponentBase} are based on this class.
  * </p>
  * 
  * <p>
  * <strong>Fields</strong><br/>
- * Fields in a Configurable may be marked as user configurable using the {@link IsParameter} annotation. For example:
+ * Fields in a ConfigurableBase may be marked as user configurable using the {@link Parameter} annotation. For example:
  * <code>
- * \@IsParameter (description="The desired population desiredSize.", defaultValue="100")
+ * \@Parameter (description="The desired population desiredSize.", defaultValue="100")
  * protected int desiredSize;
- * </code> When the Configurable is instantiated the field will be assigned the value specified in the JSON
+ * </code> When the ConfigurableBase is instantiated the field will be assigned the value specified in the JSON
  * configuration file, or the default value if a default value has been set. If sub-classes contain the same field name
  * (overriding the same field in a super-class) then the annotation of the sub-class will be used.
  * </p>
  * <p>
  * <strong>Prototypes</strong><br />
- * If a Configurable has a IsParameter field whose type extends {@link IsPrototype}, for example <code>
- * \@IsParameter (description="The class and configuration for individuals.")
+ * If a ConfigurableBase has a Parameter field whose type extends {@link Prototype}, for example <code>
+ * \@Parameter (description="The class and configuration for individuals.")
  * protected Individual individualProto;
- * </code> where Individual extends IsPrototype, then a singleton instance will automatically be initialised for it.
- * {@link Configurable#newInstance(Class)} may then be used to get new instances, where the argument to
- * <code>newInstance</code> corresponds to the base class of the IsPrototype type to get, for example
+ * </code> where Individual extends Prototype, then a singleton instance will automatically be initialised for it.
+ * {@link ConfigurableBase#newInstance(Class)} may then be used to get new instances, where the argument to
+ * <code>newInstance</code> corresponds to the base class of the Prototype type to get, for example
  * <code>someConfigurable.newInstance(Individual.class)</code>. The sub-class to use for the prototype may be specified
  * in the JSON configuration using the key "class". For example: <code>
  * {
@@ -73,33 +74,46 @@ import com.google.common.primitives.Primitives;
  * 
  * @author O. J. Coleman
  */
-public class Configurable extends Observable {
-	private static Logger logger = LoggerFactory.getLogger(Configurable.class);
+public class ConfigurableBase extends Observable {
+	private static Logger logger = LoggerFactory.getLogger(ConfigurableBase.class);
 
 	/**
 	 * Indicates that this instance is a dummy, most likely being used for printing out configuration options.
 	 */
 	protected final boolean isDummy;
+	
+	/**
+	 * A unique ID for this instance.
+	 */
+	public final long id;
+
 
 	/**
 	 * Stores singleton instances for {@link #getSingleton(Class)}. To conserve memory this is only initialised when the
 	 * first singleton is created.
 	 */
 	private Map<Class<?>, Object> singletons;
+	
+	/**
+	 * Factory used to generate unique IDs. This is passed from Configurable to sub-Configurable and so on as initialisation proceeds hierarchically.
+	 */
+	protected IDFactory idFactory;
+	
 
 	/**
-	 * Creates and configures this Configurable with the given configuration. Sub-classes must implement a constructor
+	 * Creates and configures this ConfigurableBase with the given configuration. Sub-classes must implement a constructor
 	 * accepting the same parameters and call <code>super(config)</code>. <strong>Overriding implementations of this
 	 * constructor should return after calling super() if <em>null</em> is provided</strong> (null is used to create
 	 * dummy instances when printing the available default configuration options).
 	 * 
-	 * @param config The configuration for this Configurable.
+	 * @param config The configuration for this ConfigurableBase.
 	 * 
 	 * @throws Exception If an error occurred setting parameter field values.
 	 */
-	public Configurable(JsonObject config) {
-		// If no config provided then we should just create a dummy instance (used for printing of config options).
-		isDummy = config == null || config.getBoolean("_isDummy", false);
+	public ConfigurableBase(Configuration config) {
+		isDummy = config.isDummy;
+		idFactory = config.idFactory;
+		id = idFactory.getNextID();
 
 		singletons = new HashMap<>();
 
@@ -119,29 +133,32 @@ public class Configurable extends Observable {
 	}
 
 	/**
-	 * Creates a copy of the given Configurable. The copy is essentially a shallow copy: calls to
+	 * Creates a copy of the given ConfigurableBase. The copy is essentially a shallow copy (except for {@link #id}): calls to
 	 * {@link #getSingleton(Class)} on the copy and the original will return exactly the same result. The rationale for
 	 * this behaviour is that this copy constructor is primarily intended to support the
-	 * {@link IsPrototype#Prototype(Prototype)} copy constructor, which is intended to efficiently create many copies
+	 * {@link Prototype#Prototype(PrototypeBase)} copy constructor, which is intended to efficiently create many copies
 	 * of the same prototype object. Performing deep copies of the contained singleton and prototype objects and
 	 * associated internal supporting data structures would incur a generally undesirable and unnecessary performance
 	 * cost.
 	 * 
-	 * @param configurable The Configurable to create a copy of.
+	 * @param configurable The ConfigurableBase to create a copy of.
 	 */
-	public Configurable(Configurable configurable) {
+	public ConfigurableBase(ConfigurableBase configurable) {
 		isDummy = configurable.isDummy;
+		idFactory = configurable.idFactory;
 		singletons = configurable.singletons;
+		
+		id = idFactory.getNextID();
 	}
 
 	/**
-	 * Gets a list containing this class and all its super-classes up to the parent Configurable. The list is ordered
+	 * Gets a list containing this class and all its super-classes up to the parent ConfigurableBase. The list is ordered
 	 * from super to this class.
 	 */
 	protected List<Class<?>> getSuperClasses() {
 		List<Class<?>> classes = new ArrayList<Class<?>>();
 		Class<?> superClass = this.getClass();
-		while (Configurable.class.isAssignableFrom(superClass)) {
+		while (ConfigurableBase.class.isAssignableFrom(superClass)) {
 			classes.add(superClass);
 			superClass = classes.get(classes.size() - 1).getSuperclass();
 		}
@@ -157,13 +174,13 @@ public class Configurable extends Observable {
 		// Get all super-classes too so that we can set their fields.
 		for (Class<?> clazz : getSuperClasses()) {
 			for (Field f : clazz.getDeclaredFields()) {
-				if (f.isAnnotationPresent(IsParameter.class)) {
+				if (f.isAnnotationPresent(Parameter.class)) {
 					checkFieldAlreadyDefined(fieldNames,f, clazz);
 					fields.put(FieldType.PARAMETER, f);
-				} else if (f.isAnnotationPresent(IsConfigurable.class)) {
+				} else if (f.isAnnotationPresent(Configurable.class)) {
 					checkFieldAlreadyDefined(fieldNames,f, clazz);
 					fields.put(FieldType.CONFIGURABLE, f);
-				} else if (f.isAnnotationPresent(IsPrototype.class)) {
+				} else if (f.isAnnotationPresent(Prototype.class)) {
 					checkFieldAlreadyDefined(fieldNames,f, clazz);
 					fields.put(FieldType.PROTOTYPE, f);
 				}
@@ -182,7 +199,7 @@ public class Configurable extends Observable {
 
 	/**
 	 * Instantiates and returns a new instance of the specified Class. If many instances will be created then
-	 * {@link IsPrototype}s should be used, see {@link #newInstance(Class)}. This is because newGenericInstance uses
+	 * {@link Prototype}s should be used, see {@link #newInstance(Class)}. This is because newGenericInstance uses
 	 * Java's reflection API to instantiate new instances, which is relatively slow.
 	 * 
 	 * @see #newInstance(Class)
@@ -202,7 +219,7 @@ public class Configurable extends Observable {
 			c = clazz.getConstructor();
 			return c.newInstance();
 		} catch (NoSuchMethodException ex) {
-			throw new IllegalArgumentException(clazz.getName() + " has no (accessible) constructor taking no arguments, could not create an instance of it in Configurable.newInstance() (superclass of " + this.getClass().getName() + ").", ex);
+			throw new IllegalArgumentException(clazz.getName() + " has no (accessible) constructor taking no arguments, could not create an instance of it in ConfigurableBase.newInstance() (superclass of " + this.getClass().getName() + ").", ex);
 		} catch (ReflectiveOperationException ex) {
 			throw new RuntimeException("An exception occurred when trying to create an instance of " + clazz.getSimpleName() + " using the constructor " + c.toString(), ex);
 		}
@@ -212,7 +229,7 @@ public class Configurable extends Observable {
 	 * Convenience method to handle the generation and access of singletons. The first call to this method specifying
 	 * some specific class will generate a new instance of that class. Subsequent calls specifying the same class will
 	 * return this instance. This is useful when a configuration must specify the class for some object in the system
-	 * that should or need not be a Configurable or based on a {@link IsPrototype} (see {@link #newInstance(Class)}).
+	 * that should or need not be a ConfigurableBase or based on a {@link Prototype} (see {@link #newInstance(Class)}).
 	 * Care must be taken to ensure that it has a constructor no arguments.
 	 * 
 	 * @see #newInstance(Class)
@@ -241,7 +258,7 @@ public class Configurable extends Observable {
 	}
 
 	/**
-	 * Gets the current configuration of this Configurable.
+	 * Gets the current configuration of this ConfigurableBase.
 	 * 
 	 * @param Whether or not to include the meta-data for the parameters.
 	 * @throws IllegalAccessException
@@ -254,28 +271,28 @@ public class Configurable extends Observable {
 
 		// Parameter fields.
 		for (Field field : fields.get(FieldType.PARAMETER)) {
-			getConfig(field, field.getAnnotation(IsParameter.class).description(), config, includeMetaData);
+			getConfig(field, field.getAnnotation(Parameter.class).description(), config, includeMetaData);
 		}
 
-		// Configurable fields.
+		// ConfigurableBase fields.
 		for (Field field : fields.get(FieldType.CONFIGURABLE)) {
-			getConfig(field, field.getAnnotation(IsConfigurable.class).description(), config, includeMetaData);
+			getConfig(field, field.getAnnotation(Configurable.class).description(), config, includeMetaData);
 		}
 
-		// Prototype fields.
+		// PrototypeBase fields.
 		for (Field field : fields.get(FieldType.PROTOTYPE)) {
-			getConfig(field, field.getAnnotation(IsPrototype.class).description(), config, includeMetaData);
+			getConfig(field, field.getAnnotation(Prototype.class).description(), config, includeMetaData);
 		}
 
 		return config;
 	}
 
 	/**
-	 * Populate the given field in the given Configurable using the given JsonValue.
+	 * Populate the given field in the given ConfigurableBase using the given JsonValue.
 	 */
-	private void processParameterField(Class<?> definingClass, Configurable configurable, Field field, JsonValue jsonValue) {
+	private void processParameterField(Class<?> definingClass, ConfigurableBase configurable, Field field, JsonValue jsonValue) {
 		try {
-			IsParameter annotation = field.getAnnotation(IsParameter.class);
+			Parameter annotation = field.getAnnotation(Parameter.class);
 
 			if (jsonValue != null || !annotation.defaultValue().equals("")) {
 				if (jsonValue == null) {
@@ -297,20 +314,15 @@ public class Configurable extends Observable {
 				}
 
 				boolean isArray = field.getType().isArray();
-
-				Class<?> type;
-				if (isArray) {
-					type = field.getType().getComponentType();
-				} else {
-					type = field.getType();
-				}
+				
+				Class<?> type = getFieldRuntimeType(field);
 				
 				// Provide a friendly warning if it looks like the wrong annotation has been applied.
-				if (Prototype.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of Prototype, an @IsPrototype annotation should probably be used for it.");
+				if (PrototypeBase.class.isAssignableFrom(type)) {
+					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 				}
-				else if (Configurable.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of Configurable, an @IsConfigurable annotation should probably be used for it.");
+				else if (ConfigurableBase.class.isAssignableFrom(type)) {
+					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of ConfigurableBase, an @Configurable annotation should probably be used for it.");
 				}
 				
 				// Make sure the class is not abstract.
@@ -449,7 +461,7 @@ public class Configurable extends Observable {
 
 	// Make sure the given enum value exists.
 	@SuppressWarnings("unchecked")
-	private static void checkEnumValueExists(Class<?> definingClass, Configurable configurable, Field field, Class enumClass, String value) {
+	private static void checkEnumValueExists(Class<?> definingClass, ConfigurableBase configurable, Field field, Class enumClass, String value) {
 		try {
 			Enum.valueOf(enumClass, value);
 		} catch (IllegalArgumentException ex) {
@@ -459,7 +471,7 @@ public class Configurable extends Observable {
 	}
 
 	// Make sure the given class exists.
-	private static Class<?> checkClassExists(Class<?> definingClass, Configurable configurable, Field field, String clazz) {
+	private static Class<?> checkClassExists(Class<?> definingClass, ConfigurableBase configurable, Field field, String clazz) {
 		try {
 			return Class.forName(clazz);
 		} catch (ClassNotFoundException ex) {
@@ -468,7 +480,7 @@ public class Configurable extends Observable {
 		}
 	}
 
-	static void testNumericValueBounds(Object val, Object min, Object max, Configurable configurable, Field field) {
+	static void testNumericValueBounds(Object val, Object min, Object max, ConfigurableBase configurable, Field field) {
 		if (val instanceof Float || val instanceof Double) {
 			if (min != null && ((Number) val).doubleValue() < ((Number) min).doubleValue()) {
 				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " is less than the minimum of " + min + ".");
@@ -491,9 +503,9 @@ public class Configurable extends Observable {
 	}
 
 	/**
-	 * Populate the given field in the given Configurable using the given JsonValue.
+	 * Populate the given field in the given ConfigurableBase using the given JsonValue.
 	 */
-	private void processConfigurableField(Configurable configurable, FieldType fieldType, Field field, JsonValue jsonValue) {
+	private void processConfigurableField(ConfigurableBase configurable, FieldType fieldType, Field field, JsonValue jsonValue) {
 		// If this is a dummy and a place holder value was provided, don't initialise the field.
 		if (configurable.isDummy && jsonValue != null && jsonValue.isString() && jsonValue.asString().equals("<no default value>")) {
 			return;
@@ -511,9 +523,9 @@ public class Configurable extends Observable {
 			}
 		}
 		else {
-			// Provide a friendly warning if it looks like an IsConfigurable annotation has been applied to a Prototype field.
-			if (Prototype.class.isAssignableFrom(field.getType())) {
-				logger.warn("It looks like Configurable field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of Prototype, an @IsPrototype annotation should probably be used for it.");
+			// Provide a friendly warning if it looks like an Configurable annotation has been applied to a PrototypeBase field.
+			if (PrototypeBase.class.isAssignableFrom(field.getType())) {
+				logger.warn("It looks like ConfigurableBase field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 			}
 		}
 		
@@ -550,12 +562,9 @@ public class Configurable extends Observable {
 				for (JsonValue configJsonVal : configArray) {
 					constructor = getConfigurableConstructor(definingClass, this, field, fieldType, fieldBaseTypeLabel, configJsonVal, isArray);
 
-					if (configurable.isDummy) {
-						// Mark the configuration as being for a dummy instance.
-						configJsonVal.asObject().add("_isDummy", true);
-					}
+					Configuration config = new Configuration(configJsonVal.asObject(), isDummy, idFactory);
 
-					Object val = constructor.newInstance(configJsonVal.asObject());
+					Object val = constructor.newInstance(config);
 
 					Array.set(value, idx++, val);
 				}
@@ -567,12 +576,9 @@ public class Configurable extends Observable {
 				
 				constructor = getConfigurableConstructor(definingClass, this, field, fieldType, fieldBaseTypeLabel, jsonValue, isArray);
 
-				if (configurable.isDummy) {
-					// Mark the configuration as being for a dummy instance
-					jsonValue.asObject().add("_isDummy", true);
-				}
-
-				value = constructor.newInstance(jsonValue.asObject());
+				Configuration config = new Configuration(jsonValue.asObject(), isDummy, idFactory);
+				
+				value = constructor.newInstance(config);
 			}
 
 			field.set(configurable, value);
@@ -589,25 +595,22 @@ public class Configurable extends Observable {
 	}
 
 	/**
-	 * Get the constructor for the given Configurable field, taking into account the default class in the annotation if
+	 * Get the constructor for the given ConfigurableBase field, taking into account the default class in the annotation if
 	 * specified and the "class" in the config if specified and performing error checking.
 	 */
-	Constructor<?> getConfigurableConstructor(Class<?> definingClass, Configurable configurable, Field field, FieldType fieldType, String fieldBaseTypeLabel, JsonValue jsonConfig, boolean isArray) {
+	Constructor<?> getConfigurableConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, FieldType fieldType, String fieldBaseTypeLabel, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
 			String error = "The configuration for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getCanonicalName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
-		Class<?> type = field.getType();
-		if (type.isArray()) {
-			type = type.getComponentType();
-		}
-
+		Class<?> type = getFieldRuntimeType(field);
+		
 		// Get default implementation class specified by annotation if present.
-		if (fieldType == FieldType.PROTOTYPE && !field.getAnnotation(IsPrototype.class).defaultClass().equals(Void.class)) {
-			type = field.getAnnotation(IsPrototype.class).defaultClass();
-		} else if (fieldType == FieldType.CONFIGURABLE && !field.getAnnotation(IsConfigurable.class).defaultClass().equals(Void.class)) {
-			type = field.getAnnotation(IsConfigurable.class).defaultClass();
+		if (fieldType == FieldType.PROTOTYPE && !field.getAnnotation(Prototype.class).defaultClass().equals(Void.class)) {
+			type = field.getAnnotation(Prototype.class).defaultClass();
+		} else if (fieldType == FieldType.CONFIGURABLE && !field.getAnnotation(Configurable.class).defaultClass().equals(Void.class)) {
+			type = field.getAnnotation(Configurable.class).defaultClass();
 		}
 
 		// Allow specifying the sub-class to use.
@@ -635,18 +638,30 @@ public class Configurable extends Observable {
 			throw new InvalidConfigurationException(error);
 		}
 
-		return getJsonObjectConstructor(type, configurable, field, fieldBaseTypeLabel);
+		return getConfigurationConstructor(type, configurable, field, fieldBaseTypeLabel);
 	}
 
+//	/**
+//	 * Get the JsonObject constructor for the given field. Throws ConfigurableMissingJsonObjectConstructorException if no
+//	 * such constructor exists.
+//	 */
+//	private static Constructor<?> getJsonObjectConstructor(Class<?> type, ConfigurableBase configurable, Field field, String fieldType) {
+//		try {
+//			return type.getConstructor(JsonObject.class);
+//		} catch (NoSuchMethodException ex) {
+//			throw new ConfigurableMissingJsonObjectConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a JsonObject as its only parameter.");
+//		}
+//	}
+	
 	/**
-	 * Get the JsonObject constructor for the given field. Throws ConfigurableMissingJsonObjectConstructorException if no
+	 * Get the Configuration constructor for the given field. Throws ConfigurableMissingConfigurationConstructorException if no
 	 * such constructor exists.
 	 */
-	private static Constructor<?> getJsonObjectConstructor(Class<?> type, Configurable configurable, Field field, String fieldType) {
+	private static Constructor<?> getConfigurationConstructor(Class<?> type, ConfigurableBase configurable, Field field, String fieldType) {
 		try {
-			return type.getConstructor(JsonObject.class);
+			return type.getConstructor(Configuration.class);
 		} catch (NoSuchMethodException ex) {
-			throw new ConfigurableMissingJsonObjectConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a JsonObject as its only parameter.");
+			throw new ConfigurableMissingConfigurationConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a Configuration as its only parameter.");
 		}
 	}
 
@@ -658,13 +673,11 @@ public class Configurable extends Observable {
 		try {
 			Class<?> definingClass = field.getDeclaringClass();
 	
-			Class<?> type = field.getType();
-			boolean isArray = type.isArray();
-			if (isArray) {
-				type = field.getType().getComponentType();
-			}
+			Class<?> type = getFieldRuntimeType(field);
+			boolean isArray = field.getType().isArray();
+			
 			String name = field.getName();
-			boolean isConfigurable = Configurable.class.isAssignableFrom(type);
+			boolean isConfigurable = ConfigurableBase.class.isAssignableFrom(type);
 	
 			if (includeMetaData) {
 				// Anything beginning with "_metadata is commented out in the pretty-printed output.
@@ -680,7 +693,7 @@ public class Configurable extends Observable {
 	
 				config.add("_metadata<" + name + "> " + (isConfigurable ? "base class" : "type"), typeName);
 	
-				IsParameter paramAnnotation = field.getAnnotation(IsParameter.class);
+				Parameter paramAnnotation = field.getAnnotation(Parameter.class);
 				
 				if (paramAnnotation != null) {
 					config.add("_metadata<" + name + "> optional", paramAnnotation.optional());
@@ -695,7 +708,7 @@ public class Configurable extends Observable {
 					}
 				}
 				
-				//if (Configurable.class.isAssignableFrom(type)) {
+				//if (ConfigurableBase.class.isAssignableFrom(type)) {
 				//	config.add("_metadata<" + name + "> class", "The class to use, if a class other than the base class is required.");
 				//	config.add("class", type.getCanonicalName());
 				//}
@@ -720,7 +733,7 @@ public class Configurable extends Observable {
 							if (includeMetaData) {// Adds a blank line to the pretty-printed-with-comments output.
 								configurableConfig.add("_metadata<" + name + "> ", "");
 							}
-							configurableConfig.merge(((Configurable) val).getConfiguration(includeMetaData));
+							configurableConfig.merge(((ConfigurableBase) val).getConfiguration(includeMetaData));
 							arr.add(configurableConfig);
 						} else if (type.equals(String.class) || type.isEnum()) {
 							arr.add(val.toString());
@@ -742,7 +755,7 @@ public class Configurable extends Observable {
 						if (includeMetaData) {// Adds a blank line to the pretty-printed-with-comments output.
 							configurableConfig.add("_metadata<" + name + "> ", "");
 						}
-						configurableConfig.merge(((Configurable) value).getConfiguration(includeMetaData));
+						configurableConfig.merge(((ConfigurableBase) value).getConfiguration(includeMetaData));
 						config.add(name, configurableConfig);
 					} else if (type.equals(String.class) || type.isEnum()) {
 						config.add(name, value.toString());
@@ -769,6 +782,40 @@ public class Configurable extends Observable {
 			throw new RuntimeException("Could not output configuration for field " + field.getName() + " in " + field.getDeclaringClass().getCanonicalName(), ex);
 		}
 	}
+	
+	/**
+	 * Get the actual runtime type of the given field in this ConfigurableBase, resolving generic types if necessary.
+	 * If the field is an array the component type will be returned.
+	 */
+	protected Class<?> getFieldRuntimeType(Field field) {
+		Class<?> type = TypeToken.of(this.getClass()).resolveType(field.getGenericType()).getRawType();
+		boolean isArray = type.isArray();
+		if (type.isArray()) {
+			type = type.getComponentType();
+		}
+		return type;
+	}
+	
+	
+	/**
+	 * Hash code based on {@link #id}. This provides a minimal hash code function for use in hash-table-backed Collections.
+	 */
+	@Override
+	public int hashCode() {
+		return ((Long) id).hashCode();
+	}
+	
+	/**
+	 * Equality based on {@link #id}. This provides a minimal equality function for use in Sets, etc.
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof ConfigurableBase) {
+			return id == ((ConfigurableBase) o).id;
+		}
+		return false;
+	}
+	
 
 	/**
 	 * Enums for field types, easier than passing around Strings or Classes.

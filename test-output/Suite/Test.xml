@@ -12,7 +12,7 @@
 	at java.lang.Thread.run(Thread.java:745)
 Caused by: com.ojcoleman.europa.configurable.RequiredParameterValueMissingException: Value for required parameter param in component com.ojcoleman.europa.ConfigurableComponentParamsTest$ParamsCustomObjectNoGoodConstructor
 	at com.ojcoleman.europa.configurable.ConfigurableComponent$ParameterWrapper.set(ConfigurableComponent.java:374)
-	at com.ojcoleman.europa.configurable.Component.<init>(ConfigurableComponent.java:85)
+	at com.ojcoleman.europa.configurable.ComponentBase.<init>(ConfigurableComponent.java:85)
 	at com.ojcoleman.europa.ConfigurableComponentParamsTest$ParamsCustomObjectNoGoodConstructor.<init>(ConfigurableComponentParamsTest.java:343)
 	at com.ojcoleman.europa.ConfigurableTestSetParams.setObjectParamNoGoodConstructor(ConfigurableComponentParamsTest.java:92)
 	... 20 more

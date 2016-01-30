@@ -17,6 +17,8 @@ import com.beust.jcommander.Parameter;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.WriterConfig;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.DefaultIDFactory;
 import com.ojcoleman.europa.configurable.Observable;
 import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.core.Run;
@@ -102,7 +104,7 @@ public class Main {
 		
 		config.add("configFilePath", configOrSavedRun);
 		
-		Base base = new Base(null, config);
+		Base base = new Base(null, new Configuration(config, false, new DefaultIDFactory()));
 		base.run.run();
 	}
 
@@ -143,17 +145,15 @@ public class Main {
 		String configStr = stripComments(configLines);
 		
 		JsonObject configObject = Json.parse(configStr).asObject();
-		configObject.add("_isDummy", true);
 
-		Base base = new Base(null, configObject);
+		Base base = new Base(null, new Configuration(configObject, true, new DefaultIDFactory()));
 		printConfig(base);
 	}
 
 	private void printConfigOptionsFromDefault() throws Exception {
 		JsonObject configObject = new JsonObject();
-		configObject.add("_isDummy", true);
 		
-		Base base = new Base(null, configObject);
+		Base base = new Base(null, new Configuration(configObject, true, new DefaultIDFactory()));
 		printConfig(base);
 	}
 

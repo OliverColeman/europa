@@ -5,7 +5,8 @@ import java.util.Collections;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * Represents an individual in the {@link Population} used in the evolutionary algorithm. An individual is a container
@@ -14,19 +15,19 @@ import com.ojcoleman.europa.configurable.Prototype;
  * 
  * @author O. J. Coleman
  */
-public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends Prototype {
+public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends PrototypeBase implements Comparable<Individual<G, F>> {
 	/**
 	 * The genotype represented by this individual.
 	 */
 	public final G genotype;
-
+	
 	/**
 	 * Contains the results of evaluating this individual.
 	 */
 	public final EvaluationData evaluationData;
 
 	/**
-	 * The rank of this individual within the population, according to a {@link Ranker}.
+	 * The rank of this individual within the population, according to a {@link Ranker}. A higher value indicates a higher (better) rank.
 	 */
 	protected double rank;
 
@@ -37,9 +38,15 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 
 	
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * The Species this Individual is currently associated with.
 	 */
-	public Individual(JsonObject config) {
+	Species<G, F> species;
+	
+	
+	/**
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 */
+	public Individual(Configuration config) {
 		super(config);
 		genotype = null;
 		evaluationData = null;
@@ -47,7 +54,7 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param gene the underlying Gene for the new Allele.
@@ -81,7 +88,7 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	}
 
 	/**
-	 * Returns the rank of this individual within the {@link Population}.
+	 * Returns the rank of this individual within the {@link Population}. A higher value indicates a higher (better) rank.
 	 * 
 	 * @see Ranker
 	 */
@@ -95,5 +102,25 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 */
 	public void setRank(double rank) {
 		this.rank = rank;
+	}
+	
+	
+	/**
+	 * Get the Species this Individual is currently in.
+	 */
+	public Species<G, F> getSpecies() {
+		return species;
+	}
+
+
+	@Override
+	public int compareTo(Individual<G, F> other) {
+		if (rank < other.rank) {
+			return -1;
+		}
+		if (rank > other.rank) {
+			return 1;
+		}
+		return 0;
 	}
 }

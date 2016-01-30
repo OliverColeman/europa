@@ -10,9 +10,11 @@ import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.ojcoleman.europa.algos.vector.Vector;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.DefaultEvolver;
 import com.ojcoleman.europa.core.Evolver;
+import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Run;
@@ -25,7 +27,7 @@ import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
  * 
  * @author O. J. Coleman
  */
-public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
+public class NEATEvolver<F extends Function<?, ?>> extends DefaultEvolver<NEATGenotype, F> {
 	// Central store mapping all innovation ID/gene parameter pairs to genes.
 	// private Table<Long, Vector, NEATGene> innovationIDToGene;
 
@@ -41,7 +43,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 	private NNConfig nnConfig;
 
 	
-	public NEATEvolver(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATEvolver(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		// innovationIDToGene = HashBasedTable.create();
@@ -76,7 +78,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		NEATNeuronGene gene = synapseIDToNeuronGene.get(synapseID, geneParams);
 		if (gene == null) {
 			//new NEATNeuronGene(gene, NNPart.NEURON_INPUT, run.getNextID(), geneParams);
-			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, run.getNextID(), geneParams);
+			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, geneParams);
 
 			synapseIDToNeuronGene.put(synapseID, geneParams, gene);
 		}
@@ -104,7 +106,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		NEATSynapseGene gene = connectionToGene.get(neuronIDs, geneParams);
 		if (gene == null) {
 			// new NEATSynapseGene(genotype.synapseGenePrototype, run.getNextID(), sourceID, destinationID, geneParams);
-			gene = genotype.synapseGenePrototype.newInstance(run.getNextID(), sourceID, destinationID, geneParams);
+			gene = genotype.synapseGenePrototype.newInstance(sourceID, destinationID, geneParams);
 
 			connectionToGene.put(neuronIDs, geneParams, gene);
 		}

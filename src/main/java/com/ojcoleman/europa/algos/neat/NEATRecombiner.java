@@ -15,7 +15,9 @@ import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.google.common.collect.TreeMultimap;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Recombiner;
 import com.ojcoleman.europa.core.Run;
@@ -35,7 +37,7 @@ import com.ojcoleman.europa.util.ArrayUtil;
  * @author O. J. Coleman
  */
 public class NEATRecombiner extends Recombiner<NEATGenotype> {
-	public NEATRecombiner(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public NEATRecombiner(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		// TODO Auto-generated constructor stub
 	}
@@ -46,7 +48,7 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 	 * @see com.ojcoleman.europa.core.Recombiner#recombine(com.ojcoleman.europa.core.Genotype[])
 	 */
 	@Override
-	public NEATGenotype recombine(NEATGenotype... parents) {
+	public NEATGenotype recombine(List<NEATGenotype> parents) {
 		Run run = this.getParentComponent(Run.class);
 		NEATEvolver evolver = this.getParentComponent(NEATEvolver.class);
 		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
@@ -56,17 +58,19 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 		NEATGenotype child = null;
 
 		SortedMap<Double, NEATGenotype> parentsRanker = new TreeMap<>();
+		List<Genotype<?>> genericParents = new ArrayList<>(parents.size());
 		for (NEATGenotype parent : parents) {
 			parentsRanker.put(population.getIndividual(parent.id).getRank(), parent);
+			genericParents.add(parent);
 		}
 		List<Double> ranks = new ArrayList<>(parentsRanker.keySet());
 		List<NEATGenotype> parentsRanked = new ArrayList<>(parentsRanker.values());
-
+		
 		// If one parent dominates (all the) other(s).
 		if (ranks.get(0) > ranks.get(1)) {
 			// Child inherits all structure/genes from dominant parent.
-			//new NEATGenotype(parentsRanked.get(0), run.getNextID(), parentsRanked.get(0).getAlleles(), parents);
-			child = parentsRanked.get(0).newInstance(run.getNextID(), parentsRanked.get(0).getAlleles(), parents);
+			//new NEATGenotype(parentsRanked.get(0), parentsRanked.get(0).getAlleles(), genericParents);
+			child = parentsRanked.get(0).newInstance(parentsRanked.get(0).getAlleles(), genericParents);
 
 			// Set values for each allele in the new genotype based on all values for same allele in all parents with
 			// this gene/allele.
@@ -91,8 +95,8 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 			// Child inherits structure/genes from all parents.
 
 			// Create an empty genotype (genes will be added one by one).
-			//new NEATGenotype(parentsRanked.get(0), run.getNextID(), new ArrayList<NEATAllele<?>>(), parents);
-			child = parentsRanked.get(0).newInstance(run.getNextID(), new ArrayList<NEATAllele<?>>(), parents); 
+			//new NEATGenotype(parentsRanked.get(0), new ArrayList<NEATAllele<?>>(), genericParents);
+			child = parentsRanked.get(0).newInstance(new ArrayList<NEATAllele<?>>(), genericParents); 
 			
 			// Get a list of all gene IDs across all parents, with associated alleles from each parent.
 			TreeMultimap<Long, NEATAllele<?>> allAlleles = TreeMultimap.create();
@@ -164,5 +168,10 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 				childAllele.vector.set(valIndex, value);
 			}
 		}
+	}
+
+	@Override
+	public int parentCountMaximum() {
+		return 2;
 	}
 }

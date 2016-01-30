@@ -1,7 +1,8 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * <p>
@@ -10,7 +11,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * </p>
  * <p>
  * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
- * and which should generally just call <em>super()</em> with the allele to copy.</strong> See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+ * and which should generally just call <em>super()</em> with the allele to copy.</strong> See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
  * <p>
  * Note that an Allele belongs to a specific Genotype, but may share the same Gene as Alleles in other Genotypes.
  * Alleles and Genotypes directly reference one another, but a Gene is only referenced by Alleles. A given Gene should
@@ -19,7 +20,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * 
  * @author O. J. Coleman
  */
-public class Allele<G extends Gene> extends Prototype {
+public class Allele<G extends Gene> extends PrototypeBase {
 	/**
 	 * The gene underlying this allele.
 	 */
@@ -31,15 +32,15 @@ public class Allele<G extends Gene> extends Prototype {
 	protected Genotype<?> genotype;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public Allele(JsonObject config) {
+	public Allele(Configuration config) {
 		super(config);
 		gene = null;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. The underlying
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. The underlying
 	 * {@link Gene} will be the same as the Allele to copy.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -51,7 +52,7 @@ public class Allele<G extends Gene> extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param gene the underlying Gene for the new Allele.

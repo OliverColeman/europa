@@ -7,12 +7,14 @@ import org.testng.annotations.*;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonObject;
 import com.eclipsesource.json.JsonValue;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.DefaultIDFactory;
 import com.ojcoleman.europa.configurable.InvalidConfigurationException;
 import com.ojcoleman.europa.configurable.InvalidParameterFieldException;
 import com.ojcoleman.europa.configurable.InvalidParameterValueException;
-import com.ojcoleman.europa.configurable.IsParameter;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.configurable.RequiredParameterValueMissingException;
 
 public class ConfigurableTestSetParams {
@@ -35,7 +37,7 @@ public class ConfigurableTestSetParams {
 
 	@Test(groups = { "basic" }, dataProvider = "params")
 	public void paramsSetValues(JsonObject json) throws Exception {
-		ParamsSet cc = new ParamsSet(null, json);
+		ParamsSet cc = new ParamsSet(null, new Configuration(json, false, new DefaultIDFactory()));
 		Assert.assertEquals(cc.booleanParamFalse, false);
 		Assert.assertEquals(cc.booleanParamTrue, true);
 		Assert.assertEquals(cc.intParam, 2);
@@ -54,7 +56,7 @@ public class ConfigurableTestSetParams {
 			try {
 				JsonObject jsonMissing = new JsonObject(json);
 				jsonMissing.remove(param);
-				ParamsSet cc = new ParamsSet(null, jsonMissing);
+				ParamsSet cc = new ParamsSet(null, new Configuration(jsonMissing, false, new DefaultIDFactory()));
 				Assert.fail("Required parameter " + param + " missing but no exception thrown.");
 			} catch (Exception ex) {
 				Assert.assertEquals(ex.getClass(), RequiredParameterValueMissingException.class, "Required parameter " + param + " missing but wrong exception thrown.");
@@ -67,7 +69,7 @@ public class ConfigurableTestSetParams {
 		JsonObject jsonMissing = new JsonObject(json);
 		jsonMissing.remove("booleanParamTrue");
 		try {
-			ParamsSet cc = new ParamsSet(null, jsonMissing);
+			ParamsSet cc = new ParamsSet(null, new Configuration(jsonMissing, false, new DefaultIDFactory()));
 		} catch (Exception ex) {
 			Assert.fail("Optional parameter booleanParamTrue missing but exception thrown.", ex);
 		}
@@ -75,7 +77,7 @@ public class ConfigurableTestSetParams {
 
 	@Test(groups = { "basic" }, dependsOnMethods = { "paramsSetValues" })
 	public void paramsDefaults() throws Exception {
-		ParamsDefault cc = new ParamsDefault(null, new JsonObject());
+		ParamsDefault cc = new ParamsDefault(null, new Configuration(new JsonObject(), false, new DefaultIDFactory()));
 		Assert.assertEquals(cc.booleanParamFalse, false);
 		Assert.assertEquals(cc.booleanParamTrue, true);
 		Assert.assertEquals(cc.intParam, 2);
@@ -91,7 +93,7 @@ public class ConfigurableTestSetParams {
 	@Test(groups = { "basic" })
 	public void setObjectParamNoGoodConstructor() {
 		try {
-			ParamsCustomObjectNoGoodConstructor cc = new ParamsCustomObjectNoGoodConstructor(null, new JsonObject());
+			ParamsCustomObjectNoGoodConstructor cc = new ParamsCustomObjectNoGoodConstructor(null, new Configuration(new JsonObject(), false, new DefaultIDFactory()));
 		} catch (Exception ex) {
 			Assert.assertEquals(ex.getClass(), InvalidParameterFieldException.class);
 			Assert.assertTrue(ex.getMessage().contains("no Constructor taking either a single JsonValue or String argument"));
@@ -104,7 +106,7 @@ public class ConfigurableTestSetParams {
 			try {
 				JsonObject json = new JsonObject();
 				json.add(param, -1000);
-				ParamsMinMaxValidation cc = new ParamsMinMaxValidation(null, json);
+				ParamsMinMaxValidation cc = new ParamsMinMaxValidation(null, new Configuration(json, false, new DefaultIDFactory()));
 				Assert.fail("Specified value below minimum range for " + param + " but no exception thrown.");
 			} catch (Exception ex) {
 				Assert.assertEquals(ex.getClass(), InvalidParameterValueException.class, "Specified value below minimum range for " + param + " but wrong exception thrown.");
@@ -118,7 +120,7 @@ public class ConfigurableTestSetParams {
 			try {
 				JsonObject json = new JsonObject();
 				json.add(param, 1000);
-				ParamsMinMaxValidation cc = new ParamsMinMaxValidation(null, json);
+				ParamsMinMaxValidation cc = new ParamsMinMaxValidation(null, new Configuration(json, false, new DefaultIDFactory()));
 				Assert.fail("Specified value below minimum range for " + param + " but no exception thrown.");
 			} catch (Exception ex) {
 				Assert.assertEquals(ex.getClass(), InvalidParameterValueException.class, "Specified value above maximum range for " + param + " but wrong exception thrown.");
@@ -130,11 +132,11 @@ public class ConfigurableTestSetParams {
 	public void paramsRegexValidation() throws Exception {
 		JsonObject json = new JsonObject();
 		json.add("stringParam", "pear");
-		ParamsRegexValidation cc = new ParamsRegexValidation(null, json);
+		ParamsRegexValidation cc = new ParamsRegexValidation(null, new Configuration(json, false, new DefaultIDFactory()));
 
 		try {
 			json.set("stringParam", "mango"); // Mango is gross.
-			cc = new ParamsRegexValidation(null, json);
+			cc = new ParamsRegexValidation(null, new Configuration(json, false, new DefaultIDFactory()));
 			Assert.fail("Specified value should not match regex but no exception thrown.");
 		} catch (Exception ex) {
 			Assert.assertEquals(ex.getClass(), InvalidParameterValueException.class, "Specified value should not match regex but wrong exception thrown.");
@@ -152,7 +154,7 @@ public class ConfigurableTestSetParams {
 		json.add("stringParam", Json.parse("[\"Twenty one\", \"Twenty three\"]"));
 		json.add("customObjectParam", Json.parse("[{\"intVal\":29,\"stringVal\":\"thirty one\"}, {\"intVal\":37,\"stringVal\":\"fourty one\"}]"));
 
-		ParamsArrays cc = new ParamsArrays(null, json);
+		ParamsArrays cc = new ParamsArrays(null, new Configuration(json, false, new DefaultIDFactory()));
 
 		Assert.assertEquals(cc.booleanParam, new boolean[] { true, false, true });
 		Assert.assertEquals(cc.intParam, new int[] { 2, 3, 5 });
@@ -166,7 +168,7 @@ public class ConfigurableTestSetParams {
 	@Test(groups = { "arrays" }, dependsOnGroups = { "basic" }, dependsOnMethods = { "paramsSetArrayValues" })
 	public void paramsDefaultArrayValues() throws Exception {
 		JsonObject json = new JsonObject();
-		ParamsArrays cc = new ParamsArrays(null, json);
+		ParamsArrays cc = new ParamsArrays(null, new Configuration(json, false, new DefaultIDFactory()));
 
 		Assert.assertEquals(cc.booleanParam, new boolean[] { true, false, true });
 		Assert.assertEquals(cc.intParam, new int[] { 2, 3, 5 });
@@ -181,127 +183,127 @@ public class ConfigurableTestSetParams {
 		TEST_1, TEST_2
 	}
 
-	static public class ParamsSet extends Component {
-		public ParamsSet(Component parentComponent, JsonObject componentConfig) throws Exception {
+	static public class ParamsSet extends ComponentBase {
+		public ParamsSet(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 
-		@IsParameter(description = "Test boolean parameter, false.")
+		@Parameter(description = "Test boolean parameter, false.")
 		boolean booleanParamFalse;
-		@IsParameter(description = "Test boolean parameter, true, optional.", optional = true)
+		@Parameter(description = "Test boolean parameter, true, optional.", optional = true)
 		boolean booleanParamTrue;
 
-		@IsParameter(description = "Test int parameter.")
+		@Parameter(description = "Test int parameter.")
 		int intParam;
 
-		@IsParameter(description = "Test long parameter.")
+		@Parameter(description = "Test long parameter.")
 		long longParam;
 
-		@IsParameter(description = "Test float parameter.")
+		@Parameter(description = "Test float parameter.")
 		float floatParam;
 
-		@IsParameter(description = "Test double parameter.")
+		@Parameter(description = "Test double parameter.")
 		double doubleParam;
 
-		@IsParameter(description = "Test String parameter.")
+		@Parameter(description = "Test String parameter.")
 		String stringParam;
 
-		@IsParameter(description = "Test custom object parameter.")
+		@Parameter(description = "Test custom object parameter.")
 		CustomObject customObjectParam;
 
-		@IsParameter(description = "Test class parameter.")
+		@Parameter(description = "Test class parameter.")
 		Class<? extends Double> classParam;
 
-		@IsParameter(description = "Test enum constant parameter.")
+		@Parameter(description = "Test enum constant parameter.")
 		TestEnum enumParam;
 	}
 
-	static public class ParamsDefault extends Component {
-		public ParamsDefault(Component parentComponent, JsonObject componentConfig) throws Exception {
+	static public class ParamsDefault extends ComponentBase {
+		public ParamsDefault(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 
-		@IsParameter(description = "Test boolean parameter with default false.", defaultValue = "false")
+		@Parameter(description = "Test boolean parameter with default false.", defaultValue = "false")
 		boolean booleanParamFalse;
-		@IsParameter(description = "Test boolean parameter with default true.", defaultValue = "true")
+		@Parameter(description = "Test boolean parameter with default true.", defaultValue = "true")
 		boolean booleanParamTrue;
 
-		@IsParameter(description = "Test int parameter with default.", defaultValue = "2")
+		@Parameter(description = "Test int parameter with default.", defaultValue = "2")
 		int intParam;
 
-		@IsParameter(description = "Test long parameter with default.", defaultValue = "-3")
+		@Parameter(description = "Test long parameter with default.", defaultValue = "-3")
 		long longParam;
 
-		@IsParameter(description = "Test float parameter with default.", defaultValue = "5.7")
+		@Parameter(description = "Test float parameter with default.", defaultValue = "5.7")
 		float floatParam;
 
-		@IsParameter(description = "Test double parameter with default.", defaultValue = "-11.13")
+		@Parameter(description = "Test double parameter with default.", defaultValue = "-11.13")
 		double doubleParam;
 
-		@IsParameter(description = "Test String parameter with default.", defaultValue = "Seventeen, nineteen.")
+		@Parameter(description = "Test String parameter with default.", defaultValue = "Seventeen, nineteen.")
 		String stringParam;
 
-		@IsParameter(description = "Test custom object parameter with default.", defaultValue = "{\"intVal\":21,\"stringVal\":\"twenty three\"}")
+		@Parameter(description = "Test custom object parameter with default.", defaultValue = "{\"intVal\":21,\"stringVal\":\"twenty three\"}")
 		CustomObject customObjectParam;
 
-		@IsParameter(description = "Test class parameter with default.", defaultValue = "java.lang.Double")
+		@Parameter(description = "Test class parameter with default.", defaultValue = "java.lang.Double")
 		Class<? extends Double> classParam;
 
-		@IsParameter(description = "Test enum constant parameter with default.", defaultValue = "test_2")
+		@Parameter(description = "Test enum constant parameter with default.", defaultValue = "test_2")
 		TestEnum enumParam;
 	}
 
-	static public class ParamsMinMaxValidation extends Component {
-		public ParamsMinMaxValidation(Component parentComponent, JsonObject componentConfig) throws Exception {
+	static public class ParamsMinMaxValidation extends ComponentBase {
+		public ParamsMinMaxValidation(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 
-		@IsParameter(description = "Test int parameter with default.", minimumValue = "2", defaultValue = "3", maximumValue = "5")
+		@Parameter(description = "Test int parameter with default.", minimumValue = "2", defaultValue = "3", maximumValue = "5")
 		int intParam;
 
-		@IsParameter(description = "Test long parameter with default.", minimumValue = "-7", defaultValue = "11", maximumValue = "13")
+		@Parameter(description = "Test long parameter with default.", minimumValue = "-7", defaultValue = "11", maximumValue = "13")
 		long longParam;
 
-		@IsParameter(description = "Test float parameter with default.", minimumValue = "17.19", defaultValue = "23", maximumValue = "29.31")
+		@Parameter(description = "Test float parameter with default.", minimumValue = "17.19", defaultValue = "23", maximumValue = "29.31")
 		float floatParam;
 
-		@IsParameter(description = "Test double parameter with default.", minimumValue = "37.41", defaultValue = "43", maximumValue = "47.53")
+		@Parameter(description = "Test double parameter with default.", minimumValue = "37.41", defaultValue = "43", maximumValue = "47.53")
 		double doubleParam;
 	}
 
-	static public class ParamsRegexValidation extends Component {
-		public ParamsRegexValidation(Component parentComponent, JsonObject componentConfig) throws Exception {
+	static public class ParamsRegexValidation extends ComponentBase {
+		public ParamsRegexValidation(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 
-		@IsParameter(description = "Test String parameter with regex.", regexValidation = "(apple|orange|pear|banana)")
+		@Parameter(description = "Test String parameter with regex.", regexValidation = "(apple|orange|pear|banana)")
 		String stringParam;
 	}
 
-	static public class ParamsArrays extends Component {
-		public ParamsArrays(Component parentComponent, JsonObject componentConfig) throws Exception {
+	static public class ParamsArrays extends ComponentBase {
+		public ParamsArrays(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 
-		@IsParameter(description = "Test boolean parameter.", defaultValue = "[true, false, true]")
+		@Parameter(description = "Test boolean parameter.", defaultValue = "[true, false, true]")
 		boolean[] booleanParam;
 
-		@IsParameter(description = "Test int parameter with default.", defaultValue = "[2, 3, 5]")
+		@Parameter(description = "Test int parameter with default.", defaultValue = "[2, 3, 5]")
 		int[] intParam;
 
-		@IsParameter(description = "Test long parameter with default.", defaultValue = "[7, 11]")
+		@Parameter(description = "Test long parameter with default.", defaultValue = "[7, 11]")
 		long[] longParam;
 
-		@IsParameter(description = "Test float parameter with default.", defaultValue = "[13]")
+		@Parameter(description = "Test float parameter with default.", defaultValue = "[13]")
 		float[] floatParam;
 
-		@IsParameter(description = "Test double parameter with default.", defaultValue = "[17, 19]")
+		@Parameter(description = "Test double parameter with default.", defaultValue = "[17, 19]")
 		double[] doubleParam;
 
-		@IsParameter(description = "Test String parameter with default.", defaultValue = "[\"Twenty one\", \"Twenty three\"]")
+		@Parameter(description = "Test String parameter with default.", defaultValue = "[\"Twenty one\", \"Twenty three\"]")
 		String[] stringParam;
 
-		@IsParameter(description = "Test custom object parameter with default.", defaultValue = "[{\"intVal\":29,\"stringVal\":\"thirty one\"}, {\"intVal\":37,\"stringVal\":\"fourty one\"}]")
+		@Parameter(description = "Test custom object parameter with default.", defaultValue = "[{\"intVal\":29,\"stringVal\":\"thirty one\"}, {\"intVal\":37,\"stringVal\":\"fourty one\"}]")
 		CustomObject[] customObjectParam;
 	}
 
@@ -328,11 +330,11 @@ public class ConfigurableTestSetParams {
 		}
 	}
 
-	static public class ParamsCustomObjectNoGoodConstructor extends Component {
-		@IsParameter(description = "Test custom object with no constructor accepting a String or JsonValue.", defaultValue = "{}")
+	static public class ParamsCustomObjectNoGoodConstructor extends ComponentBase {
+		@Parameter(description = "Test custom object with no constructor accepting a String or JsonValue.", defaultValue = "{}")
 		CustomObjectNoGoodConstructor param;
 
-		public ParamsCustomObjectNoGoodConstructor(Component parentComponent, JsonObject componentConfig) throws Exception {
+		public ParamsCustomObjectNoGoodConstructor(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 			super(parentComponent, componentConfig);
 		}
 	}

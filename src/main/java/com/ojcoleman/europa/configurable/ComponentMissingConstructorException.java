@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates that a sub-class of {@link Component} does not implement a constructor accepting a Component and JsonObject as parameter.
+ * Indicates that a sub-class of {@link ComponentBase} does not implement a constructor accepting a ComponentBase and JsonObject as parameter.
  * 
  * @author O. J. Coleman
  */

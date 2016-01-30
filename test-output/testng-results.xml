@@ -1,45 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testng-results skipped="0" failed="0" total="9" passed="9">
+<testng-results skipped="0" failed="0" total="7" passed="7">
   <reporter-output>
   </reporter-output>
-  <suite name="Default suite" duration-ms="93" started-at="2016-01-20T00:26:49Z" finished-at="2016-01-20T00:26:49Z">
+  <suite name="Default suite" duration-ms="94" started-at="2016-01-30T05:05:08Z" finished-at="2016-01-30T05:05:08Z">
     <groups>
     </groups>
-    <test name="Default test" duration-ms="93" started-at="2016-01-20T00:26:49Z" finished-at="2016-01-20T00:26:49Z">
+    <test name="Default test" duration-ms="94" started-at="2016-01-30T05:05:08Z" finished-at="2016-01-30T05:05:08Z">
       <class name="com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest">
-        <test-method status="PASS" signature="subCompArrayWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompArrayWithParams" duration-ms="56" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompArrayWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompArrayWithParams" duration-ms="71" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompArrayWithParams -->
-        <test-method status="PASS" signature="subCompDefault()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompDefault" duration-ms="1" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompDefault()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompDefault" duration-ms="1" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompDefault -->
-        <test-method status="PASS" signature="subCompExtendedWithOverriddenParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompExtendedWithOverriddenParams" duration-ms="9" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
-          <reporter-output>
-          </reporter-output>
-        </test-method> <!-- subCompExtendedWithOverriddenParams -->
-        <test-method status="PASS" signature="subCompExtendedWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompExtendedWithParams" duration-ms="2" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
-          <reporter-output>
-          </reporter-output>
-        </test-method> <!-- subCompExtendedWithParams -->
-        <test-method status="PASS" signature="subCompInvalid()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompInvalid" duration-ms="0" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompInvalid()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompInvalid" duration-ms="1" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompInvalid -->
-        <test-method status="PASS" signature="subCompOptional()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompOptional" duration-ms="1" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompOptional()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompOptional" duration-ms="0" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompOptional -->
-        <test-method status="PASS" signature="subCompRequired()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompRequired" duration-ms="1" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompRequired()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompRequired" duration-ms="1" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompRequired -->
-        <test-method status="PASS" signature="subCompSetImpl()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompSetImpl" duration-ms="1" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompSetImpl()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompSetImpl" duration-ms="1" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompSetImpl -->
-        <test-method status="PASS" signature="subCompWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@781efa43]" name="subCompWithParams" duration-ms="1" started-at="2016-01-20T11:26:49Z" finished-at="2016-01-20T11:26:49Z">
+        <test-method status="PASS" signature="subCompWithParams()[pri:0, instance:com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest@4348bd9]" name="subCompWithParams" duration-ms="1" started-at="2016-01-30T16:05:08Z" finished-at="2016-01-30T16:05:08Z">
           <reporter-output>
           </reporter-output>
         </test-method> <!-- subCompWithParams -->

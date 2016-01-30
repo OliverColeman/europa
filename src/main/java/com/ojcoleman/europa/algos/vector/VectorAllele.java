@@ -7,7 +7,8 @@ import java.util.Map;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Allele;
 import com.ojcoleman.europa.core.Gene;
 
@@ -18,7 +19,7 @@ import com.ojcoleman.europa.core.Gene;
  * <p>
  * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
  * and which should generally just call <em>super()</em> with the allele to copy.</strong> See
- * {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+ * {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
  * <p>
  * 
  * @see Vector
@@ -32,15 +33,15 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	public final Vector vector;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public VectorAllele(JsonObject config) {
+	public VectorAllele(Configuration config) {
 		super(config);
 		vector = Vector.EMPTY;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorAllele referencing the same underlying Gene but storing an independent copy of the Vector in the original allele.
 	 * 
 	 * @param paramVector The vector for the new allele, copied by reference.
@@ -53,7 +54,7 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorAllele with the specified underlying Gene and storing the specified Vector.
 	 * 
 	 * @param allele The allele to copy.

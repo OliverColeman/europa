@@ -5,11 +5,12 @@ import java.util.Random;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Configurable;
-import com.ojcoleman.europa.configurable.Component;
+import com.ojcoleman.europa.configurable.ConfigurableBase;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.InvalidConfigurationException;
-import com.ojcoleman.europa.configurable.IsConfigurable;
-import com.ojcoleman.europa.configurable.IsParameter;
+import com.ojcoleman.europa.configurable.Configurable;
+import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Run;
 
 /**
@@ -18,14 +19,14 @@ import com.ojcoleman.europa.core.Run;
  * 
  * @author O. J. Coleman
  */
-public class ParametrisedGeneType extends Configurable {
-	@IsConfigurable(description = "The available parameters, and associated properties, whose values should be fixed when a gene of this type is added.")
+public class ParametrisedGeneType extends ConfigurableBase {
+	@Configurable(description = "The available parameters, and associated properties, whose values should be fixed when a gene of this type is added.")
 	protected VectorMetadata paramsGene;
 
-	@IsConfigurable(description = "The available parameters, and associated properties, whose value is an allele and so may change after this type of gene is added.")
+	@Configurable(description = "The available parameters, and associated properties, whose value is an allele and so may change after this type of gene is added.")
 	protected VectorMetadata paramsAllele;
 
-	@IsConfigurable(description = "Similar to paramsAllele, however the parameters specified here are intended to be referenced from other genes or alleles, instead of those parameters being set or evolved individually in each gene or allele. If this is set to a non-empty value then an integer parameter labeled \"typeReference\" must be added to one of paramsGene or paramsAllele; this is used as the reference to the type. The minimum value for the typeReference must be 0 and the maximum value must be one less than the number of types that should be allowed.")
+	@Configurable(description = "Similar to paramsAllele, however the parameters specified here are intended to be referenced from other genes or alleles, instead of those parameters being set or evolved individually in each gene or allele. If this is set to a non-empty value then an integer parameter labeled \"typeReference\" must be added to one of paramsGene or paramsAllele; this is used as the reference to the type. The minimum value for the typeReference must be 0 and the maximum value must be one less than the number of types that should be allowed.")
 	protected VectorMetadata paramsType;
 
 	/**
@@ -40,13 +41,11 @@ public class ParametrisedGeneType extends Configurable {
 	public final int paramsTypeCount;
 
 
-	public ParametrisedGeneType(JsonObject config) throws Exception {
+	public ParametrisedGeneType(Configuration config) throws Exception {
 		super(config);
 		
-		boolean isDummy = config.getBoolean("_isDummy", false);
-		
 		// If a dummy instance is being set-up then a default element will be added to paramsType. However this causes an exception below, so make paramsType empty.
-		if (isDummy) {
+		if (config.isDummy) {
 			paramsType = VectorMetadata.EMPTY;
 		}
 
@@ -75,7 +74,7 @@ public class ParametrisedGeneType extends Configurable {
 		params.addAll(paramsGene.getLabels());
 		params.addAll(paramsAllele.getLabels());
 		params.addAll(paramsType.getLabels());
-		if (!isDummy && params.size() < paramsGene.size() + paramsAllele.size() + paramsType.size()) {
+		if (!config.isDummy && params.size() < paramsGene.size() + paramsAllele.size() + paramsType.size()) {
 			throw new InvalidConfigurationException("One or more parameters in paramsGene, paramsAllele or paramsType have the same label.");
 		}
 	}

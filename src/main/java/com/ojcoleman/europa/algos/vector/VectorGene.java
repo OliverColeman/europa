@@ -7,7 +7,8 @@ import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Gene;
 
 /**
@@ -22,15 +23,15 @@ public abstract class VectorGene extends Gene {
 	public final Vector vector;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public VectorGene(JsonObject config) {
+	public VectorGene(Configuration config) {
 		super(config);
 		vector = Vector.EMPTY;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorGene with specified type(s) and Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -50,7 +51,7 @@ public abstract class VectorGene extends Gene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorGene with the specified Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.

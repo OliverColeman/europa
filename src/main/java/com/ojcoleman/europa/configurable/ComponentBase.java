@@ -29,6 +29,7 @@ import com.eclipsesource.json.JsonValue;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
+import com.google.common.reflect.TypeToken;
 
 /**
  * <p>
@@ -39,13 +40,13 @@ import com.google.common.collect.Multimap;
  * </p>
  * <h3>Fields</h3>
  * <p>
- * The field must be of a type that extends {@link com.ojcoleman.europa.configurable.Component}. A Component may also
- * contain fields annotated with {@link IsParameter}, {@link IsConfigurable} and {@link IsPrototype}.
+ * The field must be of a type that extends {@link com.ojcoleman.europa.configurable.ComponentBase}. A Component may also
+ * contain fields annotated with {@link Parameter}, {@link Configurable} and {@link Prototype}.
  * </p>
  * <p>
- * Fields in a Component may be marked as user configurable using the {@link IsParameter} annotation. For example:
+ * Fields in a Component may be marked as user configurable using the {@link Parameter} annotation. For example:
  * <code>
- * \@IsParameter (description="The desired population desiredSize.", defaultValue="100")
+ * \@Parameter (description="The desired population desiredSize.", defaultValue="100")
  * protected int desiredSize;
  * </code> When the Component is instantiated the field will be assigned the value specified in the JSON configuration
  * file, or the default value if a default value has been set. If sub-classes contain the same field name (overriding
@@ -55,7 +56,7 @@ import com.google.common.collect.Multimap;
  * <p>
  * A Component may contain Component fields whose configuration is nested within the JSON configuration file. For
  * example: <code>
- * \@IsComponent (description="The population of individuals.", defaultImplementation=SimplePopulation.class)
+ * \@Component (description="The population of individuals.", defaultImplementation=SimplePopulation.class)
  * protected Population population;
  * </code>
  * </p>
@@ -73,12 +74,12 @@ import com.google.common.collect.Multimap;
  * </code>
  * <h3>Prototypes</h3>
  * <p>
- * If a Component has a IsParameter field whose type extends {@link IsPrototype}, for example <code>
- * &#64;IsParameter (description="The class and configuration for individuals.")
+ * If a Component has a Parameter field whose type extends {@link Prototype}, for example <code>
+ * &#64;Parameter (description="The class and configuration for individuals.")
  * protected Individual individualProto;
- * </code> where Individual extends IsPrototype, then a singleton instance will automatically be initialised for it.
- * {@link Component#newInstance(Class)} may then be used to get new instances, where the argument to
- * <code>newInstance</code> corresponds to the base class of the IsPrototype type to get, for example
+ * </code> where Individual extends Prototype, then a singleton instance will automatically be initialised for it.
+ * {@link ComponentBase#newInstance(Class)} may then be used to get new instances, where the argument to
+ * <code>newInstance</code> corresponds to the base class of the Prototype type to get, for example
  * <code>someComponent.newInstance(Individual.class)</code>. The sub-class to use for the prototype may be specified in
  * the JSON configuration using the key "prototypeClass". For example: <code>
  * {
@@ -96,20 +97,20 @@ import com.google.common.collect.Multimap;
  * 
  * @author O. J. Coleman
  */
-public abstract class Component extends Configurable {
-	private static Logger logger = LoggerFactory.getLogger(Component.class);
+public abstract class ComponentBase extends ConfigurableBase {
+	private static Logger logger = LoggerFactory.getLogger(ComponentBase.class);
 	
 	// Key is the field defining the sub-component, value is the component requesting the field (if being initialised via getSubComponent()).
-	private static Map<Field, Component> subComponentBeingInitialised = new HashMap<>();
+	private static Map<Field, ComponentBase> subComponentBeingInitialised = new HashMap<>();
 
 	/**
 	 * The parent component of this component.
 	 */
-	public final Component parentComponent;
+	public final ComponentBase parentComponent;
 	
 	private JsonObject componentConfig;
 
-	private Map<Class<?>, Component> parentClassMap = new HashMap<>();
+	private Map<Class<?>, ComponentBase> parentClassMap = new HashMap<>();
 	
 	// If the field name for a component is contained then it indicates the component has been initialised.
 	private Set<String> componentInitialised = new HashSet<>();
@@ -124,7 +125,7 @@ public abstract class Component extends Configurable {
 	 * @param config The configuration for the this component and, recursively, it's Components.
 	 * @throws Exception If an error occurred instantiating Components or setting parameter field values.
 	 */
-	public Component(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public ComponentBase(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(componentConfig);
 		
 		this.componentConfig = componentConfig;
@@ -134,12 +135,12 @@ public abstract class Component extends Configurable {
 		if (parentComponent != null) {
 			parentClassMap.putAll(parentComponent.parentClassMap);
 
-			// Add mappings for all the super-classes of the parent up to Component
+			// Add mappings for all the super-classes of the parent up to ComponentBase
 			// so that all sub/super-classes may be specified in getParentComponent()
-			Class<? extends Component> parentType = parentComponent.getClass();
-			while (parentType != Component.class) {
+			Class<? extends ComponentBase> parentType = parentComponent.getClass();
+			while (parentType != ComponentBase.class) {
 				parentClassMap.put(parentType, parentComponent);
-				parentType = (Class<? extends Component>) parentType.getSuperclass();
+				parentType = (Class<? extends ComponentBase>) parentType.getSuperclass();
 			}
 		}
 
@@ -167,7 +168,7 @@ public abstract class Component extends Configurable {
 		// (Class.getFields() only returns public fields). 
 		for (Class<?> clazz : getSuperClasses()) {
 			for (Field field : clazz.getDeclaredFields()) {
-				if (field.isAnnotationPresent(IsComponent.class)) {
+				if (field.isAnnotationPresent(Component.class)) {
 					if (fieldNames.contains(field.getName())) {
 						throw new InvalidConfigurableFieldException("A field with the same name, " + field.getName() + ", is declared in a super-class of " + clazz.getCanonicalName());
 					}
@@ -195,7 +196,7 @@ public abstract class Component extends Configurable {
 			Class<?> type = field.getType();
 			boolean isArray = field.getType().isArray();
 			String name = field.getName();
-			IsComponent annotation = field.getAnnotation(IsComponent.class);
+			Component annotation = field.getAnnotation(Component.class);
 			
 			List<JsonObject> subComponentConfigList = new ArrayList<JsonObject>();
 
@@ -223,14 +224,14 @@ public abstract class Component extends Configurable {
 
 				
 				// Get the Components as a list if they're not already.
-				Component[] subComponentsList;
+				ComponentBase[] subComponentsList;
 				if (isArray) {
-					subComponentsList = (Component[]) value;
+					subComponentsList = (ComponentBase[]) value;
 				} else {
-					subComponentsList = new Component[] { (Component) value };
+					subComponentsList = new ComponentBase[] { (ComponentBase) value };
 				}
 
-				for (Component subComp : subComponentsList) {
+				for (ComponentBase subComp : subComponentsList) {
 					JsonObject subCompConfig = new JsonObject();
 				
 					if (includeMetaData) {
@@ -271,7 +272,7 @@ public abstract class Component extends Configurable {
 	
 
 	/**
-	 * Returns the instance for a sub-Component of this Component (referenced via a field annotated with {@link @IsComponent}), initialising it if necessary. This method should be
+	 * Returns the instance for a sub-Component of this Component (referenced via a field annotated with {@link @Component}), initialising it if necessary. This method should be
 	 * called from the Constructors of other components when they require access to another Component (which may not have been initialised yet).
 	 * This method should not typically be used outside of the constructor for a Component as it is not very efficient; sub-Components
 	 * should typically be accessed via get methods defined on the parent Component.
@@ -281,19 +282,19 @@ public abstract class Component extends Configurable {
 	 * 
 	 * @return The requested Component or array of Components, depending on the Component field type.
 	 */
-	public Object getSubComponent(String fieldName, Component requestingComponent) {
+	public Object getSubComponent(String fieldName, ComponentBase requestingComponent) {
 		try {
 			Field field = this.getClass().getDeclaredField(fieldName);
-			if (field.getAnnotation(IsComponent.class) == null) {
-				throw new InvalidConfigurableFieldException("The requested Component field " + fieldName + " in Class " + this.getClass().getCanonicalName() + " is not annotated with @IsComponent.");
+			if (field.getAnnotation(Component.class) == null) {
+				throw new InvalidConfigurableFieldException("The requested ComponentBase field " + fieldName + " in Class " + this.getClass().getCanonicalName() + " is not annotated with @Component.");
 			}
 			
 			// If this field was already in the process of being initialised we have a loop.
 			if (subComponentBeingInitialised.containsKey(field)) {
 				String message = "Two or more components are requesting access to each other during their initialisation.\n    The Component fields currently being initialised (and the requesting component if applicable) are:\n";
-				for (Map.Entry<Field, Component> fieldComp : subComponentBeingInitialised.entrySet()) {
+				for (Map.Entry<Field, ComponentBase> fieldComp : subComponentBeingInitialised.entrySet()) {
 					Field f = fieldComp.getKey();
-					Component c = fieldComp.getValue();
+					ComponentBase c = fieldComp.getValue();
 					message += "        " + f.getDeclaringClass().getCanonicalName() + "#" + f.getName();
 					if (c != null) {
 						message += " (" + c.getClass().getCanonicalName() + ")";
@@ -331,7 +332,7 @@ public abstract class Component extends Configurable {
 	 * @param clazz The class of the desired parent component. Any sub- or super-class of the desired parent component
 	 *            may be specified.
 	 */
-	public <T extends Component> T getParentComponent(Class<T> clazz) {
+	public <T extends ComponentBase> T getParentComponent(Class<T> clazz) {
 		return (T) parentClassMap.get(clazz);
 	}
 
@@ -347,7 +348,7 @@ public abstract class Component extends Configurable {
 		Class<?> definingClass = field.getDeclaringClass();
 
 		boolean isArray = field.getType().isArray();
-		IsComponent annotation = field.getAnnotation(IsComponent.class);
+		Component annotation = field.getAnnotation(Component.class);
 
 		// In case it's private or protected.
 		field.setAccessible(true);
@@ -356,7 +357,7 @@ public abstract class Component extends Configurable {
 		try {
 			// Check if the current value is null.
 			if (field.get(this) != null) {
-				logger.warn("The Component field " + field.getName() + " in " + definingClass.getCanonicalName() + " is set to a non-null value in its declaring line, this should be avoided for Component.getSubComponent() to function properly.");
+				logger.warn("The Component field " + field.getName() + " in " + definingClass.getCanonicalName() + " is set to a non-null value in its declaring line, this should be avoided for ComponentBase.getSubComponent() to function properly.");
 			}
 			
 			Object value;
@@ -396,13 +397,10 @@ public abstract class Component extends Configurable {
 				int idx = 0;
 				for (JsonValue configJsonVal : configArray) {
 					constructor = getComponentConstructor(definingClass, this, field, configJsonVal, isArray);
+					
+					Configuration config = new Configuration(configJsonVal.asObject(), isDummy, idFactory);
 
-					if (isDummy) {
-						// Mark the configuration as being for a dummy instance.
-						configJsonVal.asObject().add("_isDummy", true);
-					}
-
-					Object val = constructor.newInstance(this, configJsonVal.asObject());
+					Object val = constructor.newInstance(this, config);
 
 					Array.set(value, idx++, val);
 				}
@@ -420,12 +418,9 @@ public abstract class Component extends Configurable {
 
 				constructor = getComponentConstructor(definingClass, this, field, jsonValue, isArray);
 
-				if (isDummy) {
-					// Mark the configuration as being for a dummy instance
-					jsonValue.asObject().add("_isDummy", true);
-				}
+				Configuration config = new Configuration(jsonValue.asObject(), isDummy, idFactory);
 
-				value = constructor.newInstance(this, jsonValue.asObject());
+				value = constructor.newInstance(this, config);
 			}
 
 			field.set(this, value);
@@ -445,23 +440,20 @@ public abstract class Component extends Configurable {
 	 * Get the constructor for the given Component field, taking into account the default class in the annotation if
 	 * specified and the "class" in the config if specified and performing error checking.
 	 */
-	Constructor<?> getComponentConstructor(Class<?> definingClass, Configurable configurable, Field field, JsonValue jsonConfig, boolean isArray) {
+	Constructor<?> getComponentConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
 			String error = "The configuration for Component field " + field.getName() + " in " + definingClass.getCanonicalName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
-		Class<?> type = field.getType();
-		if (type.isArray()) {
-			type = type.getComponentType();
-		}
-
-		if (!Component.class.isAssignableFrom(type)) {
+		Class<?> type = getFieldRuntimeType(field);
+		
+		if (!ComponentBase.class.isAssignableFrom(type)) {
 			String error = "The type of Component field " + field.getName() + " in " + definingClass.getCanonicalName() + " is not a sub-class of Component.";
 			throw new InvalidConfigurableFieldException(error);
 		}
 		
-		IsComponent annotation = field.getAnnotation(IsComponent.class);
+		Component annotation = field.getAnnotation(Component.class);
 		
 		// Allow specifying the sub-class to use.
 		if (jsonConfig.asObject().getString("class", null) != null) {
@@ -499,7 +491,7 @@ public abstract class Component extends Configurable {
 		}
 
 		try {
-			return type.getConstructor(Component.class, JsonObject.class);
+			return type.getConstructor(ComponentBase.class, Configuration.class);
 		} catch (NoSuchMethodException ex) {
 			throw new ComponentConstructorException("The class specified for Component field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a Component and JsonObject as its only parameters.");
 		}

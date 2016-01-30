@@ -5,7 +5,8 @@ import java.util.Set;
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
 import com.ojcoleman.europa.algos.vector.VectorGene;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * Base class for representations of NEAT genes.
@@ -14,20 +15,14 @@ import com.ojcoleman.europa.configurable.Prototype;
  */
 public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	/**
-	 * The NEAT innovation ID.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public final long id;
-
-	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
-	 */
-	public NEATGene(JsonObject config) {
+	public NEATGene(Configuration config) {
 		super(config);
-		id = -1;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorGene with specified type(s) and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -39,11 +34,10 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	 */
 	public NEATGene(NEATGene prototype, Set<Object> type, long id, Vector paramVector) {
 		super(prototype, type, paramVector);
-		this.id = id;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Create a new
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
 	 * VectorGene with the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -53,7 +47,6 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	 */
 	public NEATGene(NEATGene prototype, long id, Vector paramVector) {
 		super(prototype, paramVector);
-		this.id = id;
 	}
 
 	@Override

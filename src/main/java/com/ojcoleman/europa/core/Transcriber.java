@@ -1,9 +1,10 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
+import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.configurable.IsComponent;
-import com.ojcoleman.europa.configurable.IsPrototype;
+import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.populations.SimplePopulation;
 
 /**
@@ -11,15 +12,18 @@ import com.ojcoleman.europa.populations.SimplePopulation;
  * the Genotype and the Function, and be able to produce a template genotype. Typically a Transcriber will query the
  * primary {@link Evaluator} to determine some aspects of the Genotype and phenotype Function.
  */
-public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends Component {
-	@IsComponent(description = "Component for the population of individuals.", defaultClass = SimplePopulation.class)
+public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase {
+	@Prototype(description = "The prototype configuration for the genotype.")
+	protected G genotype;
+	
+	@Component(description = "Component for the population of individuals.", defaultClass = SimplePopulation.class)
 	protected Population<G, F> population;
 	
 	
 	/**
-	 * Constructor for {@link Component}.
+	 * Constructor for {@link ComponentBase}.
 	 */
-	public Transcriber(Component parentComponent, JsonObject componentConfig) throws Exception {
+	public Transcriber(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
 
@@ -41,6 +45,9 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 */
 	public abstract G getTemplateGenotype();
 
+	/**
+	 * Returns a reference to the Population.
+	 */
 	public Population<G, F> getPopulation() {
 		return population;
 	}

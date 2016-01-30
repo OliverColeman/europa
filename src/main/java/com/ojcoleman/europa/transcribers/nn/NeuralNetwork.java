@@ -7,7 +7,8 @@ import java.util.Map;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * <p>A wrapper for neural network implementations whose configuration is defined by a set of labelled numeric parameters. 
@@ -16,7 +17,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * <p>The wrapper supports the notion of neuron and synapse types. A type is defined by a specific configuration (a set of values for some parameters), 
  * and a neuron or synapse that references that type will adopt that configuration. See {@link ParametrisedGeneType#getParamsType()} for more information.</p>
  */
-public abstract class NeuralNetwork extends Prototype implements VectorFunction {
+public abstract class NeuralNetwork extends PrototypeBase implements VectorFunction {
 	/**
 	 * The instance configuration for the neural network to be built. 
 	 */
@@ -34,15 +35,15 @@ public abstract class NeuralNetwork extends Prototype implements VectorFunction 
 	
 	
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public NeuralNetwork(JsonObject config) {
+	public NeuralNetwork(Configuration config) {
 		super(config);
 		instanceConfig = null;
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * Create a neural network with the given instance configuration.
 	 *

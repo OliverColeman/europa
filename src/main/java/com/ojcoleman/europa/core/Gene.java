@@ -6,7 +6,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
-import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
  * <p>
@@ -21,7 +22,7 @@ import com.ojcoleman.europa.configurable.Prototype;
  * only be included once in a Genotype.
  * </p>
  */
-public class Gene extends Prototype {
+public class Gene extends PrototypeBase {
 	/**
 	 * The type(s) of the gene, if applicable to the evolutionary algorithm in use. Usually these are enum constants.
 	 * May be empty. The set is immutable (actually an {@link Collections#unmodifiableSet(Set)}, but this class will
@@ -30,15 +31,15 @@ public class Gene extends Prototype {
 	public final Set<Object> types;
 
 	/**
-	 * Prototype constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public Gene(JsonObject config) {
+	public Gene(Configuration config) {
 		super(config);
 		types = Collections.unmodifiableSet(typeSet());
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param type The type(s) of the gene. Usually these are enum constants. May be empty. The given Set is passed
@@ -53,7 +54,7 @@ public class Gene extends Prototype {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.Prototype#Prototype(Prototype)}. Creates a Gene
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Creates a Gene
 	 * with no {@link #types}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

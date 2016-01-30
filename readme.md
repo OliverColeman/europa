@@ -36,7 +36,7 @@ want a jar file that does not include the dependencies replace "withDeps" with
 
 ## Configurable Component Architecture
 
-Every significant piece of functionality is a "component" (extending com.ojcoleman.europa.configurable.Component). Components can have various kinds of parameters and sub-components. A parameter or sub-component is just a field in a Class with a custom annotation, for example:
+Every significant piece of functionality is a "component" (extending com.ojcoleman.europa.configurable.ComponentBase). Components can have various kinds of parameters and sub-components. A parameter or sub-component is just a field in a Class with a custom annotation, for example:
 
 ```java
 	@Parameter(description="The random seed. Default value is the system time.", optional=true)
