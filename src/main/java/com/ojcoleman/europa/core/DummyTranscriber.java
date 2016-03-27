@@ -15,7 +15,7 @@ public class DummyTranscriber extends Transcriber<DummyGenotype, Function<?, ?>>
 	}
 
 	@Override
-	public Function<?, ?> transcribe(DummyGenotype genotype, Function<?, ?> function) {
+	public Function<?, ?> transcribe(DummyGenotype genotype, Function<?, ?> function, Log log) {
 		return null;
 	}
 

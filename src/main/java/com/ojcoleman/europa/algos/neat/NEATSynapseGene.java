@@ -39,14 +39,12 @@ public class NEATSynapseGene extends NEATGene {
 	 * with random values.
 	 * 
 	 * @param prototype The prototype gene to copy.
-	 * @param geneID The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the
-	 *            NEAT algorithm.
 	 * @param sourceID The NEAT ID of the source neuron gene.
 	 * @param destinationID The NEAT ID of the destination neuron gene.
 	 * @param paramVector The parameter vector for this synapse.
 	 */
-	NEATSynapseGene(NEATSynapseGene prototype, long geneID, long sourceID, long destinationID, Vector paramVector) {
-		super(prototype, Gene.typeSet(NNPart.SYNAPSE), geneID, paramVector);
+	public NEATSynapseGene(NEATSynapseGene prototype, long sourceID, long destinationID, Vector paramVector) {
+		super(prototype, Gene.typeSet(NNPart.SYNAPSE), paramVector);
 		this.sourceID = sourceID;
 		this.destinationID = destinationID;
 	}

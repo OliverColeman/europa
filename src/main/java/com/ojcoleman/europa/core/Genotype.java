@@ -11,12 +11,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.reflect.TypeToken;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
+import com.ojcoleman.europa.util.StructuredStringableStringer;
 
 /**
  * <p>
@@ -35,7 +37,7 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
  * 
  * @author O. J. Coleman
  */
-public abstract class Genotype<A extends Allele<?>> extends PrototypeBase {
+public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implements StructuredStringable {
 	/**
 	 * The parent(s) of this Genotype (as an unmodifiable List).
 	 */
@@ -47,7 +49,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase {
 	protected final Collection<A> alleles;
 
 	private ArrayListMultimap<Object, A> allelesByGeneType;
-
+	
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
@@ -203,5 +205,12 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase {
 				allelesByGeneType.remove(type, allele);
 			}
 		}
+	}
+
+	
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		super.getStructuredStringableObject(map);
+		map.put("alleles", alleles);
 	}
 }

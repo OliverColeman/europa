@@ -1,6 +1,7 @@
 package com.ojcoleman.europa.algos.vector;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,10 @@ import java.util.Random;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
+import com.ojcoleman.europa.core.StructuredStringable;
+import com.ojcoleman.europa.util.Interval;
+import com.ojcoleman.europa.util.IntervalDouble;
+import com.sun.swing.internal.plaf.metal.resources.metal;
 
 /**
  * A Vector stores an array of double-precision floating point values. The meta-data for each element are defined by a
@@ -19,7 +24,7 @@ import com.google.common.primitives.Doubles;
  * 
  * @author O. J. Coleman
  */
-public class Vector {
+public class Vector implements StructuredStringable {
 	/**
 	 * The largest magnitude (positive or negative) integer that may be stored in a Vector. This is determined by the
 	 * largest integer value for which it and all smaller integer values can be accurately represented by a (IEEE 754)
@@ -71,10 +76,10 @@ public class Vector {
 		if (info.size() != values.length) {
 			throw new IllegalArgumentException("The meta data for a Vector must contain the same number of elements as that for the values given.");
 		}
-		this.values = new double[values.length];
-		setValues(values);
 		this.metadata = info;
 		this.mutable = mutable;
+		this.values = new double[values.length];
+		setValuesIgnoreMutable(values);
 	}
 
 	/**
@@ -136,7 +141,8 @@ public class Vector {
 
 	/**
 	 * Set the value at the specified index. If the element at the given index is intended to store an integer then the
-	 * given value will be rounded.
+	 * given value will be rounded. If the value is outside of the bounds specified by the {@link #metadata} then it 
+	 * will be clamped to the lower or upper bound as necessary.
 	 * 
 	 * @throws UnsupportedOperationException if the values are not {@link #mutable} or if the value at the specified
 	 *             index is intended to store an integer and a value with magnitude greater than
@@ -146,6 +152,11 @@ public class Vector {
 		if (!mutable) {
 			throw new UnsupportedOperationException("The values of this Vector may not be modified.");
 		}
+		value = metadata.bound(index).clamp(value);
+		setIgnoreMutable(index, value);
+	}
+	
+	private void setIgnoreMutable(int index, double value) {
 		if (metadata.isInteger(index)) {
 			if (value > maximumIntegerValue || value < -maximumIntegerValue) {
 				throw new UnsupportedOperationException("The value at the specified index, " + index + ", is intended to hold an integer value, the largest integer that may be stored is (-)2^53 but a value larger than this was given.");
@@ -203,12 +214,30 @@ public class Vector {
 			set(i, newValues[i]);
 		}
 	}
+	
+	private void setValuesIgnoreMutable(double[] newValues) {
+		if (newValues.length != values.length) {
+			throw new IllegalArgumentException("The source values array and the Vector must be of equal length.");
+		}
+
+		for (int i = 0; i < values.length; i++) {
+			setIgnoreMutable(i, newValues[i]);
+		}
+	}
 
 	/**
 	 * Get a List view of the values (the values as an unmodifiable list backed by the underlying primitive array).
 	 */
 	public List<Double> getValues() {
 		return Collections.unmodifiableList(Doubles.asList(values));
+	}
+
+
+	/**
+	 * Get a reference to the underlying values array. Be careful. Do not modify the values if {@link #mutable} is not set.
+	 */
+	public double[] getValuesReference() {
+		return values;
 	}
 
 	/**
@@ -237,5 +266,57 @@ public class Vector {
 	@Override
 	public int hashCode() {
 		return Arrays.hashCode(values);
+	}
+
+	/**
+	 * Returns a raw sum over all the values in this vector.
+	 */
+	public double sum() {
+		double sum = 0;
+		for (int i = 0; i < values.length; i++) {
+			sum += values[i];
+		}
+		return sum;
+	}
+
+	/**
+	 * Returns a new Vector whose values are the averages of the corresponding values over the given Vectors.
+	 * 
+	 * @param vectors the Vectors to average over.
+	 * 
+	 * @throws IllegalArgumentException If the list of vectors is empty.
+	 * @throws IllegalArgumentException If any of the given Vectors have different metadata.
+	 */
+	public static Vector calculateAverage(Collection<Vector> vectors) {
+		if (vectors.isEmpty()) {
+			throw new IllegalArgumentException("Can not average over empty list of Vectors.");
+		}
+		Vector avg = null;
+		for (Vector v : vectors) {
+			if (avg == null) {
+				avg = new Vector(v.metadata);
+			}
+			else if (!avg.metadata.equals(v.metadata)) {
+				throw new IllegalArgumentException("Can not average over Vectors with different metadata.");
+			}
+			
+			for (int i = 0; i < avg.size(); i++) {
+				avg.values[i] += v.values[i];
+			}
+		}
+		for (int i = 0; i < avg.size(); i++) {
+			avg.values[i] /= vectors.size();
+		}
+		return avg;
+	}
+	
+
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		map.put("metadata", metadata);
+		map.put("mutable", mutable);
+		for (int i = 0; i < values.length; i++) {
+			map.put(metadata.label(i), "(" + (metadata.isInteger(i) ? "int" : "float") + " " + metadata.bound(i) + ")  " + values[i]);
+		}
 	}
 }

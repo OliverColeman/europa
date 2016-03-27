@@ -31,7 +31,7 @@ public class VectorMetadata extends ConfigurableBase {
 	/**
 	 * Metadata for an empty (zero length/size) vector.
 	 */
-	public final static VectorMetadata EMPTY = new VectorMetadata(new Configuration(Json.parse("{\"elements\":[]}").asObject(), false, new DefaultIDFactory()));
+	public final static VectorMetadata EMPTY = new VectorMetadata(new ArrayList<String>(0), new double[0], new double[0], new boolean[0]);
 
 	@Configurable(description = "The default meta-data for the elements of the Vector.")
 	protected ElementDefaults elementDefaults;
@@ -44,19 +44,7 @@ public class VectorMetadata extends ConfigurableBase {
 	
 
 	/**
-	 * Create a VectorMetadata from the given JsonObject. An example JSON object:
-	 * 
-	 * <pre>
-	 * {
-	 *   "_defaults" : {"min": -1, "max": 2, "int": true}
-	 *   "myParam" : {"min": -1}
-	 *   "myOtherParam" : {"min": -2, "max": 3, "int": false}
-	 * }
-	 * </pre>
-	 * 
-	 * The "_defaults" specify default values to use if values are not specified for a specific parameter. This is
-	 * optional, as is any of the keys within the defaults. If, for a given parameter, no value is specified for the
-	 * "min, "max" or "int" keys either explicitly or in the defaults then 0, 1 or false are used respectively.
+	 * Creates new VectorMetadata from the given Configuration.
 	 */
 	public VectorMetadata(Configuration config) {
 		super(config);
@@ -68,11 +56,30 @@ public class VectorMetadata extends ConfigurableBase {
 		for (Element el : elements) {
 			el.updateBounds(elementDefaults.min, elementDefaults.max);
 		}
-
+		
 		labels = new ArrayList<>(elements.length);
 		labelMap = new HashMap<String, Element>();
 		for (int i = 0; i < elements.length; i++) {
 			labels.add(elements[i].label);
+			labelMap.put(elements[i].label, elements[i]);
+		}
+	}
+	
+	
+	/**
+	 * Creates new VectorMetadata from the given specifications.
+	 */
+	public VectorMetadata(List<String> labels, double[] minValues, double[] maxValues, boolean[] isInteger) {
+		elements = new Element[labels.size()];
+		
+		for (int e = 0; e < elements.length; e++) {
+			elements[e] = new Element(labels.get(e), minValues[e], maxValues[e], isInteger[e]);
+		}
+
+		this.labels = new ArrayList<>(labels);
+		labelMap = new HashMap<String, Element>();
+		for (int i = 0; i < elements.length; i++) {
+			this.labels.add(elements[i].label);
 			labelMap.put(elements[i].label, elements[i]);
 		}
 	}
@@ -89,7 +96,7 @@ public class VectorMetadata extends ConfigurableBase {
 		return elements.length == 0;
 	}
 
-	public Interval<?> bound(int index) {
+	public IntervalDouble bound(int index) {
 		return elements[index].bounds;
 	}
 
@@ -109,7 +116,7 @@ public class VectorMetadata extends ConfigurableBase {
 		return labelMap.containsKey(label);
 	}
 
-	public Interval<?> bound(String label) {
+	public IntervalDouble bound(String label) {
 		return labelMap.get(label).bounds;
 	}
 
@@ -143,16 +150,21 @@ public class VectorMetadata extends ConfigurableBase {
 		@Parameter(description = "The upper bound for this Vector Element, inclusive.", optional = true)
 		protected double max = Double.NaN;
 
-		@Parameter(description = "Indicates if this Vector Element stores an integer value.", optional = true)
+		@Parameter(description = "Indicates if this Vector Element stores an integer value.", defaultValue="false")
 		protected boolean isInteger;
-
+		
 		/**
 		 * The minimum and maximum bounds for this Vector Element.
 		 */
-		protected Interval<?> bounds;
+		protected IntervalDouble bounds;
 
 		public ElementDefaults(Configuration config) {
 			super(config);
+		}
+		
+		public ElementDefaults(double min, double max, boolean isInteger) {
+			this.isInteger = isInteger;
+			bounds = new IntervalDouble(min, max);
 		}
 		
 		protected void updateBounds(double minDefault, double maxDefault) {
@@ -168,7 +180,7 @@ public class VectorMetadata extends ConfigurableBase {
 		/**
 		 * Get the lower and upper bounds for this Vector Element, inclusive.
 		 */
-		public Interval<?> getBounds() {
+		public IntervalDouble getBounds() {
 			return bounds;
 		}
 
@@ -186,9 +198,14 @@ public class VectorMetadata extends ConfigurableBase {
 	public static class Element extends ElementDefaults {
 		@Parameter(description = "The label for this Vector Element.", optional = true)
 		protected String label;
-
+		
 		public Element(Configuration config) {
 			super(config);
+		}
+
+		public Element(String label, double min, double max, boolean isInteger) {
+			super(min, max, isInteger);
+			this.label = label;
 		}
 
 		/**

@@ -26,7 +26,7 @@ public class DummyEvaluator extends Evaluator {
 	}
 
 	@Override
-	public void evaluate(Individual individual) {
+	public void evaluate(Individual individual, Log log) {
 	}
 
 }

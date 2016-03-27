@@ -20,16 +20,12 @@ public class IntervalDouble extends Interval<Double> {
 		range = end - start;
 	}
 
-	/**
-	 * Translate a value from the unit interval [0, 1] to the corresponding value from this interval.
-	 */
+	@Override
 	public double translateFromUnit(double p) {
 		return start + p * range();
 	}
 
-	/**
-	 * Translate a value from this interval to the corresponding value from the unit interval [0, 1].
-	 */
+	@Override
 	public double translateToUnit(double p) {
 		return (p - start) / range();
 	}

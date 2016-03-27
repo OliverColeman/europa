@@ -17,11 +17,11 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
  * 
  * @author O. J. Coleman
  */
-public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends PrototypeBase {
+public class Species<G extends Genotype<?>> extends PrototypeBase {
 	/**
 	 * The members of this Species.
 	 */
-	protected Set<Individual<G, F>> members;
+	protected Set<Individual<G, ?>> members;
 
 	/**
 	 * The number of generations this Species has persisted for.
@@ -40,7 +40,7 @@ public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends Pr
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 */
-	public Species(Species<G, F> prototype) {
+	public Species(Species<G> prototype) {
 		super(prototype);
 
 		members = new HashSet<>();
@@ -49,7 +49,7 @@ public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends Pr
 	/**
 	 * Adds the given Individual to this Species. This should generally only be called by a {@link Speciator}.
 	 */
-	public void addMember(Individual<G, F> member) {
+	public void addMember(Individual<G, ?> member) {
 		if (members.contains(member)) {
 			throw new IllegalStateException("Attempted to add an Individual to the Species it's already in.");
 		}
@@ -64,18 +64,28 @@ public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends Pr
 	/**
 	 * Removes the given Individual from this Species. This should generally only be called by a {@link Speciator}.
 	 */
-	public void removeMember(Individual<G, F> member) {
+	public void removeMember(Individual<G, ?> member) {
 		if (!members.contains(member)) {
 			throw new IllegalStateException("Attempted to remove an Individual from a Species it's not in.");
 		}
 		members.remove(member);
 		member.species = null;
 	}
+	
+	/**
+	 * Adds the given Individual to this Species., removing it if necessary from it's current Species. This should generally only be called by a {@link Speciator}.
+	 */
+	public void addMemberRemoveFromCurrent(Individual<G, ?> member) {
+		if (member.hasSpecies()) {
+			member.getSpecies().removeMember(member);
+		}
+		addMember(member);
+	}
 
 	/**
 	 * Returns an unmodifiable view of the members of this Species.
 	 */
-	public Set<Individual<G, F>> getMembers() {
+	public Set<Individual<G, ?>> getMembers() {
 		return Collections.unmodifiableSet(members);
 	}
 
@@ -105,7 +115,7 @@ public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends Pr
 	 */
 	public double getAverageRank() {
 		double totalRank = 0;
-		for (Individual<G, F> ind : members) {
+		for (Individual<G, ?> ind : members) {
 			totalRank += ind.getRank();
 		}
 		return totalRank / members.size();
@@ -116,5 +126,15 @@ public class Species<G extends Genotype<?>, F extends Function<?, ?>> extends Pr
 	 */
 	public boolean isEmpty() {
 		return members.size() == 0;
+	}
+	
+
+	/**
+	 * Removes all the members from this Species.
+	 */
+	public void clear() {
+		for (Individual<G, ?> ind : members) {
+			this.removeMember(ind);
+		}
 	}
 }

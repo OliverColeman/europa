@@ -1,8 +1,10 @@
 package com.ojcoleman.europa.algos.neat;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +16,6 @@ import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.neat.NEATAllele;
 import com.ojcoleman.europa.algos.vector.VectorGeneGenotype;
 import com.ojcoleman.europa.configurable.Configuration;
-import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Gene;
@@ -75,7 +76,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	 */
 	public NEATGenotype(NEATGenotype prototype) {
 		super(prototype);
-
+		
 		init();
 	}
 

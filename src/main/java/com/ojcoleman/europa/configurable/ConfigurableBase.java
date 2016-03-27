@@ -19,6 +19,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.text.WordUtils;
+import org.reflections.Reflections;
+import org.reflections.scanners.SubTypesScanner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,6 +34,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
+import com.ojcoleman.europa.core.StructuredStringable;
 
 /**
  * <p>
@@ -74,7 +77,7 @@ import com.google.common.reflect.TypeToken;
  * 
  * @author O. J. Coleman
  */
-public class ConfigurableBase extends Observable {
+public class ConfigurableBase extends Observable implements StructuredStringable {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurableBase.class);
 
 	/**
@@ -99,7 +102,7 @@ public class ConfigurableBase extends Observable {
 	 */
 	protected IDFactory idFactory;
 	
-
+	
 	/**
 	 * Creates and configures this ConfigurableBase with the given configuration. Sub-classes must implement a constructor
 	 * accepting the same parameters and call <code>super(config)</code>. <strong>Overriding implementations of this
@@ -116,14 +119,14 @@ public class ConfigurableBase extends Observable {
 		id = idFactory.getNextID();
 
 		singletons = new HashMap<>();
-
+	
 		// Get the available configurable fields and initialise them.
 		for (Map.Entry<FieldType, Field> entry : getAnnotatedFields().entries()) {
 			FieldType type = entry.getKey();
 			Field field = entry.getValue();
-
+			
 			JsonValue value = config == null ? null : config.get(field.getName());
-
+			
 			if (type == FieldType.PARAMETER) {
 				processParameterField(field.getDeclaringClass(), this, field, value);
 			} else {
@@ -131,7 +134,7 @@ public class ConfigurableBase extends Observable {
 			}
 		}
 	}
-
+	
 	/**
 	 * Creates a copy of the given ConfigurableBase. The copy is essentially a shallow copy (except for {@link #id}): calls to
 	 * {@link #getSingleton(Class)} on the copy and the original will return exactly the same result. The rationale for
@@ -150,6 +153,15 @@ public class ConfigurableBase extends Observable {
 		
 		id = idFactory.getNextID();
 	}
+	
+	
+	/**
+	 * Creates an unconfigured ConfigurableBase. This is useful when a sub-class may be instantiated programmatically.
+	 */
+	public ConfigurableBase() {
+		isDummy = false;
+		id = -1;
+	}
 
 	/**
 	 * Gets a list containing this class and all its super-classes up to the parent ConfigurableBase. The list is ordered
@@ -166,7 +178,7 @@ public class ConfigurableBase extends Observable {
 		return classes;
 	}
 
-	protected Multimap<FieldType, Field> getAnnotatedFields() {
+	Multimap<FieldType, Field> getAnnotatedFields() {
 		Multimap<FieldType, Field> fields = ArrayListMultimap.create();
 
 		Set<String> fieldNames = new HashSet<>();
@@ -192,7 +204,7 @@ public class ConfigurableBase extends Observable {
 	
 	private void checkFieldAlreadyDefined(Set<String> fieldNames, Field f, Class<?> clazz) {
 		if (fieldNames.contains(f.getName())) {
-			throw new InvalidConfigurableFieldException("A field with the same name, " + f.getName() + ", is declared in a super-class of " + clazz.getCanonicalName());
+			throw new InvalidConfigurableFieldException("A field with the same name, " + f.getName() + ", is declared in a super-class of " + clazz.getName());
 		}
 		fieldNames.add(f.getName());
 	}
@@ -294,7 +306,7 @@ public class ConfigurableBase extends Observable {
 		try {
 			Parameter annotation = field.getAnnotation(Parameter.class);
 
-			if (jsonValue != null || !annotation.defaultValue().equals("")) {
+			if (jsonValue != null || !annotation.defaultValue().equals(Parameter.PARAMETER_NO_DEFAULT)) {
 				if (jsonValue == null) {
 					String val = annotation.defaultValue();
 					if (field.getType().equals(String.class) || field.getType().equals(Class.class) || field.getType().isEnum()) {
@@ -307,30 +319,30 @@ public class ConfigurableBase extends Observable {
 						Pattern p = Pattern.compile(annotation.regexValidation().trim());
 						Matcher m = p.matcher(jsonValue.asString().trim());
 						if (!m.matches()) {
-							String error = "The value given for parameter " + field.getName() + " in " + definingClass.getCanonicalName() + " is invalid, it must match the regular expression /" + p.pattern() + "/.";
+							String error = "The value given for parameter " + field.getName() + " in " + definingClass.getName() + " is invalid, it must match the regular expression /" + p.pattern() + "/.";
 							throw new InvalidParameterValueException(error);
 						}
 					}
 				}
-
+				
 				boolean isArray = field.getType().isArray();
 				
 				Class<?> type = getFieldRuntimeType(field);
 				
 				// Provide a friendly warning if it looks like the wrong annotation has been applied.
 				if (PrototypeBase.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
+					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 				}
 				else if (ConfigurableBase.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of ConfigurableBase, an @Configurable annotation should probably be used for it.");
+					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of ConfigurableBase, an @Configurable annotation should probably be used for it.");
 				}
 				
 				// Make sure the class is not abstract.
 				if (!type.isPrimitive() && Modifier.isAbstract(type.getModifiers())) {
-					String error = "Parameter field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a type (" + type.getCanonicalName() + ") which is an abstract class, which can not be instantiated.";
+					String error = "Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a type (" + type.getName() + ") which is an abstract class, which can not be instantiated.";
 					throw new InvalidParameterFieldException(error);
 				}
-
+				
 				if (type.isPrimitive()) {
 					// Convert to wrapped type so we can use the constructor from the Wrapper to convert from string if
 					// necessary.
@@ -354,7 +366,7 @@ public class ConfigurableBase extends Observable {
 						}
 					}
 					if (jsonConstructor == null && stringConstructor == null) {
-						String error = "Parameter field " + field.getName() + " in " + definingClass.getCanonicalName() + " is of a Class that has no Constructor taking either a single JsonValue or String argument.";
+						String error = "Parameter field " + field.getName() + " in " + definingClass.getName() + " is of a Class that has no Constructor taking either a single JsonValue or String argument.";
 						throw new InvalidParameterFieldException(error);
 					}
 				}
@@ -370,7 +382,7 @@ public class ConfigurableBase extends Observable {
 						try {
 							minValue = stringConstructor.newInstance(minValueStr);
 						} catch (NumberFormatException ex) {
-							String error = "The minimum value specified for the parameter " + field.getName() + " in " + definingClass.getCanonicalName() + " is not a valid number format.";
+							String error = "The minimum value specified for the parameter " + field.getName() + " in " + definingClass.getName() + " is not a valid number format.";
 							throw new InvalidConfigurableAnnotationException(error, ex);
 						}
 					}
@@ -378,7 +390,7 @@ public class ConfigurableBase extends Observable {
 						try {
 							maxValue = stringConstructor.newInstance(maxValueStr);
 						} catch (NumberFormatException ex) {
-							String error = "The maximum value specified for the parameter " + field.getName() + " in " + definingClass.getCanonicalName() + " is not a valid number format.";
+							String error = "The maximum value specified for the parameter " + field.getName() + " in " + definingClass.getName() + " is not a valid number format.";
 							throw new InvalidConfigurableAnnotationException(error, ex);
 						}
 					}
@@ -439,14 +451,14 @@ public class ConfigurableBase extends Observable {
 					}
 
 					testNumericValueBounds(val, minValue, maxValue, configurable, field);
-
+					
 					field.set(configurable, val);
 				}
 			} else if (!configurable.isDummy && !annotation.optional()) {
 				throw new RequiredParameterValueMissingException("Value for required parameter " + field.getName() + " in " + definingClass.getName() + " missing.");
 			}
 		} catch (Exception ex) {
-			String error = "Error setting value for parameter " + field.getName() + " in " + definingClass.getCanonicalName();
+			String error = "Error setting value for parameter " + field.getName() + " in " + definingClass.getName();
 			
 			if (ex instanceof RuntimeException) {
 				// Just throw the actual cause to make it clearer what the problem is.
@@ -465,7 +477,7 @@ public class ConfigurableBase extends Observable {
 		try {
 			Enum.valueOf(enumClass, value);
 		} catch (IllegalArgumentException ex) {
-			String error = "The enum constant " + value + " specified for the parameter " + field.getName() + " in " + definingClass.getCanonicalName() + " does not exist. Check case?";
+			String error = "The enum constant " + value + " specified for the parameter " + field.getName() + " in " + definingClass.getName() + " does not exist. Check case?";
 			throw new InvalidParameterValueException(error);
 		}
 	}
@@ -475,7 +487,7 @@ public class ConfigurableBase extends Observable {
 		try {
 			return Class.forName(clazz);
 		} catch (ClassNotFoundException ex) {
-			String error = "The class " + clazz + " specified for the parameter " + field.getName() + " in " + definingClass.getCanonicalName() + " could not be found.";
+			String error = "The class " + clazz + " specified for the parameter " + field.getName() + " in " + definingClass.getName() + " could not be found.";
 			throw new InvalidParameterValueException(error);
 		}
 	}
@@ -483,17 +495,17 @@ public class ConfigurableBase extends Observable {
 	static void testNumericValueBounds(Object val, Object min, Object max, ConfigurableBase configurable, Field field) {
 		if (val instanceof Float || val instanceof Double) {
 			if (min != null && ((Number) val).doubleValue() < ((Number) min).doubleValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " is less than the minimum of " + min + ".");
+				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
 			}
 			if (max != null && ((Number) val).doubleValue() > ((Number) max).doubleValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " is less than the maximum of " + max + ".");
+				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
 			}
 		} else if (val instanceof Number) {
 			if (min != null && ((Number) val).longValue() < ((Number) min).longValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " is less than the minimum of " + min + ".");
+				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
 			}
 			if (max != null && ((Number) val).longValue() > ((Number) max).longValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " is less than the maximum of " + max + ".");
+				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
 			}
 		}
 	}
@@ -518,14 +530,14 @@ public class ConfigurableBase extends Observable {
 		if (fieldType == FieldType.PROTOTYPE) {
 			// Arrays of prototypes not allowed.
 			if (field.getType().isArray()) {
-				String error = "Arrays of Prototypes not allowed: field " + field.getName() + " in " + definingClass.getCanonicalName();
+				String error = "Arrays of Prototypes not allowed: field " + field.getName() + " in " + definingClass.getName();
 				throw new InvalidConfigurationException(error);
 			}
 		}
 		else {
 			// Provide a friendly warning if it looks like an Configurable annotation has been applied to a PrototypeBase field.
 			if (PrototypeBase.class.isAssignableFrom(field.getType())) {
-				logger.warn("It looks like ConfigurableBase field " + field.getName() + " in class " + definingClass.getCanonicalName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
+				logger.warn("It looks like ConfigurableBase field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 			}
 		}
 		
@@ -589,7 +601,7 @@ public class ConfigurableBase extends Observable {
 				// Just throw the actual cause to make it clearer what the problem is.
 				throw (ConfigurableException) cause;
 			} else {
-				throw new ConfigurableException("Error while initialising field " + field.getName() + " in " + definingClass.getCanonicalName(), ex);
+				throw new ConfigurableException("Error while initialising field " + field.getName() + " in " + definingClass.getName(), ex);
 			}
 		}
 	}
@@ -600,41 +612,42 @@ public class ConfigurableBase extends Observable {
 	 */
 	Constructor<?> getConfigurableConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, FieldType fieldType, String fieldBaseTypeLabel, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
-			String error = "The configuration for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getCanonicalName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
+			String error = "The configuration for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
 		Class<?> type = getFieldRuntimeType(field);
 		
-		// Get default implementation class specified by annotation if present.
-		if (fieldType == FieldType.PROTOTYPE && !field.getAnnotation(Prototype.class).defaultClass().equals(Void.class)) {
+		String specifiedClass = jsonConfig.asObject().getString("class", null); 
+		
+		// Get default implementation class specified by annotation if present and class not user-specified and the default class is a sub-class of the (possibly generic) runtime type.
+		if (specifiedClass == null && fieldType == FieldType.PROTOTYPE && !field.getAnnotation(Prototype.class).defaultClass().equals(Void.class) && type.isAssignableFrom(field.getAnnotation(Prototype.class).defaultClass())) {
 			type = field.getAnnotation(Prototype.class).defaultClass();
-		} else if (fieldType == FieldType.CONFIGURABLE && !field.getAnnotation(Configurable.class).defaultClass().equals(Void.class)) {
+		} else if (specifiedClass == null && fieldType == FieldType.CONFIGURABLE && !field.getAnnotation(Configurable.class).defaultClass().equals(Void.class) && type.isAssignableFrom(field.getAnnotation(Configurable.class).defaultClass())) {
 			type = field.getAnnotation(Configurable.class).defaultClass();
 		}
 
-		// Allow specifying the sub-class to use.
-		if (jsonConfig.asObject().getString("class", null) != null) {
-			String className = jsonConfig.asObject().getString("class", null);
+		// If user-specified class.
+		if (specifiedClass != null) {
 			try {
-				Class<?> newType = Class.forName(className);
-
+				Class<?> newType = Class.forName(specifiedClass);
+			
 				// Make sure the specified class is a sub-class of the field type.
 				if (!type.isAssignableFrom(newType)) {
-					String error = "The specified class, '" + className + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getCanonicalName() + " is not a sub-class of the " + fieldBaseTypeLabel + " field class, " + type.getCanonicalName() + ".";
+					String error = "The specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + " is not a sub-class of the " + fieldBaseTypeLabel + " field class, " + type.getName() + ".";
 					throw new InvalidConfigurationException(error);
 				}
 
 				type = newType;
 			} catch (ClassNotFoundException ex) {
-				String error = "Could not find specified class, '" + className + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getCanonicalName() + ".";
+				String error = "Could not find specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + ".";
 				throw new InvalidConfigurationException(error);
 			}
 		}
 
 		// Make sure the type is not abstract.
 		if (Modifier.isAbstract(type.getModifiers())) {
-			String error = "A concrete (non-abstract) class must be specified for " + fieldBaseTypeLabel + " field " + field.getName() + " in class " + definingClass.getCanonicalName() + ".";
+			String error = "A concrete (non-abstract) class must be specified for " + fieldBaseTypeLabel + " field " + field.getName() + " in class " + definingClass.getName() + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
@@ -649,7 +662,7 @@ public class ConfigurableBase extends Observable {
 //		try {
 //			return type.getConstructor(JsonObject.class);
 //		} catch (NoSuchMethodException ex) {
-//			throw new ConfigurableMissingJsonObjectConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a JsonObject as its only parameter.");
+//			throw new ConfigurableMissingJsonObjectConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getName() + " must implement a public constructor accepting a JsonObject as its only parameter.");
 //		}
 //	}
 	
@@ -661,7 +674,7 @@ public class ConfigurableBase extends Observable {
 		try {
 			return type.getConstructor(Configuration.class);
 		} catch (NoSuchMethodException ex) {
-			throw new ConfigurableMissingConfigurationConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getCanonicalName() + " must implement a public constructor accepting a Configuration as its only parameter.");
+			throw new ConfigurableMissingConfigurationConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getName() + " must implement a public constructor accepting a Configuration as its only parameter.");
 		}
 	}
 
@@ -688,18 +701,37 @@ public class ConfigurableBase extends Observable {
 				for (int descIdx = 1; descIdx < descriptionArr.length; descIdx++) {
 					config.add("_metadata<" + name + descIdx + ">            ", descriptionArr[descIdx]);
 				}
-	
-				String typeName = type.getCanonicalName();
-	
+				
+				String typeName = type.getName();
+				
 				config.add("_metadata<" + name + "> " + (isConfigurable ? "base class" : "type"), typeName);
-	
+				
+				if (isConfigurable) {
+					// Find and list available implementations.
+					Reflections reflections = new Reflections("com.ojcoleman.europa");
+					Set<?> subTypes = reflections.getSubTypesOf(type);
+					List<Class<?>> imps = new ArrayList<>();
+					for (Object o : subTypes) {
+						Class<?> c = (Class<?>) o;
+						if (!Modifier.isAbstract(c.getModifiers())) {
+							imps.add(c);
+						}
+					}
+					if (!imps.isEmpty()) {
+						config.add("_metadata<" + name + "> available implementations", "");
+						for (Class<?> c : imps) {
+							config.add("_metadata<" + name + c.getName() + "> ", " " + c.getName());
+						}
+					}
+				}
+				
 				Parameter paramAnnotation = field.getAnnotation(Parameter.class);
 				
 				if (paramAnnotation != null) {
 					config.add("_metadata<" + name + "> optional", paramAnnotation.optional());
 				}
 				
-				if (paramAnnotation != null && paramAnnotation.defaultValue() != null && !paramAnnotation.defaultValue().equals("")) {
+				if (paramAnnotation != null && paramAnnotation.defaultValue() != null && !paramAnnotation.defaultValue().equals(Parameter.PARAMETER_NO_DEFAULT)) {
 					if (type.equals(String.class) || type.equals(Class.class) || type.isEnum()) {
 						config.add("_metadata<" + name + "> defaultValue", paramAnnotation.defaultValue());
 					} else {
@@ -710,7 +742,7 @@ public class ConfigurableBase extends Observable {
 				
 				//if (ConfigurableBase.class.isAssignableFrom(type)) {
 				//	config.add("_metadata<" + name + "> class", "The class to use, if a class other than the base class is required.");
-				//	config.add("class", type.getCanonicalName());
+				//	config.add("class", type.getName());
 				//}
 
 			}
@@ -729,7 +761,7 @@ public class ConfigurableBase extends Observable {
 							if (includeMetaData) {
 								configurableConfig.add("_metadata<" + name + "> class", "The class to use for '" + name + "', if a class other than the base class is required.");
 							}
-							configurableConfig.add("class", val.getClass().getCanonicalName());
+							configurableConfig.add("class", val.getClass().getName());
 							if (includeMetaData) {// Adds a blank line to the pretty-printed-with-comments output.
 								configurableConfig.add("_metadata<" + name + "> ", "");
 							}
@@ -751,7 +783,7 @@ public class ConfigurableBase extends Observable {
 						if (includeMetaData) {
 							configurableConfig.add("_metadata<" + name + "> class", "The class to use for '" + name + "', if a class other than the base class is required.");
 						}
-						configurableConfig.add("class", value.getClass().getCanonicalName());
+						configurableConfig.add("class", value.getClass().getName());
 						if (includeMetaData) {// Adds a blank line to the pretty-printed-with-comments output.
 							configurableConfig.add("_metadata<" + name + "> ", "");
 						}
@@ -776,10 +808,10 @@ public class ConfigurableBase extends Observable {
 			}
 		}
 		catch (ParseException ex) {
-			throw new RuntimeException("Unable to parse  " + jsonToParse + "  while outputting configuration for field " + field.getName() + " in " + field.getDeclaringClass().getCanonicalName(), ex);
+			throw new RuntimeException("Unable to parse  " + jsonToParse + "  while outputting configuration for field " + field.getName() + " in " + field.getDeclaringClass().getName(), ex);
 		}
 		catch (Exception ex) {
-			throw new RuntimeException("Could not output configuration for field " + field.getName() + " in " + field.getDeclaringClass().getCanonicalName(), ex);
+			throw new RuntimeException("Could not output configuration for field " + field.getName() + " in " + field.getDeclaringClass().getName(), ex);
 		}
 	}
 	
@@ -820,7 +852,13 @@ public class ConfigurableBase extends Observable {
 	/**
 	 * Enums for field types, easier than passing around Strings or Classes.
 	 */
-	private enum FieldType {
+	enum FieldType {
 		PARAMETER, CONFIGURABLE, PROTOTYPE
+	}
+
+
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		map.put("id", id);
 	}
 }

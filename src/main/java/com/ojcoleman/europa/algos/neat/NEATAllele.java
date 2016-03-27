@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.algos.neat;
 
+import java.util.Map;
+
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
 import com.ojcoleman.europa.algos.vector.VectorAllele;
@@ -81,5 +83,12 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	 */
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
+	}
+	
+	
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		super.getStructuredStringableObject(map);
+		map.put("enabled", enabled);
 	}
 }

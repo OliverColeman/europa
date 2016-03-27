@@ -1,33 +1,37 @@
 package com.ojcoleman.europa.core;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.eclipsesource.json.*;
-import com.ojcoleman.europa.Base;
 import com.ojcoleman.europa.configurable.ComponentBase;
+import com.ojcoleman.europa.configurable.ComponentStateLog;
 import com.ojcoleman.europa.configurable.Configurable;
 import com.ojcoleman.europa.configurable.Configuration;
-import com.ojcoleman.europa.configurable.IDFactory;
+import com.ojcoleman.europa.configurable.Observable;
+import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.monitor.OverviewMonitor;
+import com.ojcoleman.europa.util.DecimalFormatConfigurable;
+import com.thoughtworks.xstream.XStream;
+import com.google.common.collect.Table;
 import com.ojcoleman.europa.configurable.Component;
-import com.ojcoleman.europa.populations.SimplePopulation;
-import com.ojcoleman.europa.rankers.DefaultRanker;
-import com.ojcoleman.europa.speciators.NoSpeciation;
+
 
 /**
  * <p>
@@ -59,31 +63,31 @@ import com.ojcoleman.europa.speciators.NoSpeciation;
 public class Run extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Run.class);
 
-	// private static Run singleton;
+	
+	@Parameter(description = "The path(s) to the original configuration file(s) (.json extension). NOTE: this is informational only, setting it has no effect.", optional = true)
+	protected String[] configFilePaths;
 
+	@Parameter(description = "How many iterations/generations to perform before saving the Run state to a file (for later resume or examination). A value <= 0 indicates no saving.", defaultValue = "1000")
+	protected int saveFrequency;
+
+	@Parameter(description = "The path of the file to save the Run state to (for later resume or examination). Default is the name of the Run in the current working directory.", optional = true)
+	protected String savePath;
+
+	@Parameter(description = "The default format for printing floating point numbers. Pattern string format is defined by java.text.DecimalFormat.", defaultValue = "0.00")
+	protected DecimalFormatConfigurable defaultNumberFormat;
+	
 	/**
-	 * Run event types.
+	 * Static reference to the (most recent) {@link #defaultNumberFormat}. This should only be used in classes which do not have a reference to the Component hierarchy. 
 	 */
-	public static enum Event {
-		/**
-		 * An event type indicating that an iteration of the main cycle (evaluation of individuals; replacement of some
-		 * individuals generated from fittest) is complete.
-		 */
-		IterationComplete,
+	protected static DecimalFormat defaultNumberFormatStatic;
 
-		/**
-		 * An event type indicating that this Run is set to stop when the current cycle is complete.
-		 */
-		Stopping
-	}
-
-	@Parameter(description = "The name of the run. DefaultEvolver is the name of the configuration file appended with the current date and time.", optional = true)
+	@Parameter(description = "The name of the run. Default is the name of the configuration file appended with the current date and time.", optional = true)
 	protected String name;
 
-	@Parameter(description = "File output directory. DefaultEvolver is run name (with an integer appended to make it unique if necessary).", optional = true)
+	@Parameter(description = "File output directory. Default is run name (with an integer appended to make it unique if necessary).", optional = true)
 	protected String outputDirectory;
 
-	@Parameter(description = "The random seed. DefaultEvolver value is the system time.", optional = true)
+	@Parameter(description = "The random seed. Default value is the system time.", optional = true)
 	protected long randomSeed;
 
 	@Parameter(description = "The class to use to generate random numbers. It must extend Java.util.Random.", defaultValue = "java.util.Random")
@@ -98,8 +102,8 @@ public class Run extends ComponentBase {
 	@Component(description = "Component(s) for the fitness evaluator(s). By default the first evaluator is considered the Primary evaluator, which may be used by the Transcriber to obtain information about how the genotype should be constructed.", defaultClass = DummyEvaluator.class)
 	protected Evaluator[] evaluators;
 
-	@Component(description = "Component for maintaining pertinent bits of evolution history.", defaultClass = History.class)
-	protected History history;
+	@Component(description = "Components for monitoring the evolutionary process.", defaultClass = OverviewMonitor.class)
+	protected Monitor[] monitors;
 	
 	@Configurable(description = "Configuration for utility class to perform operations in parallel.", defaultClass = Parallel.class)
 	protected Parallel parallel;
@@ -122,12 +126,25 @@ public class Run extends ComponentBase {
 	 * If set then this Run will stop (exit {@link #mainLoop()} when the current cycle is complete.
 	 */
 	protected boolean stop;
+	
+	private final List<Evaluator> evaluatorsList;
+	
+	// Running average of how long each iteration takes in seconds.
+	private double avgIterationTime;
 
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
 	public Run(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
+		
+		defaultNumberFormatStatic = defaultNumberFormat;
+
+		if (savePath == null || savePath.equals("")) {
+			savePath = getName();
+		}
+		
+		evaluatorsList = Collections.unmodifiableList(Arrays.asList(evaluators));
 
 		// if (singleton != null) {
 		// throw new Exception("There should only be a single instance of Run.");
@@ -135,23 +152,8 @@ public class Run extends ComponentBase {
 		// singleton = this;
 
 		if (name == null) {
-			if ((parentComponent instanceof Base) && ((Base) parentComponent).getConfigFilePath() != null) {
-				name = ((Base) parentComponent).getConfigFilePath().getFileName().toString();
-			} else {
-				name = "europa";
-			}
+			name = getConfigFilePath().getFileName().toString();
 			name += (new SimpleDateFormat("_yyyyMMdd_HHmmss")).format(new Date());
-		}
-
-		if (outputDirectory == null) {
-			outputDirectory = Paths.get(".", name).toFile().getCanonicalPath().toString();
-
-			int id = 0;
-			DecimalFormat formatter = new DecimalFormat("000");
-			while (Files.exists(Paths.get(outputDirectory + (id == 0 ? "" : "_" + formatter.format(id))))) {
-				id++;
-			}
-			outputDirectory = outputDirectory + (id == 0 ? "" : "_" + formatter.format(id));
 		}
 
 		if (randomSeed == 0) {
@@ -161,6 +163,28 @@ public class Run extends ComponentBase {
 		random = this.newGenericInstance(randomClass);
 
 		currentIteration = 0;
+		
+		monitor(this);
+		
+		// If we should save the run state periodically.
+		if (saveFrequency > 0) {
+			addEventListener(new Observer() {
+				@Override
+				public void eventOccurred(Observable observed, Object event, Object state) {
+					if (event == Run.Event.IterationComplete) {
+						if (currentIteration > 0 && currentIteration % saveFrequency == 0) {
+							XStream xstream = new XStream();
+							xstream.setMarshallingStrategy(null);
+							try {
+								xstream.toXML(this, new FileWriter(savePath));
+							} catch (IOException e) {
+								logger.error("Could not save Run state to file.", e);
+							}
+						}
+					}
+				}
+			});
+		}
 	}
 
 	/**
@@ -172,6 +196,9 @@ public class Run extends ComponentBase {
 		mainLoop();
 	}
 
+	/**
+	 * Get a reference to the Transcriber component.
+	 */
 	protected void mainLoop() {
 		// Get a reference to the Population Component.
 		Population<?, ?> population = transcriber.getPopulation();
@@ -182,8 +209,12 @@ public class Run extends ComponentBase {
 			population.generate();
 		}
 
+		double prevTime = System.currentTimeMillis();
+				
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
+			this.fireEvent(Event.IterationBegin, currentIteration);
+			
 			// Evaluate the population (transcribing from genotype to phenotype as necessary).
 			population.evaluate();
 			
@@ -195,26 +226,50 @@ public class Run extends ComponentBase {
 			
 			// Evolve population.
 			population.evolve();
-
-			this.fireEvent(Event.IterationComplete);
+			
+			// Time keeping.
+			double currentTime = System.currentTimeMillis();
+			double duration = (currentTime - prevTime) / 1000d;
+			prevTime = currentTime;
+			if (avgIterationTime == 0)
+				avgIterationTime = duration;
+			else
+				avgIterationTime = avgIterationTime * 0.9 + duration * 0.1;
+			
+			this.fireEvent(Event.IterationComplete, currentIteration);
 			
 			currentIteration++;
 		}
 	}
 
 	
+	/**
+	 * Get a reference to the Transcriber component.
+	 */
 	public Transcriber<?, ?> getTranscriber() {
 		return transcriber;
 	}
-
 	
-	public History getHistory() {
-		return history;
+	/**
+	 * Get a reference to the Population component (specified in the Transcriber).
+	 */
+	public Population<?, ?> getPopulation() {
+		return transcriber.getPopulation();
 	}
 
+
+	/**
+	 * Get a reference to the evaluators (as an unmodifiable list).
+	 */	
+	public List<Evaluator> getEvaluators() {
+		return evaluatorsList;
+	}
 	
-	public Evaluator[] getEvaluators() {
-		return evaluators;
+	/**
+	 * Get a reference to the utility component for performing operations in parallel.
+	 */
+	public Parallel getParallel() {
+		return parallel;
 	}
 
 	
@@ -256,6 +311,30 @@ public class Run extends ComponentBase {
 	 * @see #outputDirectory
 	 */
 	public Path getOutputDirectory() {
+		if (outputDirectory == null) {
+			try {
+				outputDirectory = Paths.get(".", "output", name).toFile().getCanonicalPath().toString();
+			} catch (IOException e) {
+				logger.error(" Could not get canonical path for output directory.", e);
+			}
+
+			int id = 0;
+			DecimalFormat formatter = new DecimalFormat("000");
+			while (Files.exists(Paths.get(outputDirectory + (id == 0 ? "" : "_" + formatter.format(id))))) {
+				id++;
+			}
+			outputDirectory = outputDirectory + (id == 0 ? "" : "_" + formatter.format(id));
+		}
+		
+		if (!Files.exists(Paths.get(outputDirectory))) {
+			try {
+				Files.createDirectories(Paths.get(outputDirectory));
+			} catch (IOException e) {
+				logger.error(" Could not create output directory.", e);
+			}
+		}
+		
+		System.out.println(outputDirectory);
 		return Paths.get(outputDirectory);
 	}
 
@@ -264,5 +343,93 @@ public class Run extends ComponentBase {
 	 */
 	public Evaluator getPrimaryEvaluator() {
 		return evaluators[0];
+	}
+	
+	/**
+	 * Set the {@link #monitors} to monitor the given Observable.
+	 * This is typically called by the Observable, for example with:
+	 * <code>
+	 * this.getParentComponent(Run.class).monitor(this);
+	 * </code>
+	 */
+	public void monitor(Observable o) {
+		// Use getSubComponent as this method may be called from the constructors of other Components before monitor is initialised.
+		Monitor[] monitors =  (Monitor[]) getSubComponent("monitors", this);
+		for (Monitor monitor : monitors) {
+			o.addEventListener(monitor);
+		}
+	}
+	
+
+	/**
+	 * Returns the path to the (first) original configuration file, or null if none specified.
+	 */
+	public Path getConfigFilePath() {
+		if (configFilePaths != null) {
+			return Paths.get(configFilePaths[0]);
+		}
+		return null;
+	}
+	
+
+	/**
+	 * @return The default formatter for printing floating point numbers.
+	 */
+	public DecimalFormat getDefaultNumberFormat() {
+		return defaultNumberFormat;
+	}
+	
+	/**
+	 * @return Reference to the formatter returned by {@link #getDefaultNumberFormat()} for the most recently instantiated Base. 
+	 * This should only be used in classes which do not have a reference to the Component hierarchy. 
+	 */
+	public static DecimalFormat getDefaultNumberFormatStatic() {
+		return defaultNumberFormatStatic;
+	}
+	
+	
+	@Override
+	public List<ComponentStateLog> getState() {
+		List<ComponentStateLog> stats = new ArrayList<>();
+		
+		stats.add(new ComponentStateLog("General", "Iteration", currentIteration));
+		
+		Runtime runtime = Runtime.getRuntime();
+		long memTotal = Math.round(runtime.totalMemory() / 1048576);
+		long memFree = Math.round(runtime.freeMemory() / 1048576);
+		long memUsed = memTotal - memFree;
+		stats.add(new ComponentStateLog("General", "Memory", "Available", memTotal, "MB"));
+		stats.add(new ComponentStateLog("General", "Memory", "Free", memFree, "MB"));
+		stats.add(new ComponentStateLog("General", "Memory", "Used", memUsed, "MB"));
+		
+		stats.add(new ComponentStateLog("General", "Time", "Iteration duration", avgIterationTime, "seconds"));
+		
+		double eta = avgIterationTime * (maximumIterations - currentIteration);
+		stats.add(new ComponentStateLog("General", "Time", "Estimated remaining", eta, "seconds"));
+		
+		return stats;
+	}
+	
+	/**
+	 * Run event types.
+	 */
+	public static enum Event {
+		/**
+		 * An event type indicating that an iteration of the main cycle (evaluation of individuals; replacement of some
+		 * individuals generated from fittest) is starting.
+		 */
+		IterationBegin,
+		
+		/**
+		 * An event type indicating that an iteration of the main cycle (evaluation of individuals; replacement of some
+		 * individuals generated from fittest) is complete. This event is fired before incrementing the iteration 
+		 * counter {@link Run#getCurrentIteration()}.
+		 */
+		IterationComplete,
+
+		/**
+		 * An event type indicating that this Run is set to stop when the current cycle is complete.
+		 */
+		Stopping
 	}
 }

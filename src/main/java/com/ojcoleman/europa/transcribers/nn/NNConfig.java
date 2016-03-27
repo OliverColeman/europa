@@ -1,24 +1,25 @@
 package com.ojcoleman.europa.transcribers.nn;
 
-import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.ConfigurableBase;
 import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
 import com.ojcoleman.europa.configurable.Configurable;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedGeneType;
 
 /**
- * A component describing essential configuration information for a neural network for which the configuration is defined by {@link NNParametrisedGeneType}s.
+ * A component describing essential configuration information for a neural network for which the configuration is defined by {@link BainParametrisedGeneType}s.
  * 
  * @author O. J. Coleman
  */
-public class NNConfig extends ConfigurableBase {
+public class NNConfig<N extends ParametrisedGeneType, S extends ParametrisedGeneType> extends ConfigurableBase {
 	@Configurable(description = "Configuration for the neurons.")
-	protected NNParametrisedGeneType neuron;
+	protected N neuron;
 
 	@Configurable(description = "Configuration for the synapses.")
-	protected NNParametrisedGeneType synapse;
+	protected S synapse;
 
-	@Parameter(description = "The basic allowable topology type of the networks, \"recurrent\" or \"feed_forward\"", defaultValue = "feed_forward")
+	@Parameter(description = "The basic allowable topology class of the networks, \"recurrent\" or \"feed_forward\"", defaultValue = "feed_forward")
 	protected Topology topology;
 
 	@Parameter(description = "For recurrent neural networks, the number of simulation steps to perform for each application of the input and reading of the output.", defaultValue = "5")
@@ -33,14 +34,14 @@ public class NNConfig extends ConfigurableBase {
 	/**
 	 * @return the configuration for the neurons.
 	 */
-	public NNParametrisedGeneType neuron() {
+	public N neuron() {
 		return neuron;
 	}
 
 	/**
 	 * @return the configuration for the synapses.
 	 */
-	public NNParametrisedGeneType synapse() {
+	public S synapse() {
 		return synapse;
 	}
 

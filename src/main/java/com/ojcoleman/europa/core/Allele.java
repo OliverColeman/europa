@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.core;
 
+import java.util.Map;
+
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
@@ -88,5 +90,11 @@ public class Allele<G extends Gene> extends PrototypeBase {
 	 */
 	public Genotype<?> getGenotype() {
 		return genotype;
+	}
+
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		super.getStructuredStringableObject(map);
+		map.put("gene", gene);
 	}
 }

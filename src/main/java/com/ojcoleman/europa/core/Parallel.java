@@ -78,7 +78,7 @@ public class Parallel extends ConfigurableBase {
 		}
 	}
 
-	private static <T> Collection<Callable<Void>> createCallables(final Iterable<T> elements, final Operation<T> operation, int size) {
+	private <T> Collection<Callable<Void>> createCallables(final Iterable<T> elements, final Operation<T> operation, int size) {
 		List<Callable<Void>> callables = new ArrayList<Callable<Void>>(size);
 		for (final T elem : elements) {
 			callables.add(new Callable<Void>() {

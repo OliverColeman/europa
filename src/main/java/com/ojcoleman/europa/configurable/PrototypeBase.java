@@ -1,11 +1,20 @@
 package com.ojcoleman.europa.configurable;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ClassUtils;
+import org.apache.commons.lang3.reflect.ConstructorUtils;
+import org.apache.commons.lang3.reflect.MethodUtils;
+
 import com.eclipsesource.json.JsonObject;
+import com.google.common.collect.Multimap;
+import com.ojcoleman.europa.configurable.ConfigurableBase.FieldType;
 import com.ojcoleman.europa.core.Allele;
 
 /**
@@ -14,8 +23,8 @@ import com.ojcoleman.europa.core.Allele;
  * individual or a genotype. If many of these objects must be instantiated throughout a run then it becomes very
  * inefficient to do this via Java's Reflection API. The quickest method is to use object cloning methods, followed by
  * copy constructors (see
- * <a href="http://vyazelenko.com/2013/10/29/copy-object-in-java-performance-comparison/">this</a> and
- * <a href="http://vyazelenko.com/2013/10/30/clone-vs-copy-constructor-a-closer-look/">this</a>). However a good
+ * <a href="http://vyazelenko.com/3/10/29/copy-object-in-java-performance-comparison/">this</a> and
+ * <a href="http://vyazelenko.com/3/10/30/clone-vs-copy-constructor-a-closer-look/">this</a>). However a good
  * argument can be made that <a href="http://www.artima.com/intv/bloch13.html">Java's clone should be avoided</a>.
  * Additionally the clone approach is less flexible than the copy constructor approach, for example setting the value of
  * final fields to a new value in the copy is impossible. Thus Prototype employs the copy constructor approach to create
@@ -103,12 +112,28 @@ public abstract class PrototypeBase extends ConfigurableBase {
 	 * object recursively as necessary. However some object reference fields may be copied by reference rather than
 	 * being deep copied, for example if the class references objects which should be shared with other instances.
 	 * </p>
+	 * <p>
+	 * <strong>Note:</strong> Fields annotated with {@link Prototype} will be copied by reference automatically.
+	 * If this is not desired for a specific field then it's value can be set to something else after calling super(). 
+	 * </p>
 	 */
 	public PrototypeBase(PrototypeBase prototype) {
 		super(prototype);
 		
 		// Copy the prototype constructor cache by reference since it's for the same prototype class.
 		prototypeConstructors = prototype.prototypeConstructors;
+		
+		// Copy Prototype fields by reference.
+		Multimap<FieldType, Field> fields = this.getAnnotatedFields();
+		for (Field field : fields.get(FieldType.PROTOTYPE)) {
+			field.setAccessible(true);
+			try {
+				field.set(this, field.get(prototype));
+			} catch (IllegalArgumentException | IllegalAccessException e) {
+				// Something very strange happening if we get to here.
+				throw new RuntimeException("Could not set Prototype field in a Prototype being copied.", e);
+			}
+		}
 	}
 
 	/**
@@ -128,10 +153,10 @@ public abstract class PrototypeBase extends ConfigurableBase {
 		// Build the constructor parameters and get the constructor.
 		Object[] constructorParams = new Object[newInstanceParameters.length + 1];
 		constructorParams[0] = this;
-		StringBuilder constructorParamTypesAsString = new StringBuilder(getClass().getCanonicalName() + ", ");
+		StringBuilder constructorParamTypesAsString = new StringBuilder(getClass().getName() + ", ");
 		for (int p = 0; p < newInstanceParameters.length; p++) {
 			constructorParams[p + 1] = newInstanceParameters[p];
-			constructorParamTypesAsString.append(newInstanceParameters[p].getClass().getCanonicalName()).append(", ");
+			constructorParamTypesAsString.append(newInstanceParameters[p].getClass().getName()).append(", ");
 		}
 
 		Constructor<T> constructor = (Constructor<T>) prototypeConstructors.get(constructorParamTypesAsString.toString());
@@ -141,18 +166,18 @@ public abstract class PrototypeBase extends ConfigurableBase {
 			for (int p = 0; p < newInstanceParameters.length; p++) {
 				constructorParamTypes[p + 1] = newInstanceParameters[p].getClass();
 			}
-			try {
-				constructor = (Constructor<T>) getClass().getConstructor(constructorParamTypes);
+			constructor = (Constructor<T>) ConstructorUtils.getMatchingAccessibleConstructor(getClass(), constructorParamTypes);
+			
+			if (constructor == null) {
+				throw new IllegalArgumentException("Could not instantiate a new instance of prototype " + getClass().getName() + " via ConfigurableBase.newInstance() because there is no (public) copy constructor for this prototype class matching the given argument types: " + constructorParamTypesAsString);
+			}
 
-				// Improves performance of constructor.newInstance by removing securtity checks.
-				constructor.setAccessible(true);
+			// Improves performance of constructor.newInstance by removing securtity checks.
+			constructor.setAccessible(true);
 
-				// Add it to cache.
-				synchronized (prototypeConstructors) {
-					prototypeConstructors.put(constructorParamTypesAsString.toString(), constructor);
-				}
-			} catch (NoSuchMethodException e) {
-				throw new IllegalArgumentException("Could not instantiate a new instance of prototype " + getClass().getCanonicalName() + " via ConfigurableBase.newInstance() because there is no copy constructor for this prototype class matching the given argument types: " + constructorParamTypesAsString);
+			// Add it to cache.
+			synchronized (prototypeConstructors) {
+				prototypeConstructors.put(constructorParamTypesAsString.toString(), constructor);
 			}
 		}
 
@@ -166,4 +191,44 @@ public abstract class PrototypeBase extends ConfigurableBase {
 			throw new NewInstanceConstructorException("When instantiating an instance of a prototype via ConfigurableBase.newInstance() using the constructor " + constructor.toString() + " an exception occurred.", ex);
 		}
 	}
+	
+	public static <T> Constructor<T> getMatchingAccessibleConstructor(final Class<T> cls, final Class<?>... parameterTypes) {
+		System.out.println("find ctor for "+ cls);
+		// see if we can find the constructor directly
+		// most of the time this works and it's much faster
+		try {
+			final Constructor<T> ctor = cls.getConstructor(parameterTypes);
+			// MemberUtils.setAccessibleWorkaround(ctor);
+			return ctor;
+		} catch (final NoSuchMethodException e) { // NOPMD - Swallow
+		}
+		Constructor<T> result = null;
+		/*
+		 * (1) Class.getConstructors() is documented to return Constructor<T> so as long as the array is not
+		 * subsequently modified, everything's fine.
+		 */
+		final Constructor<?>[] ctors = cls.getConstructors();
+
+		// return best match:
+		for (Constructor<?> ctor : ctors) {
+			// compare parameters
+			if (ClassUtils.isAssignable(parameterTypes, ctor.getParameterTypes(), true)) {
+				// get accessible version of constructor
+				ctor = ConstructorUtils.getAccessibleConstructor(ctor);
+				if (ctor != null) {
+					// MemberUtils.setAccessibleWorkaround(ctor);
+					if (result == null) {
+						// || MemberUtils.compareParameterTypes(ctor.getParameterTypes(), result
+						// .getParameterTypes(), parameterTypes) < 0) {
+						// temporary variable for annotation, see comment above (1)
+						@SuppressWarnings("unchecked")
+						final Constructor<T> constructor = (Constructor<T>) ctor;
+						result = constructor;
+					}
+				}
+			}
+		}
+		return result;
+	}
+	
 }

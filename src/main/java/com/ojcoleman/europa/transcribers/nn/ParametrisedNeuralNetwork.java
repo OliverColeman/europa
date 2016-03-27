@@ -11,33 +11,37 @@ import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
 
 /**
- * <p>A wrapper for neural network implementations whose configuration is defined by a set of labelled numeric parameters. 
- * The wrapper specifies methods for constructing the network, and implements the {@link VectorFunction} interface
- * to represent applying input to the network and reading the associated output.</p>
- * <p>The wrapper supports the notion of neuron and synapse types. A type is defined by a specific configuration (a set of values for some parameters), 
- * and a neuron or synapse that references that type will adopt that configuration. See {@link ParametrisedGeneType#getParamsType()} for more information.</p>
+ * <p>
+ * A wrapper for neural network implementations whose configuration is defined by a set of labelled numeric parameters.
+ * The wrapper specifies methods for constructing the network, and implements the {@link VectorFunction} interface to
+ * represent applying input to the network and reading the associated output.
+ * </p>
+ * <p>
+ * The wrapper supports the notion of neuron and synapse types. A type is defined by a specific configuration (a set of
+ * values for some parameters), and a neuron or synapse that references that type will adopt that configuration. See
+ * {@link ParametrisedGeneType#getParamsType()} for more information.
+ * </p>
  */
-public abstract class NeuralNetwork extends PrototypeBase implements VectorFunction {
+public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements VectorFunction {
 	/**
-	 * The instance configuration for the neural network to be built. 
+	 * The instance configuration for the neural network to be built.
 	 */
 	public final NNInstanceConfig instanceConfig;
-	
+
 	/**
 	 * The neuron type configurations.
 	 */
 	protected List<Map<String, Double>> neuronTypes;
-	
+
 	/**
 	 * The synapse type configurations.
 	 */
 	protected List<Map<String, Double>> synapseTypes;
-	
-	
+
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
-	public NeuralNetwork(Configuration config) {
+	public ParametrisedNeuralNetwork(Configuration config) {
 		super(config);
 		instanceConfig = null;
 	}
@@ -48,23 +52,22 @@ public abstract class NeuralNetwork extends PrototypeBase implements VectorFunct
 	 * Create a neural network with the given instance configuration.
 	 *
 	 * @param prototype The prototype neural network instance to copy.
-	 * @param instConfig The instance configuration for the new neural network, for example specifying the number of inputs and outputs.
+	 * @param instConfig The instance configuration for the new neural network, for example specifying the number of
+	 *            inputs and outputs.
 	 */
-	public NeuralNetwork(NeuralNetwork prototype, NNInstanceConfig instConfig) {
+	public ParametrisedNeuralNetwork(ParametrisedNeuralNetwork prototype, NNInstanceConfig instConfig) {
 		super(prototype);
-		
+
 		this.instanceConfig = instConfig;
-		
+
 		neuronTypes = new ArrayList<>();
 		synapseTypes = new ArrayList<>();
 	}
 
-	
 	/**
 	 * @return The base or general configuration for the neural network.
 	 */
-	public abstract NNConfig getConfig();
-	
+	public abstract NNConfig<?, ?> getConfig();
 
 	/**
 	 * Add a neuron type to this neural network.
@@ -94,7 +97,8 @@ public abstract class NeuralNetwork extends PrototypeBase implements VectorFunct
 	 * Add a neuron to this neural network.
 	 * 
 	 * @param config Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
-	 *            value. If types are used then the config should generally contain a reference to a type according to the values returned by {@link #addNeuronType(Map<String, Double>)}.
+	 *            value. If types are used then the config should generally contain a reference to a type according to
+	 *            the values returned by {@link #addNeuronType(Map<String, Double>)}.
 	 * @return The index of the new neuron in this neural network. This is used to reference a neuron, for example in
 	 *         {@link #addSynapse(Map<String, Double>, int, int)}.
 	 */
@@ -104,10 +108,21 @@ public abstract class NeuralNetwork extends PrototypeBase implements VectorFunct
 	 * Add a synapse to this neural network.
 	 * 
 	 * @param config Synapse model-specific configuration parameters, if applicable. This will typically contain at
-	 *            least a "weight" value. If types are used then the config should generally contain a reference to a type according to the values returned by {@link #addSynapseType(Map<String, Double>)}.
-	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map<String, Double>)}.
-	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map<String, Double>)}.
+	 *            least a "weight" value. If types are used then the config should generally contain a reference to a
+	 *            type according to the values returned by {@link #addSynapseType(Map<String, Double>)}.
+	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map<String,
+	 *            Double>)}.
+	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map<String,
+	 *            Double>)}.
 	 * @return The index of the new synapse in this neural network.
 	 */
 	public abstract void addSynapse(Map<String, Double> config, int source, int dest);
+
+	/**
+	 * This method should be called by a {@Link Transcriber} when the neural network is completed (when there will be no
+	 * more calls to {@link #addNeuron} or {@link #addSynapse(Map, int, int)}. Sub-classes may override this method in
+	 * order to perform any clean-up or other initialisation tasks.
+	 */
+	public void finishedBuilding() {
+	}
 }

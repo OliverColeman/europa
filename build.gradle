@@ -33,10 +33,12 @@ dependencies {
     compile "com.beust:jcommander:1.48"
     compile "com.thoughtworks.xstream:xstream:1.4.8"
     compile "com.eclipsesource.minimal-json:minimal-json:0.9.4"
-    compile 'com.google.guava:guava:18.0'
+    compile 'com.google.guava:guava:19.0'
     compile 'org.apache.commons:commons-lang3:3.4'
-    compile 'edu.princeton.cs.algs4:algs4:1.0'
-    compile(group: 'org.ojcoleman.bain', name: 'bain', version: '1.0.0', ext: 'jar')
+    compile 'org.reflections:reflections:0.9.10'
+    compile 'com.googlecode.princeton-java-algorithms:algorithms:4.0.1'
+    compile 'org.apache.commons:commons-csv:1.2'
+    compile(group: 'org.ojcoleman.bain', name: 'bain', version: '1.0.4', ext: 'jar')
     
     // aparapi not available in any repo.
     compile fileTree(dir: 'lib', include: 'aparapi.jar')

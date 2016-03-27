@@ -33,6 +33,16 @@ public class IntervalLong extends Interval<Long> {
 	public boolean isIn(Long value) {
 		return value >= start && value <= end;
 	}
+	
+	@Override
+	public double translateFromUnit(double p) {
+		return start + p * range();
+	}
+
+	@Override
+	public double translateToUnit(double p) {
+		return (p - start) / range();
+	}
 
 	@Override
 	public Long random(Random random) {

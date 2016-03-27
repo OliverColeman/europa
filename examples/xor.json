@@ -1,0 +1,10 @@
+  {
+    "maximumIterations": 10,
+    "evaluators": [
+      {
+        "class": "com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
+        "name": "XOR",
+        "pathToCSVFile": "/home/data/ai/datasets/xor.csv"
+      }
+    ]
+  }

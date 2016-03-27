@@ -27,7 +27,7 @@ import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
  * 
  * @author O. J. Coleman
  */
-public class NEATEvolver<F extends Function<?, ?>> extends DefaultEvolver<NEATGenotype, F> {
+public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 	// Central store mapping all innovation ID/gene parameter pairs to genes.
 	// private Table<Long, Vector, NEATGene> innovationIDToGene;
 
@@ -105,9 +105,9 @@ public class NEATEvolver<F extends Function<?, ?>> extends DefaultEvolver<NEATGe
 		// If we have already added the same connection in another genotype reuse the gene from it.
 		NEATSynapseGene gene = connectionToGene.get(neuronIDs, geneParams);
 		if (gene == null) {
-			// new NEATSynapseGene(genotype.synapseGenePrototype, run.getNextID(), sourceID, destinationID, geneParams);
+			// new NEATSynapseGene(genotype.synapseGenePrototype, sourceID, destinationID, geneParams);
 			gene = genotype.synapseGenePrototype.newInstance(sourceID, destinationID, geneParams);
-
+			
 			connectionToGene.put(neuronIDs, geneParams, gene);
 		}
 		// new NEATSynapseAllele(genotype.synapseAllelePrototype, gene, nnConfig.synapse().createAlleleVector());

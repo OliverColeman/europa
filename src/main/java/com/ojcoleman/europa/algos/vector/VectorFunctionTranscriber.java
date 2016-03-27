@@ -36,6 +36,7 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 		// Ordinarily we'd used Run.getPrimaryEvaluator() however we should use getSubComponent in Component constructors.
 		Evaluator[] evaluators = (Evaluator[]) getParentComponent(Run.class).getSubComponent("evaluators", this);
 		Evaluator primaryEvaluator = evaluators[0];
+		
 		if (primaryEvaluator instanceof VectorFunctionEvaluator) {
 			functionInputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionInputSize();
 			functionOutputSize = ((VectorFunctionEvaluator) primaryEvaluator).getVectorFunctionOutputSize();

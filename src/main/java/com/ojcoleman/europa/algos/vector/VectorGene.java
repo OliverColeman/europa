@@ -44,7 +44,7 @@ public abstract class VectorGene extends Gene {
 	public VectorGene(VectorGene prototype, Set<Object> type, Vector vector) {
 		super(prototype, type);
 
-		if (!vector.mutable) {
+		if (vector.mutable) {
 			throw new IllegalArgumentException("The Vector for a VectorGene must not be set as mutable.");
 		}
 		this.vector = vector;

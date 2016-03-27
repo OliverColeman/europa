@@ -25,14 +25,14 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 	@Parameter(description = "The probability of applying this mutator to any given value within an allele.", defaultValue = "0.25", minimumValue = "0", maximumValue = "1")
 	protected double valueApplyRate;
 
-	@Parameter(description = "The type of probability distribution to use to perturb an allele value. May be 'normal' or 'uniform'.", defaultValue = "normal")
+	@Parameter(description = "The type of probability distribution to use to perturb an allele value. May be 'normal' (Gaussian) or 'uniform'.", defaultValue = "normal")
 	protected PerturbationType perturbationType;
 
-	@Parameter(description = "The amount to perturb an allele value. For 'normal' perturbation type this is the standard deviation, for 'uniform' this is the maximum amount to perturb by.", defaultValue = "1", minimumValue = "0")
-	protected double perturbationRate;
+	@Parameter(description = "The perturbation magnitude. For 'normal' perturbation type this is the standard deviation, for 'uniform' this is the maximum amount to perturb by.", defaultValue = "1", minimumValue = "0")
+	protected double perturbationMagnitude;
 
-	@Parameter(description = "Whether to multiply the perturbationRate by the allowable range of the value to perturb (for example if the allowable interval of the value is [-1, 1] then the perturbationRate would be multiplied by 2).", defaultValue = "true")
-	protected boolean perturbationRateNormalise;
+	@Parameter(description = "Whether to multiply the perturbationMagnitude by the allowable range of the value to perturb (for example if the allowable interval of the value is [-1, 1] then the perturbationMagnitude would be multiplied by 2).", defaultValue = "true")
+	protected boolean perturbationMagnitudeNormalise;
 
 	public VectorMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
@@ -59,7 +59,7 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 						} else {
 							perturbation = random.nextDouble() * 2 - 1;
 						}
-						if (perturbationRateNormalise) {
+						if (perturbationMagnitudeNormalise) {
 							perturbation *= allele.vector.metadata.bound(i).range().doubleValue();
 						}
 						double newVal = allele.vector.get(i) + perturbation;

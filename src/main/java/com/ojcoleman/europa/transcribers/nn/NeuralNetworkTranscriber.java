@@ -21,5 +21,5 @@ public abstract class NeuralNetworkTranscriber<G extends Genotype<?>> extends Ve
 	/**
 	 * Returns the neural network prototype instance for networks produced by this transcriber.
 	 */
-	public abstract NeuralNetwork getNeuralNetworkPrototype();
+	public abstract ParametrisedNeuralNetwork getNeuralNetworkPrototype();
 }

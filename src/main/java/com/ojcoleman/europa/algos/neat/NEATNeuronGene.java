@@ -30,12 +30,10 @@ public class NEATNeuronGene extends NEATGene {
 	 * @param prototype The prototype gene to copy.
 	 * @param type The type of the neuron. Generally one of {@link NNPart#NEURON_INPUT}, {@link NNPart#NEURON_HIDDEN},
 	 *            {@link NNPart#NEURON_OUTPUT}.
-	 * @param geneID The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the
-	 *            NEAT algorithm.
 	 * @param paramVector The parameter vector for this gene.
 	 */
-	public NEATNeuronGene(NEATNeuronGene prototype, NNPart type, long geneID, Vector paramVector) {
-		super(prototype, Gene.typeSet(NNPart.NEURON, type), geneID, paramVector);
+	public NEATNeuronGene(NEATNeuronGene prototype, NNPart type, Vector paramVector) {
+		super(prototype, Gene.typeSet(NNPart.NEURON, type), paramVector);
 	}
 
 	/**
@@ -43,11 +41,9 @@ public class NEATNeuronGene extends NEATGene {
 	 * NEATNeuronGene with same type as the prototype and the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
-	 * @param geneID The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the
-	 *            NEAT algorithm.
 	 * @param paramVector The parameter vector for this gene.
 	 */
-	public NEATNeuronGene(NEATNeuronGene prototype, long geneID, Vector paramVector) {
-		super(prototype, geneID, paramVector);
+	public NEATNeuronGene(NEATNeuronGene prototype, Vector paramVector) {
+		super(prototype, paramVector);
 	}
 }

@@ -1,6 +1,7 @@
 package com.ojcoleman.europa.core;
 
 import com.eclipsesource.json.JsonObject;
+import com.google.common.collect.Table;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Component;
@@ -36,9 +37,11 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 *            to re-use the function objects it generates in the case that they are large and deallocating and
 	 *            recreating them from scratch is inefficient. Note that this will be null at times (for example in the
 	 *            first calls to this method).
+	 * @param log Whether, how and what details to log of the transcription. How the log is interpreted and
+	 *            handled is up to the implementing class. If {@link Log#NO_LOG} is given then no logging is required.
 	 */
-	public abstract F transcribe(G genotype, F function);
-
+	public abstract F transcribe(G genotype, F function, Log log);
+	
 	/**
 	 * Generate and return a template genotype that this Transcriber knows how to transcribe. The template is used to
 	 * seed an evolutionary run.

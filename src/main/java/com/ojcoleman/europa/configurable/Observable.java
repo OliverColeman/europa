@@ -50,7 +50,25 @@ public abstract class Observable {
 			event = Event.Unspecified;
 		}
 		for (Observer listener : listeners) {
-			listener.eventOccurred(this, event);
+			listener.eventOccurred(this, event, null);
+		}
+	}
+	
+	/**
+	 * Notifies all observers of the given event or change.
+	 * 
+	 * @param type The type of event or change. This should be tied to a constant defined in the Subject sub-class.
+	 * @param state An arbitrary object typically describing the current state of the Observable or information about the event.
+	 * 
+	 * @see Observer
+	 * @see #addEventListener(Observer)
+	 */
+	protected void fireEvent(Object event, Object state) {
+		if (event == null) {
+			event = Event.Unspecified;
+		}
+		for (Observer listener : listeners) {
+			listener.eventOccurred(this, event, state);
 		}
 	}
 }

@@ -1,7 +1,7 @@
 package com.ojcoleman.europa.transcribers.nn;
 
 /**
- * Describes the basic topology of a network.
+ * Describes the basic topology class of a network.
  */
 public enum Topology {
 	/**
@@ -10,7 +10,7 @@ public enum Topology {
 	RECURRENT,
 	/**
 	 * The network is strictly feed-forward (no recurrent connections or cycles), but the longest and shortest paths
-	 * between input and output neurons may not be equal.
+	 * between input and output neurons may not be equal (that is, the neurons may not be arranged in layers that only have connections from one layer to the next).
 	 */
 	FEED_FORWARD,
 	/**

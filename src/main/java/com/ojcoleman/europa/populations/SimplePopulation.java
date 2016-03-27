@@ -42,7 +42,7 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 	}
 
 	@Override
-	public void removeIndividual(Individual<G, F> individual) {
+	public void removeIndividual(Individual<G, ?> individual) {
 		members.remove(individual);
 	}
 

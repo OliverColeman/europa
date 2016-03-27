@@ -17,7 +17,7 @@ import com.ojcoleman.europa.configurable.Parameter;
  * each Species if applicable, and produces new members via recombination and/or cloning and mutation to replace the
  * current members. If elitism is used, some number of members may be maintained to the next generation unchanged.
  */
-public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> extends Evolver<G, F> {
+public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 	@Parameter(description = "The proportion of parents to select from the population or each species, used to generate new genotypes.", defaultValue = "0.2", minimumValue = "0", maximumValue = "1")
 	double parentsProportion;
 
@@ -37,45 +37,45 @@ public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> ext
 	
 	
 	@Override
-	public void evolve(final Population<G, F> population) {
-		List<Species<G, F>> parentSpecies = population.getSpecies();
+	public void evolve(final Population<G, ?> population) {
+		List<Species<G>> parentSpecies = population.getSpecies();
 		
 		if (parentSpecies.isEmpty()) {
 			throw new IllegalStateException("No species from which to produce offspring.");
 		}
 		
 		
-		final Map<Species<G, F>, Double> speciesNewSizeProportional = new HashMap<>();
+		final Map<Species<G>, Double> speciesNewSizeProportional = new HashMap<>();
 		if (speciesFitnessSharing) {
 			// Number of offspring to produce from a species is proportional to its average fitness (fitness sharing).
 			double totalAvgRank = 0;
-			for (Species<G, F> species : parentSpecies) {
+			for (Species<G> species : parentSpecies) {
 				double avgRank = species.getAverageRank();
 				speciesNewSizeProportional.put(species, avgRank);
 				totalAvgRank += avgRank;
 			}
 			// Normalise proportional new sizes.
-			for (Species<G, F> species : parentSpecies) {
+			for (Species<G> species : parentSpecies) {
 				speciesNewSizeProportional.put(species, speciesNewSizeProportional.get(species) / totalAvgRank);
 			}
 		}
 		else {
 			// Number of offspring to produce from a species is proportional to the species size.
-			for (Species<G, F> species : parentSpecies) {
+			for (Species<G> species : parentSpecies) {
 				speciesNewSizeProportional.put(species, (double) species.size() / population.size());
 			}
 		}
 		
 		final List<G> newOffspring = Collections.synchronizedList(new ArrayList<G>(population.getDesiredSize()));
-		final DefaultEvolver<G, F> evolver = this;
+		final DefaultEvolver<G> evolver = this;
 		final Random random = this.getParentComponent(Run.class).random;
 		
 		// Reproduce from each species relative to its percentage of total fitness.
-		this.getParentComponent(Run.class).parallel.foreach(parentSpecies, new Parallel.Operation<Species<G, F>>() {
-			public void perform(Species<G, F> species) {
+		this.getParentComponent(Run.class).parallel.foreach(parentSpecies, new Parallel.Operation<Species<G>>() {
+			public void perform(Species<G> species) {
 				if (!species.isEmpty()) {
 					// Get all members of species, highest ranked first.
-					List<Individual<G, F>> rankedMembers = new ArrayList<>(species.getMembers());
+					List<Individual<G, ?>> rankedMembers = new ArrayList<>(species.getMembers());
 					Collections.sort(rankedMembers);
 					Collections.reverse(rankedMembers);
 					
@@ -86,7 +86,7 @@ public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> ext
 					if (numSpecieOffspring > 0) {
 						// Get parents.
 						int parentCount = Math.max(2, (int) Math.round(species.size() * parentsProportion));
-						List<Individual<G, F>> parents = rankedMembers.subList(0, parentCount);
+						List<Individual<G, ?>> parents = rankedMembers.subList(0, parentCount);
 						
 						for (int offspringIdx = 0; offspringIdx < numSpecieOffspring; numSpecieOffspring++) {
 							G newGenotype = null;
@@ -100,15 +100,15 @@ public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> ext
 								// Determine number of parents.
 								int maxParents = recombiner.parentCountMaximum();
 								if (maxParents < 2) {
-									throw new IllegalStateException("The maximum number of parents for a Recombiner must be >= 2, " + recombiner.getClass().getCanonicalName() + " gave " + maxParents);
+									throw new IllegalStateException("The maximum number of parents for a Recombiner must be >= 2, " + recombiner.getClass().getName() + " gave " + maxParents);
 								}
 								int offspringParentCount = random.nextInt(maxParents - 1) + 2;
 								
 								// Collect genotypes from randomly selected parents.
 								Collections.shuffle(parents, random);
-								List<Individual<G, F>> offspringParents = parents.subList(0, offspringParentCount);
+								List<Individual<G, ?>> offspringParents = parents.subList(0, offspringParentCount);
 								List<G> offspringParentGenotypes = new ArrayList<>(offspringParentCount);
-								for (Individual<G, F> p : offspringParents) {
+								for (Individual<G, ?> p : offspringParents) {
 									offspringParentGenotypes.add(p.genotype);
 								}
 								
@@ -129,8 +129,8 @@ public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> ext
 					}
 					
 					// Remove non-elites from population (this also removes the individuals from the species).
-					List<Individual<G, F>> toRemove = rankedMembers.subList(eliteCount, rankedMembers.size());
-					for (Individual<G, F> ind : toRemove) {
+					List<Individual<G, ?>> toRemove = rankedMembers.subList(eliteCount, rankedMembers.size());
+					for (Individual<G, ?> ind : toRemove) {
 						population.removeIndividual(ind);
 					}
 				}
@@ -151,7 +151,7 @@ public class DefaultEvolver<G extends Genotype<?>, F extends Function<?, ?>> ext
 			mutateGenotype(newGenotype, false);
 			newOffspring.add(newGenotype);
 		}
-
+		
 		// Add new genotypes to population.
 		for (G newGenotype : newOffspring) {
 			population.addGenotype(newGenotype);

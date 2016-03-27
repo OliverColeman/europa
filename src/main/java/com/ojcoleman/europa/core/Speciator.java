@@ -13,9 +13,9 @@ import com.ojcoleman.europa.configurable.Prototype;
  * 
  * @author O. J. Coleman
  */
-public abstract class Speciator<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase {
+public abstract class Speciator<G extends Genotype<?>, S extends Species<G>> extends ComponentBase {
 	@Prototype (description="The common (prototype) configuration for Species.", defaultClass=Species.class)
-	protected Species<G, F> speciesPrototype;
+	protected S speciesPrototype;
 	
 	/**
 	 * Constructor for {@link ComponentBase}.
@@ -23,12 +23,14 @@ public abstract class Speciator<G extends Genotype<?>, F extends Function<?, ?>>
 	public Speciator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
-
+	
 	/**
-	 * Divide the given Population into species.
+	 * Divide the given Population into species. Species may be added/removed to/from the 
+	 * given list of Species. Individuals in the Population should be added/removed to/from
+	 * Species with the methods {@link Species#addMember(Individual)} and {@link Species#removeMember(Individual)}.
 	 * 
 	 * @param population The population to speciate.
-	 * @param species The current set of Species.
+	 * @param species The (current) Species.
 	 */
-	public abstract void speciate(Population<G, F> population, List<Species<G, F>> species);
+	public abstract void speciate(Population<G, ?> population, List<S> species);
 }

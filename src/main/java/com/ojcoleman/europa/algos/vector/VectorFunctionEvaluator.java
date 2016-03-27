@@ -20,18 +20,14 @@ public abstract class VectorFunctionEvaluator extends Evaluator {
 	}
 
 	/**
-	 * Primary {@link Evaluator} classes sould override this method to return the expected number of inputs to the
+	 * Primary {@link Evaluator} classes should override this method to return the expected number of inputs to the
 	 * functions to evaluate.
 	 */
-	public int getVectorFunctionInputSize() {
-		return 0;
-	}
+	public abstract int getVectorFunctionInputSize();
 
 	/**
-	 * Primary {@link Evaluator} classes sould override this method to return the expected number of outputs for the
+	 * Primary {@link Evaluator} classes should override this method to return the expected number of outputs for the
 	 * functions to evaluate.
 	 */
-	public int getVectorFunctionOutputSize() {
-		return 0;
-	}
+	public abstract int getVectorFunctionOutputSize();
 }

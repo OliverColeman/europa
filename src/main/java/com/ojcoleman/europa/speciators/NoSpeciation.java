@@ -19,8 +19,8 @@ import com.ojcoleman.europa.core.Species;
  * 
  * @author O. J. Coleman
  */
-public class NoSpeciation<G extends Genotype<?>, F extends Function<?, ?>> extends Speciator<G, F> {
-	private final Species<G, F> theOnlySpecies;
+public class NoSpeciation<G extends Genotype<?>> extends Speciator<G, Species<G>> {
+	private final Species<G> theOnlySpecies;
 	
 	/**
 	 * Constructor for {@link ComponentBase}.
@@ -32,11 +32,11 @@ public class NoSpeciation<G extends Genotype<?>, F extends Function<?, ?>> exten
 	}
 
 	@Override
-	public void speciate(Population<G, F> population, List<Species<G, F>> species) {
+	public void speciate(Population<G, ?> population, List<Species<G>> species) {
 		if (species.isEmpty()) {
 			species.add(theOnlySpecies);
 		}
-		for (Individual<G, F> ind : population.getMembers()) {
+		for (Individual<G, ?> ind : population.getMembers()) {
 			if (ind.getSpecies() == null) {
 				theOnlySpecies.addMember(ind);
 			}

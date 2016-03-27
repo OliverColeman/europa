@@ -1,6 +1,7 @@
 bin/
 build/
 doc/
+output/
 .gradle
 .settings
 .classpath

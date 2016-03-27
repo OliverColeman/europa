@@ -11,6 +11,8 @@ import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Allele;
 import com.ojcoleman.europa.core.Gene;
+import com.ojcoleman.europa.util.Interval;
+import com.ojcoleman.europa.util.IntervalDouble;
 
 /**
  * <p>
@@ -80,8 +82,11 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 
 	/**
 	 * Get the values from this allele and its underlying gene as a map from the vector element labels to their values.
+	 * 
+	 * @param map The map to put the parameters in. This is emptied before putting the parameters in.
 	 */
 	public Map<String, Double> getAllValuesAsMap(Map<String, Double> map) {
+		map.clear();
 		for (int i = 0; i < gene.vector.metadata.size(); i++) {
 			map.put(vector.metadata.label(i), gene.vector.get(i));
 		}
@@ -89,5 +94,44 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 			map.put(vector.metadata.label(i), vector.get(i));
 		}
 		return map;
+	}
+	
+	/**
+	 * Returns the sum of the absolute differences between corresponding values in this and the given VectorAllele, ignoring the "typeReference" parameter if present.
+	 * 
+	 * @param other The VectorAllele to get the difference from.
+	 * @param normalise Whether the difference for each element should be normalised to a unit range, and the sum of the differences should be normalised to a unit range.
+	 * 
+	 * @throws IllegalArgumentException If this and the given VectorAllele have different Vector metadata.
+	 */ 
+	public double difference(VectorAllele<?> other, boolean normalise) {
+		if (!vector.metadata.equals(other.vector.metadata)) {
+			throw new IllegalArgumentException("Can't compute difference of Vectors with different metadata.");
+		}
+		
+		double diff = 0;
+		if (!normalise) {
+			for (int i = 0; i < vector.metadata.size(); i++) {
+				if (!vector.metadata.label(i).equals("typeReference")) {
+					diff += Math.abs(vector.get(i) - other.vector.get(i));
+				}
+			}
+		}
+		else {
+			for (int i = 0; i < vector.metadata.size(); i++) {
+				if (!vector.metadata.label(i).equals("typeReference")) {
+					Interval<?> bounds = (IntervalDouble) vector.metadata.bound(i);
+					diff += Math.abs(bounds.translateToUnit(vector.get(i)) - bounds.translateToUnit(other.vector.get(i)));
+				}
+			}
+			diff /= vector.size();
+		}
+		return diff;
+	}
+
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		super.getStructuredStringableObject(map);
+		map.put("vector", vector);
 	}
 }

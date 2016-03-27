@@ -53,6 +53,16 @@ public abstract class Interval<T extends Number & Comparable<T>> {
 	 * greater than the end of this interval then returns the end value. Otherwise returns the given value.
 	 */
 	public abstract T clamp(T value);
+	
+	/**
+	 * Translate a value from the unit interval [0, 1] to the corresponding value from this interval.
+	 */
+	public abstract double translateFromUnit(double p);
+
+	/**
+	 * Translate a value from this interval to the corresponding value from the unit interval [0, 1].
+	 */
+	public abstract double translateToUnit(double p);
 
 	/**
 	 * Get a random uniformly distributed value in the range [start, end] (inclusive).

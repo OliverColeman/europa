@@ -1,63 +1,153 @@
 {
-  "configFilePath": "<no default value>",
-  "saveFrequency": 1000,
-  "savePath": "europa_20160126_072402",
-  "numRuns": 1,
-  "run": {
-    "class": "com.ojcoleman.europa.core.Run",
-    "name": "europa_20160126_072402",
-    "outputDirectory": "/home/data/ai/PhD/software/europa/europa_20160126_072402",
-    "randomSeed": 1453753442100,
-    "randomClass": "java.util.Random",
-    "maximumIterations": 0,
-    "transcriber": {
-      "class": "com.ojcoleman.europa.algos.neat.NEATTranscriber",
-      "population": {
-        "class": "com.ojcoleman.europa.populations.SimplePopulation",
-        "desiredSize": 100,
-        "parallelThreads": 8,
-        "individualPrototype": {
-          "class": "com.ojcoleman.europa.core.Individual"
-        },
-        "evolver": {
-          "class": "com.ojcoleman.europa.core.DefaultEvolver",
-          "relativeCloneProportion": 1.0,
-          "parentsProportion": 0.2,
-          "elitismProportion": 0.05,
-          "speciesFitnessSharing": true,
-          "genotypePrototype": {
-            "class": "com.ojcoleman.europa.core.DummyGenotype"
-          },
-          "mutators": [
-            {
-              "class": "com.ojcoleman.europa.core.DummyMutator",
-              "applyPercentageClones": 1.0,
-              "applyPercentageChildren": 0.25
-            }
-          ],
-          "recombiners": [
-            
-          ]
-        },
-        "ranker": {
-	      "class": "com.ojcoleman.europa.rankers.DefaultRanker"
-	    },
-	    "speciator": {
-          "class": "com.ojcoleman.europa.speciators.NoSpeciation",
-          "speciesPrototype": {
-            "class": "com.ojcoleman.europa.core.Species"
-          }
-        }
-      }
-    },
-    "evaluators": [
-      {
-        "class": "com.ojcoleman.europa.core.DummyEvaluator",
-        "name": "DummyEvaluator"
-      }
-    ],
-    "history": {
-      "class": "com.ojcoleman.europa.core.History"
-    }
-  }
+	"class":"com.ojcoleman.europa.core.Run",
+	"name":"neat",
+	"saveFrequency":1000,
+	"parallel":{
+		"class":"com.ojcoleman.europa.core.Parallel",
+		"threadCount":1
+	},
+	"transcriber":{
+		"class":"com.ojcoleman.europa.algos.neat.NEATTranscriber",
+		"genotype":{
+			"class":"com.ojcoleman.europa.algos.neat.NEATGenotype",
+			"genePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATGene"
+			},
+			"allelePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATAllele"
+			},
+			"neuronGenePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATNeuronGene"
+			},
+			"neuronAllelePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATNeuronAllele"
+			},
+			"synapseGenePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATSynapseGene"
+			},
+			"synapseAllelePrototype":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATSynapseAllele"
+			}
+		},
+		"neuralNetwork":{
+			"class":"com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork",
+			"config":{
+				"topology":"FEED_FORWARD",
+				"simulationStepsPerStep":5,
+				"simulationResolution":1000,
+				"aparapiExecutionMode":"SEQ",
+				"neuron":{
+					"class":"com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedGeneType",
+					"modelClass":"com.ojcoleman.bain.neuron.rate.SigmoidBipolarNeuronCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-16.0,
+								"max":16.0,
+								"label":"bias"
+							}
+						]
+					}
+				},
+				"synapse":{
+					"modelClass":"com.ojcoleman.bain.synapse.rate.FixedSynapseCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-16,
+								"max":16,
+								"label":"weight"
+							}
+						]
+					}
+				}
+			}
+		},
+		"population":{
+			"class":"com.ojcoleman.europa.populations.SimplePopulation",
+			"desiredSize":10,
+			"individualPrototype":{
+				"class":"com.ojcoleman.europa.core.Individual"
+			},
+			"evolver":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATEvolver",
+				"relativeCloneProportion":1.0,
+				"parentsProportion":0.2,
+				"elitismProportion":0.05,
+				"speciesFitnessSharing":true,
+				"mutators":[
+					{
+						"class":"com.ojcoleman.europa.algos.vector.VectorMutator",
+						"applyPercentageClones":1.0,
+						"applyPercentageRecombined":0.25,
+						"alleleApplyRate":0.5,
+						"valueApplyRate":0.5,
+						"perturbationType":"normal",
+						"perturbationMagnitude":1,
+						"perturbationMagnitudeNormalise":true
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATSynapseAddMutator",
+						"applyPercentageClones":1.0,
+						"applyPercentageRecombined":0.25,
+						"type":"FIXED",
+						"fixedMaximum":1,
+						"applyRate":0.05
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATNeuronAddMutator",
+						"applyPercentageClones":1.0,
+						"applyPercentageRecombined":0.25,
+						"maximum":1,
+						"applyRate":0.01
+					}
+				],
+				"recombiners":[
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATRecombiner",
+						"vetoMutation":false,
+						"relativeProportion":2.0
+					}
+				]
+			},
+			"speciator":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATSpeciatorOriginal",
+				"excessGenesFactor":1.0,
+				"disjointGenesFactor":1.0,
+				"paramValueDifferenceFactor":0.4,
+				"normaliseParameterValues":true,
+				"geneMismatchUseValues":false,
+				"speciationThreshold":3.0,
+				"speciationTarget":16
+			},
+			"ranker":{
+				"class":"com.ojcoleman.europa.rankers.DefaultRanker"
+			}
+		}
+	},
+	"evaluators":[
+		{
+			"class":"com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
+			"name":"XOR",
+			"errorTypeTrial":"RMSE",
+			"errorTypeOutput":"SAE",
+			"fitnessConversionType":"proportional",
+			"performanceMetric":"proportional",
+			"acceptableError":0.1,
+			"pathToCSVFile":"/home/data/ai/datasets/xor.csv"
+		}
+	],
+	"monitors":[
+		{
+			"class":"com.ojcoleman.europa.monitor.DebugMonitor",
+			"printToFile":"debug.log",
+			"listenTo":"com.ojcoleman.europa.core.Population",
+			"logEvents":[ "PopulationGenerated" ]
+		},
+		{
+			"class":"com.ojcoleman.europa.monitor.OverviewMonitor",
+			"printToConsole":true,
+			"printToFile":"overview.log"
+		}
+	]
 }

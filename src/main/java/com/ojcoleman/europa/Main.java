@@ -15,7 +15,10 @@ import java.util.regex.Pattern;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.eclipsesource.json.Json;
+import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonValue;
+import com.eclipsesource.json.ParseException;
 import com.eclipsesource.json.WriterConfig;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.DefaultIDFactory;
@@ -33,38 +36,28 @@ import com.thoughtworks.xstream.XStream;
 public class Main {
 	@Parameter(description = "<Configuration file (.json extension) or previously saved run (.europa extension)>")
 	List<String> configOrSavedRun;
-
+	
 	@Parameter(names = "--printConfig", description = "Prints an example configuration file showing available parameters and default sub-components. May be combined with a custom input configuration file or snapshot to see options for custom components or the configuration of the snapshot.")
 	private boolean printConfig = false;
-
+	
 	@Parameter(names = "--noMetadata", description = "If printConfig is provided, disables including the metadata for parameters and components.")
 	private boolean noMetadata = false;
-
+	
 	@Parameter(names = "--strictJSON", description = "If printConfig is provided, disables \"commenting out\" the metadata in the JSON output, thus producing valid JSON. Metadata about parameters and components is commented out by default to improve readability. Note that this program will accept configuration files with comments.")
 	private boolean strictJSON = false;
-
+	
 	public static void main(String[] args) {
 		try {
 			Main main = new Main();
 			JCommander jcom = new JCommander(main, args);
 
-			String configOrSavedRun = null;
-
-			if (main.configOrSavedRun != null) {
-				if (main.configOrSavedRun.size() != 1) {
-					jcom.usage();
-					System.exit(-1);
-				}
-				configOrSavedRun = main.configOrSavedRun.get(0);
-			}
-
 			if (main.printConfig) {
-				if (configOrSavedRun == null) {
+				if (main.configOrSavedRun == null || main.configOrSavedRun.isEmpty()) {
 					main.printConfigOptionsFromDefault();
-				} else if (configOrSavedRun.endsWith(".json")) {
-					main.printConfigOptionsFromConfig(configOrSavedRun);
-				} else if (configOrSavedRun.endsWith(".europa")) {
-					main.printConfigOptionsFromSaved(configOrSavedRun);
+				} else if (main.configOrSavedRun.get(0).endsWith(".json")) {
+					main.printConfigOptionsFromConfig(mergeConfigs(main.configOrSavedRun));
+				} else if (main.configOrSavedRun.get(0).endsWith(".europa")) {
+					main.printConfigOptionsFromSaved(main.configOrSavedRun.get(0));
 				} else {
 					jcom.usage();
 					System.exit(-1);
@@ -75,10 +68,10 @@ public class Main {
 					System.exit(-1);
 				}
 
-				if (configOrSavedRun.endsWith(".json")) {
-					main.launchFromConfig(configOrSavedRun);
-				} else if (configOrSavedRun.endsWith(".europa")) {
-					main.launchFromSaved(configOrSavedRun);
+				if (main.configOrSavedRun.get(0).endsWith(".json")) {
+					main.launchFromConfig(mergeConfigs(main.configOrSavedRun));
+				} else if (main.configOrSavedRun.get(0).endsWith(".europa")) {
+					main.launchFromSaved(main.configOrSavedRun.get(0));
 				} else {
 					jcom.usage();
 					System.exit(-1);
@@ -88,77 +81,51 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private synchronized void launchFromSaved(String configOrSavedRun) throws Exception {
 		XStream xstream = new XStream();
 		xstream.setMarshallingStrategy(null);
 		
-		Base Base = (Base) xstream.fromXML(new FileReader(configOrSavedRun));
-		Base.run.run();
+		Run run = (Run) xstream.fromXML(new FileReader(configOrSavedRun));
+		run.run();
 	}
-
-	private synchronized void launchFromConfig(String configOrSavedRun) throws Exception {
-		List<String> configLines = Files.readAllLines(Paths.get(configOrSavedRun), StandardCharsets.UTF_8);
-		String configStr = stripComments(configLines);
-		JsonObject config = Json.parse(configStr).asObject();
+	
+	private synchronized void launchFromConfig(JsonObject config) throws Exception {
+		JsonArray configFilePaths = new JsonArray();
+		for (String confPath : configOrSavedRun) {
+			configFilePaths.add(confPath);
+		}
+		config.add("configFilePaths", configFilePaths);
 		
-		config.add("configFilePath", configOrSavedRun);
-		
-		Base base = new Base(null, new Configuration(config, false, new DefaultIDFactory()));
-		base.run.run();
+		Run run = new Run(null, new Configuration(config, false, new DefaultIDFactory()));
+		run.run();
 	}
-
-	private synchronized void launch(final Base base) throws Exception {
-		base.run.addEventListener(new Observer() {
-			@Override
-			public void eventOccurred(Observable observed, Object event) {
-				if (event == Run.Event.IterationComplete) {
-					if (base.saveFrequency > 0 && base.run.getCurrentIteration() % base.saveFrequency == 0) {
-						XStream xstream = new XStream();
-						xstream.setMarshallingStrategy(null);
-						try {
-							xstream.toXML(base, new FileWriter(base.savePath));
-						} catch (IOException e) {
-							base.logger.error("Could not save Run state to file.", e);
-						}
-					}
-				}
-			}
-
-		});
-
-		base.run.run();
+	
+	private synchronized void launch(final Run run) throws Exception {
+		run.run();
 	}
 
 	private void printConfigOptionsFromSaved(String configOrSavedRun) throws Exception {
 		XStream xstream = new XStream();
 		xstream.setMarshallingStrategy(null);
-		Base base = (Base) xstream.fromXML(new FileReader(configOrSavedRun));
-		printConfig(base);
-		//JsonObject config = base.getConfiguration(false);
-		//System.out.println(config.toString(WriterConfig.PRETTY_PRINT));
-
+		Run run = (Run) xstream.fromXML(new FileReader(configOrSavedRun));
+		printConfig(run);
 	}
 
-	private void printConfigOptionsFromConfig(String configFile) throws Exception {
-		List<String> configLines = Files.readAllLines(Paths.get(configFile), StandardCharsets.UTF_8);
-		String configStr = stripComments(configLines);
-		
-		JsonObject configObject = Json.parse(configStr).asObject();
-
-		Base base = new Base(null, new Configuration(configObject, true, new DefaultIDFactory()));
-		printConfig(base);
+	private void printConfigOptionsFromConfig(JsonObject configObject) throws Exception {
+		Run run = new Run(null, new Configuration(configObject, true, new DefaultIDFactory()));
+		printConfig(run);
 	}
 
 	private void printConfigOptionsFromDefault() throws Exception {
 		JsonObject configObject = new JsonObject();
 		
-		Base base = new Base(null, new Configuration(configObject, true, new DefaultIDFactory()));
-		printConfig(base);
+		Run run = new Run(null, new Configuration(configObject, true, new DefaultIDFactory()));
+		printConfig(run);
 	}
 
-	private void printConfig(Base base) throws Exception {
-		JsonObject configJO = base.getConfiguration(!noMetadata);
+	private void printConfig(Run run) throws Exception {
+		JsonObject configJO = run.getConfiguration(!noMetadata);
 		String configOut = configJO.toString(WriterConfig.PRETTY_PRINT);
 
 		if (!strictJSON) {
@@ -169,7 +136,7 @@ public class Main {
 			configOut = Pattern.compile("^\\s*//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll(""); 
 		}
 		
-		// Replace \" with " in commment lines.
+		// Replace \" with " in comment lines.
 		StringBuilder configOutSB = new StringBuilder(configOut.length());
 		Pattern comment = Pattern.compile("^\\s*//.*");
 		for (String line : configOut.split("\n")) {
@@ -184,16 +151,16 @@ public class Main {
 		System.out.println(configOutSB.toString());
 	}
 	
-	private String stripComments(String jsonWithComments) {
+	private static String stripComments(String jsonWithComments) {
 		List<String> jsonLines = Arrays.asList(jsonWithComments.split("\n"));
 		return stripComments(jsonLines);
 	}
 	
-	private String stripComments(List<String> jsonWithComments) {
+	private static String stripComments(List<String> jsonWithComments) {
 		StringBuffer config = new StringBuffer();
 		for (String line : jsonWithComments) {
 			if (!line.matches("^\\s*//.*$")) {
-				config.append(line);
+				config.append(line + "\n");
 			}
 		}
 		String json = config.toString();
@@ -202,5 +169,43 @@ public class Main {
 		json = Pattern.compile(",\\s*}").matcher(json).replaceAll(" }");
 		
 		return json;
+	}
+	
+	private static JsonObject mergeConfigs(List<String> configPaths) throws IOException {
+		JsonObject mergedConfig = new JsonObject();
+		
+		for (String confPath : configPaths) {
+			List<String> configLines = Files.readAllLines(Paths.get(confPath), StandardCharsets.UTF_8);
+			String configStr = stripComments(configLines);
+			try {
+				JsonObject config = Json.parse(configStr).asObject();
+
+				recursiveMerge(mergedConfig, config);
+			}
+			catch (ParseException ex) {
+				throw new IllegalArgumentException("Could not parse configuration file " + confPath, ex);
+			}
+		}
+		
+		return mergedConfig;
+	}
+	
+	/**
+	 * Recursively merge o2 into o1. Values in o2 overwrite those in o1 if set.
+	 */
+	private static void recursiveMerge(JsonObject o1, JsonObject o2) {
+		for (String key : o2.names()) {
+			JsonValue val2 = o2.get(key);
+			// If o1 does not define this value or the value is not an object then replace/set the value in o1.
+			if (o1.get(key) == null || !o1.get(key).isObject()) {
+				o1.set(key, val2);
+			}
+			else if (o1.get(key).isObject()) {
+				// Otherwise recursively merge the object values.
+				JsonObject merged = o1.get(key).asObject();
+				recursiveMerge(merged, val2.asObject());
+				o1.set(key, merged);
+			}
+		}
 	}
 }

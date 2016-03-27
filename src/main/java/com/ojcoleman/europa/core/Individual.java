@@ -2,11 +2,14 @@ package com.ojcoleman.europa.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
+import com.ojcoleman.europa.util.StructuredStringableStringer;
 
 /**
  * Represents an individual in the {@link Population} used in the evolutionary algorithm. An individual is a container
@@ -15,7 +18,7 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
  * 
  * @author O. J. Coleman
  */
-public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends PrototypeBase implements Comparable<Individual<G, F>> {
+public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends PrototypeBase implements Comparable<Individual<?, ?>> {
 	/**
 	 * The genotype represented by this individual.
 	 */
@@ -35,12 +38,12 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 * The {@link Function} to be evaluated (transcribed from the Genotype if the Genotype is not also the Function).
 	 */
 	protected F function;
-
+	
 	
 	/**
 	 * The Species this Individual is currently associated with.
 	 */
-	Species<G, F> species;
+	Species<G> species;
 	
 	
 	/**
@@ -81,12 +84,21 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	}
 
 	/**
-	 * Sets the function transcribed from the genotype of this individual.
+	 * Sets the function transcribed from the genotype of this individual. 
+	 * This is generally called by the {@link Population} component.
 	 */
 	public void setFunction(F function) {
 		this.function = function;
 	}
-
+	
+	/**
+	 * Clears the reference to the function transcribed from the genotype of this individual. 
+	 * This is generally called by the {@link Population} component if a function instances are being recycled.
+	 */
+	public void clearFunction() {
+		this.function = null;
+	}
+	
 	/**
 	 * Returns the rank of this individual within the {@link Population}. A higher value indicates a higher (better) rank.
 	 * 
@@ -108,13 +120,23 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	/**
 	 * Get the Species this Individual is currently in.
 	 */
-	public Species<G, F> getSpecies() {
+	public Species<G> getSpecies() {
 		return species;
+	}
+	
+	/**
+	 * Returns true iff this Individual belongs to a {@link Species}
+	 */
+	public boolean hasSpecies() {
+		return species != null;
 	}
 
 
+	/** 
+	 * Compares Individuals by their {@link #rank}.
+	 */
 	@Override
-	public int compareTo(Individual<G, F> other) {
+	public int compareTo(Individual<?, ?> other) {
 		if (rank < other.rank) {
 			return -1;
 		}
@@ -122,5 +144,15 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 			return 1;
 		}
 		return 0;
+	}
+	
+
+	@Override
+	public void getStructuredStringableObject(Map<String, Object> map) {
+		super.getStructuredStringableObject(map);
+		map.put("genotype", genotype);
+		map.put("evaluation", evaluationData);
+		map.put("function", function);
+		map.put("rank", rank);
 	}
 }

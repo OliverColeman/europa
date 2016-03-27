@@ -7,9 +7,11 @@ import com.ojcoleman.europa.algos.vector.Vector;
 import com.ojcoleman.europa.algos.vector.VectorGene;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
+import com.ojcoleman.europa.configurable.ConfigurableBase;
 
 /**
- * Base class for representations of NEAT genes.
+ * Base class for representations of NEAT genes. Note that the innovation ID required by NEAT is 
+ * implemented with {@link ConfigurableBase#id} (which this class extends).
  * 
  * @author O. J. Coleman
  */
@@ -28,11 +30,9 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	 * @param prototype The prototype gene to copy.
 	 * @param type The type(s) of the gene, if applicable to the evolutionary algorithm in use. Usually these are enum
 	 *            constants. May be empty.
-	 * @param id The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the NEAT
-	 *            algorithm.
 	 * @param paramVector The parameter vector for this gene.
 	 */
-	public NEATGene(NEATGene prototype, Set<Object> type, long id, Vector paramVector) {
+	public NEATGene(NEATGene prototype, Set<Object> type, Vector paramVector) {
 		super(prototype, type, paramVector);
 	}
 
@@ -41,11 +41,9 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	 * VectorGene with the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
-	 * @param id The ID of this Gene within the {@link NEATGenotype}. This is the historical marking used in the NEAT
-	 *            algorithm.
 	 * @param paramVector The parameter vector for this gene.
 	 */
-	public NEATGene(NEATGene prototype, long id, Vector paramVector) {
+	public NEATGene(NEATGene prototype, Vector paramVector) {
 		super(prototype, paramVector);
 	}
 

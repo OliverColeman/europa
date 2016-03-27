@@ -7,8 +7,12 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user
- * configurable, e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.
+ * <p>For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user
+ * configurable, e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.</p>
+ * 
+ * <p><strong>Note: setting an initial value for a Parameter field will prevent the fields value being set via a configuration.</strong>
+ * This is because Java processes initial field values after calling the super-class's constructor. For more information see 
+ * http://stackoverflow.com/questions/8843825/why-are-member-objects-initialized-after-the-super-classs-constructor</p>
  * 
  * @see Configurable
  * @see Prototype
@@ -20,6 +24,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Parameter {
+	static final String PARAMETER_NO_DEFAULT = "<NO DEFAULT VALUE>";
+	
 	/**
 	 * Description for the sub-component.
 	 */
@@ -34,7 +40,7 @@ public @interface Parameter {
 	/**
 	 * A default value for the parameter.
 	 */
-	String defaultValue() default "";
+	String defaultValue() default PARAMETER_NO_DEFAULT;
 
 	/**
 	 * For numeric types, a minimum value, inclusive. Optional.

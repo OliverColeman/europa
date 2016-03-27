@@ -49,6 +49,14 @@ public class ConfigurableTestSetParams {
 		Assert.assertEquals(cc.classParam, Double.class);
 		Assert.assertEquals(cc.enumParam, TestEnum.TEST_1);
 	}
+	
+	@Test(groups = { "basic" })
+	public void paramsSetValuesSuper() throws Exception {
+		JsonObject json = Json.parse("{ \"superClassParam\" : 2, \"subClassParam\" : 3 }").asObject();
+		ParamsSetSub cc = new ParamsSetSub(null, new Configuration(json, false, new DefaultIDFactory()));
+		Assert.assertEquals(cc.superClassParam, 2);
+		Assert.assertEquals(cc.subClassParam, 3);
+	}
 
 	@Test(groups = { "basic" }, dataProvider = "params", dependsOnMethods = { "paramsSetValues" })
 	public void paramsMissingRequired(JsonObject json) {
@@ -216,6 +224,25 @@ public class ConfigurableTestSetParams {
 
 		@Parameter(description = "Test enum constant parameter.")
 		TestEnum enumParam;
+	}
+	
+
+	static public class ParamsSetSuper extends ComponentBase {
+		public ParamsSetSuper(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
+			super(parentComponent, componentConfig);
+		}
+
+		@Parameter(description = "Test super class parameter.")
+		int superClassParam;
+	}
+	
+	static public class ParamsSetSub extends ParamsSetSuper {
+		public ParamsSetSub(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
+			super(parentComponent, componentConfig);
+		}
+
+		@Parameter(description = "Test sub class parameter.")
+		int subClassParam;
 	}
 
 	static public class ParamsDefault extends ComponentBase {

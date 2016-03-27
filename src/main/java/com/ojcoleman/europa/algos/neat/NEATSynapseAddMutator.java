@@ -13,6 +13,7 @@ import com.google.common.collect.Table;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.core.Evolver;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
@@ -60,7 +61,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 		Random random = run.random;
 		NeuralNetworkTranscriber<?> transcriber = (NeuralNetworkTranscriber<?>) run.getSubComponent("transcriber", this);
 		NNConfig nnConfig = transcriber.getNeuralNetworkPrototype().getConfig();
-		NEATEvolver evolver = (NEATEvolver) run.getSubComponent("evolver", this);
+		NEATEvolver evolver = (NEATEvolver) this.getParentComponent(Evolver.class);
 
 		// Get a list of the neuron IDs.
 		List<Long> neuronIDs = new ArrayList<>(genotype.getNeurons().keySet());

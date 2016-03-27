@@ -9,6 +9,20 @@ import java.util.Random;
 
 public class ArrayUtil {
 	/**
+	 * Returns a deep copy of the given 2D array.
+	 */
+	public static double[][] copy(double[][] a) {
+		if (a.length == 0) {
+			return new double[0][0];
+		}
+		double[][] c = new double[a.length][];
+		for (int i = 0; i < a.length; i++) {
+			c[i] = Arrays.copyOf(a[i], a[i].length);
+		}
+		return c;
+	}
+	
+	/**
 	 * @param a The array to print.
 	 * @param separator A string to separate each element.
 	 * @param formatter A formatter to format the values. If null given the numbers will be printed raw.

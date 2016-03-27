@@ -1,6 +1,7 @@
 package com.ojcoleman.europa.core;
 
 import java.util.Map;
+
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -58,5 +59,18 @@ public class EvaluationData {
 	 */
 	public Map<EvaluationDescription, Double> getPerformanceResults() {
 		return Collections.unmodifiableMap(performanceResults);
+	}
+	
+	public String toString() {
+		StringBuilder s = new StringBuilder();
+		boolean first = true;
+		for (Map.Entry<EvaluationDescription, Double> res : allResults.entrySet()) {
+			if (!first)
+				s.append(", ");
+			else
+				first = false;
+			s.append(res.getKey().name + ": " + Run.getDefaultNumberFormatStatic().format(res.getValue()));
+		}
+		return s.toString();
 	}
 }

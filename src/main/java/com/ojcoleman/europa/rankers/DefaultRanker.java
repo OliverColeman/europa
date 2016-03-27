@@ -13,6 +13,7 @@ import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Ranker;
+import com.ojcoleman.europa.core.Run;
 
 /**
  * This is a simple ranker that only considers the primary fitness objective when ranking individuals.
@@ -25,8 +26,10 @@ public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> exte
 	 */
 	public DefaultRanker(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
+		
+		this.getParentComponent(Run.class).monitor(this);
 	}
-
+	
 	@Override
 	public void rank(Population<G, F> population) {
 		Set<EvaluationDescription> evDescs = population.getMembers().iterator().next().evaluationData.getFitnessResults().keySet();
@@ -44,5 +47,18 @@ public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> exte
 		for (Individual<?, ?> ind : fitnessIndividualMap.values()) {
 			ind.setRank(rank++);
 		}
+		
+		this.fireEvent(Event.RankingFinished, fitnessIndividualMap.lastEntry().getValue().evaluationData);
+	}
+	
+	
+	/**
+	 * Ranker event types.
+	 */
+	public static enum Event {
+		/**
+		 * An event type indicating that ranking of the individuals has finished.
+		 */
+		RankingFinished,
 	}
 }

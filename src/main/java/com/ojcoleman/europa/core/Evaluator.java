@@ -1,9 +1,7 @@
 package com.ojcoleman.europa.core;
 
-import java.util.Collection;
 import java.util.Set;
 
-import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
@@ -27,11 +25,11 @@ public abstract class Evaluator extends ComponentBase {
 			name = this.getClass().getSimpleName();
 		}
 	}
-
+	
 	public String getName() {
 		return name;
 	}
-
+	
 	/**
 	 * Get the {@link EvaluationDescription}s that describe the evaluations performed by this evaluator.
 	 */
@@ -45,6 +43,10 @@ public abstract class Evaluator extends ComponentBase {
 	 * <p>
 	 * <strong>It is critical that this method is thread-safe (can handle multiple simultaneous calls).</strong>
 	 * </p>
+	 * 
+	 * @param individual The Individual to evaluate.
+	 * @param log Whether, how and what details to log of the evaluation. How the log is interpreted and
+	 *            handled is up to the implementing class. If {@link Log#NO_LOG} is given then no logging is required.
 	 */
-	public abstract void evaluate(Individual individual);
+	public abstract void evaluate(Individual individual, Log log);
 }

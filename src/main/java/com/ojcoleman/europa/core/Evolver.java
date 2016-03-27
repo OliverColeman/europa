@@ -24,7 +24,7 @@ import com.ojcoleman.europa.configurable.Component;
  * 
  * @author O. J. Coleman
  */
-public abstract class Evolver<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase {
+public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Evolver.class);
 	
 	
@@ -76,7 +76,6 @@ public abstract class Evolver<G extends Genotype<?>, F extends Function<?, ?>> e
 		for (int i = 1; i < actualRecombinerProportions.length; i++) {
 			actualRecombinerProportions[i] += actualRecombinerProportions[i-1];
 		}
-		System.out.println("actualRecombinerProportions: " + Arrays.toString(actualRecombinerProportions));
 		
 		random = this.getParentComponent(Run.class).random;
 	}
@@ -104,7 +103,7 @@ public abstract class Evolver<G extends Genotype<?>, F extends Function<?, ?>> e
 	 * </ul>
 	 * </p>
 	 */
-	public abstract void evolve(Population<G, F> population);
+	public abstract void evolve(Population<G, ?> population);
 	
 	
 	/**
