@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.transcribers.nn.integration;
 
+import java.util.Map;
+
 import com.amd.aparapi.Kernel;
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.bain.base.ComponentCollection;
@@ -22,5 +24,12 @@ public class BainNNConfig extends NNConfig<BainParametrisedGeneType, BainParamet
 
 	public BainNNConfig(Configuration config) throws Exception {
 		super(config);
+	}
+
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("simulationResolution", simulationResolution);
+		map.put("aparapiExecutionMode", aparapiExecutionMode);
 	}
 }

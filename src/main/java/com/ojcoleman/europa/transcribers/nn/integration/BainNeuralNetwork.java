@@ -1,9 +1,11 @@
 package com.ojcoleman.europa.transcribers.nn.integration;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,8 @@ import com.ojcoleman.europa.functiontypes.VectorFunction;
 import com.ojcoleman.europa.transcribers.nn.NNInstanceConfig;
 import com.ojcoleman.europa.transcribers.nn.ParametrisedNeuralNetwork;
 import com.ojcoleman.europa.transcribers.nn.Topology;
+import com.ojcoleman.europa.util.ArrayUtil;
+import com.ojcoleman.europa.util.Stringer;
 
 import edu.princeton.cs.algorithms.BellmanFordSP;
 import edu.princeton.cs.algorithms.DirectedEdge;
@@ -48,6 +52,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	// Record of how many synapses have been added via addSynapse()
 	private int addedSynapseCount;
 	
+	// Number of input neurons.
+	private int inputSize;
 	// Index of the first output neuron.
 	private int outputIndex;
 	
@@ -108,6 +114,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			throw new RuntimeException("Error creating synapses for Bain neural network.", e);
 		}
 		
+		inputSize = instConfig.inputCount;
 		outputIndex = instConfig.neuronCount - instConfig.outputCount;
 		
 		// stepsPerStep and topology may be changed by setStepsPerStepForNonLayeredFF()
@@ -117,7 +124,6 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		nn = new NeuralNetwork(config.simulationResolution, neurons, synapses, config.aparapiExecutionMode);
 		
 		neuronTypeToBainConfig = new HashMap<>();
-		
 	}
 	
 	
@@ -176,6 +182,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		
 		// addedSynapseCount is the index for the new synapse.
 		
+		synapses.setPreAndPostNeurons(addedSynapseCount, source, dest);
+		
 		// Set weight/efficacy first if specified.
 		if (config.containsKey("weight")) {
 			synapses.setEfficacy(addedSynapseCount, config.get("weight"));
@@ -198,6 +206,12 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	 * @param typeToBainConfig Mapping from component type indexes to Bain ConfigurableComponentCollection configuration index (eg {@link #neuronTypeToBainConfig}).
 	 */
 	protected static void setComponentConfig(ConfigurableComponentCollection<?> componentCollection, int componentIndex, Map<String, Double> config, List<Map<String, Double>> types, Map<Integer, Integer> typeToBainConfig) {
+		//TODO not adding configs when it should?
+		
+		TreeMap<String, Object> dbg = new TreeMap<>();
+		dbg.put("0compIndex", componentIndex);
+		dbg.put("1config", config);
+		
 		// Params specific to each component.
 		Map<String, Double> nonTypeConfig = new HashMap<>(config);
 		
@@ -215,6 +229,10 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 		// Remove "typeReference" parameter if present.
 		nonTypeConfig.remove("typeReference");
+		
+		dbg.put("2typeConfig", typeConfig);
+		dbg.put("3nonTypeConfig", nonTypeConfig);
+		
 		
 		// If a type is specified and there are no more parameters specified in the nonTypeConfig, we can use a Bain 
 		// ComponentConfiguration to encapsulate the type params (which is more efficient than creating a 
@@ -242,6 +260,9 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				nonTypeConfig.putAll(typeConfig);
 			}
 			
+			dbg.put("4nonTypeConfig", nonTypeConfig);
+			
+			
 			// If there are any params to set.
 			if (!nonTypeConfig.isEmpty()) {
 				// Add a new configuration to the component collection.
@@ -250,6 +271,10 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				componentCollection.setComponentConfiguration(componentIndex, configIndex);
 			}
 		}
+		
+		dbg.put("9typeToBainConfig", typeToBainConfig);
+		
+		//System.out.println(Stringer.toString(dbg));
 	}
 	
 	/**
@@ -334,8 +359,6 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			}
 		}
 		
-		//System.err.println("maxDepth " + maxDepth + "  cyclic " + (cyclic ? "T" : "F"));
-		
 		if (!cyclic) {
 			stepsPerStep = maxDepth - 1;
 		} else {
@@ -344,8 +367,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 	}
 	
-
-
+	
+	
 	@Override
 	public double[] apply(double[] stimuli) {
 		double[] outputs = new double[instanceConfig.outputCount];
@@ -427,5 +450,143 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	@Override
 	public double getMaximumOutputValue() {
 		return nn.getNeurons().getMaximumPossibleOutputValue();
+	}
+	
+	
+	public boolean isInput(int neuronIndex) {
+		return neuronIndex < inputSize;
+	}
+	
+	public boolean isOutput(int neuronIndex) {
+		return neuronIndex >= outputIndex;
+	}
+	
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("bainNNConfig", config);
+		map.put("topology", topology);
+		map.put("stepsPerStep", stepsPerStep);
+		map.put("bainNN", this.toString());
+	}
+	
+	
+	/**
+	 * Returns a string describing this network and its connectivity.
+	 */
+	@Override
+	public String toString() {
+		int neuronCount = nn.getNeurons().getSize();
+		int synapseCount = nn.getSynapses().getSize();
+		//int neuronDisabledCount = 0;
+		
+		//for (int i = 0; i < neuronCount; i++) {
+		//	if (!neuronDisabled[i]) neuronDisabledCount++;
+		//}
+		DecimalFormat floatf = new DecimalFormat(" 0.00;-0.00");
+		DecimalFormat intf = new DecimalFormat("000000000");
+		DecimalFormat nfInt = new DecimalFormat("0000");
+		StringBuilder out = new StringBuilder(125 + synapseCount * 30);
+		out.append("Neuron class: " + nn.getNeurons().getClass());
+		out.append("\nSynapse class: " + nn.getSynapses().getClass());
+		//out.append("\nNeuron count: " + neuronCount + "  Populated/enabled size: " + neuronDisabledCount);
+		out.append("\nSynapse count: " + synapseCount + "  Populated/enabled size: " + nn.getSynapses().getSizePopulated());
+		out.append("\nTopology type: " + topology);
+		out.append("\nCycles per step: " + stepsPerStep);
+
+		//out.append("\nNeurons:\n\tEnabled\t");
+		out.append("\nNeurons:\n");
+		NeuronCollectionWithBias biasNeurons = (nn.getNeurons() instanceof NeuronCollectionWithBias) ? (NeuronCollectionWithBias) nn.getNeurons() : null;
+		//if (coordsEnabled()) {
+		//	out.append("Coordinates\t\t\t\t");
+		//}
+		if (biasNeurons != null) {
+			out.append("bias\t");
+		}
+		String[] paramNames = nn.getNeurons().getConfigSingleton() != null ? nn.getNeurons().getConfigSingleton().getParameterNames() : null;
+		if (paramNames != null) {
+			out.append("config\t");
+			for (int p = 0; p < paramNames.length; p++) {
+				out.append(paramNames[p].substring(0, Math.min(6, paramNames[p].length())) + "\t");
+			}
+		}
+		out.append("\n");
+		for (int i = 0; i < neuronCount; i++) {
+			//out.append("\n\t" + (neuronDisabled[i] ? "0" : "1"));
+			//if (coordsEnabled()) {
+			//	out.append("\t(" + floatf.format(getXCoord(i)) + ", " + floatf.format(getYCoord(i)) + ", " + floatf.format(getZCoord(i)) + ")");
+			//}
+			if (biasNeurons != null) {
+				out.append(floatf.format(biasNeurons.getBias(i)));
+			}
+			if (paramNames != null) {
+				if (nn.getNeurons().getComponentConfiguration(i) != null) {
+					out.append("\t" + nn.getNeurons().getComponentConfigurationIndex(i) + "\t" + ArrayUtil.toString(nn.getNeurons().getComponentConfiguration(i).getParameterValues(), "\t", floatf));
+				}
+				else {
+					out.append("<no config>");
+				}
+			}
+			out.append("\n");
+		}
+		
+		if (nn.getNeurons().getConfigurationCount() > 0) {
+			out.append("\n\nNeuron configurations:\n");
+			for (int p = 0; p < paramNames.length; p++) {
+				out.append("\t" + paramNames[p].substring(0, Math.min(6, paramNames[p].length())));
+			}
+			out.append("\n");
+			for (int i = 0; i < nn.getNeurons().getConfigurationCount(); i++) {
+				out.append("\t" + ArrayUtil.toString(nn.getNeurons().getConfiguration(i).getParameterValues(), ",\t", floatf) + "\n");
+			}
+		}
+		
+		out.append("\nSynapses:");
+		out.append("\n\tpre > post\tEnabled\tweight");
+		paramNames = nn.getSynapses().getConfigSingleton() != null ? nn.getSynapses().getConfigSingleton().getParameterNames() : null;
+		if (paramNames != null) {
+			out.append("\tConf\t");
+			for (int p = 0; p < paramNames.length; p++) {
+				out.append(paramNames[p].substring(0, Math.min(6, paramNames[p].length())) + "\t");
+			}
+		}
+		TreeMap<String, String> sortedSynapses = new TreeMap<String, String>();
+		for (int i = 0; i < synapseCount; i++) {
+			int pre = nn.getSynapses().getPreNeuron(i);
+			int post = nn.getSynapses().getPostNeuron(i);
+			String preType = isInput(pre) ? "i" : isOutput(pre) ? "o" : "h";
+			String postType = isInput(post) ? "i" : isOutput(post) ? "o" : "h";
+			String enabled = nn.getSynapses().isNotUsed(i) ? "0" : "1";
+			//if (!nn.getSynapses().isNotUsed(i)) {
+			//	System.err.println(i + "\t" + nn.getSynapses().getEfficacy(i) + "\t " + nn.getSynapses().getInitialEfficacy(i) + "\t " + nn.getSynapses().getComponentConfiguration(i).getParameterValue("n"));
+			//}
+			String efficacy = floatf.format(nn.getSynapses().getInitialEfficacy(i));
+			String zero = nn.getSynapses().getInitialEfficacy(i) == 0 ? "z" : " ";
+			
+			String key = intf.format(pre) + ":" + intf.format(post) + ":" + intf.format(i);
+			String value = preType + ":" + pre + " > " + postType + ":" + post + "\t" + enabled + "\t" + efficacy + zero;
+			if (paramNames != null && nn.getSynapses().getComponentConfiguration(i) != null) {
+				value += "\t" + nn.getSynapses().getComponentConfigurationIndex(i) + "\t" + ArrayUtil.toString(nn.getSynapses().getComponentConfiguration(i).getParameterValues(), "\t", floatf);
+			}
+			//sortedSynapses.put(key, value);			
+			sortedSynapses.put(nfInt.format(i), value);
+		}
+		for (String cs : sortedSynapses.values()) {
+			out.append("\n\t" + cs);
+		}
+		
+		if (nn.getSynapses().getConfigurationCount() > 0) {
+			out.append("\n\nSynapse configurations:\n");
+			for (int p = 0; p < paramNames.length; p++) {
+				out.append("\t" + paramNames[p].substring(0, Math.min(6, paramNames[p].length())));
+			}
+			out.append("\n");
+			for (int i = 0; i < nn.getSynapses().getConfigurationCount(); i++) {
+				out.append("\t" + ArrayUtil.toString(nn.getSynapses().getConfiguration(i).getParameterValues(), ",\t", floatf) + "\n");
+			}
+		}
+		
+		out.append("\n");
+		return out.toString();
 	}
 }

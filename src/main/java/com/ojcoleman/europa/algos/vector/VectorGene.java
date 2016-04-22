@@ -3,6 +3,7 @@ package com.ojcoleman.europa.algos.vector;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
@@ -87,5 +88,12 @@ public abstract class VectorGene extends Gene {
 	@Override
 	public int hashCode() {
 		return vector.hashCode();
+	}
+	
+
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
+		map.put("vector", vector);
 	}
 }

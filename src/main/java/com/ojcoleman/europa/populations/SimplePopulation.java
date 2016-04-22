@@ -41,11 +41,6 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 		members.put(individual.genotype.id, individual);
 	}
 
-	@Override
-	public void removeIndividual(Individual<G, ?> individual) {
-		members.remove(individual);
-	}
-
 	public Individual<G, F> getIndividual(long genotypeID) {
 		return members.get(genotypeID);
 	}
@@ -53,5 +48,10 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 	@Override
 	public int size() {
 		return members.size();
+	}
+
+	@Override
+	protected void remove(Individual<G, ?> ind) {
+		members.remove(ind.genotype.id);
 	}
 }

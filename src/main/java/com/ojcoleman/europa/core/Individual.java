@@ -9,7 +9,7 @@ import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.ArrayListMultimap;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
-import com.ojcoleman.europa.util.StructuredStringableStringer;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Represents an individual in the {@link Population} used in the evolutionary algorithm. An individual is a container
@@ -87,8 +87,8 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 * Sets the function transcribed from the genotype of this individual. 
 	 * This is generally called by the {@link Population} component.
 	 */
-	public void setFunction(F function) {
-		this.function = function;
+	public void setFunction(Function<?, ?> function) {
+		this.function = (F) function;
 	}
 	
 	/**
@@ -133,7 +133,8 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 
 
 	/** 
-	 * Compares Individuals by their {@link #rank}.
+	 * Compares Individuals by their {@link #rank}. 
+	 * If rank is equal then compares them by ID.
 	 */
 	@Override
 	public int compareTo(Individual<?, ?> other) {
@@ -143,13 +144,19 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 		if (rank > other.rank) {
 			return 1;
 		}
+		if (id < other.id) {
+			return -1;
+		}
+		if (id > other.id) {
+			return 1;
+		}
 		return 0;
 	}
 	
 
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
-		super.getStructuredStringableObject(map);
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
 		map.put("genotype", genotype);
 		map.put("evaluation", evaluationData);
 		map.put("function", function);

@@ -14,7 +14,7 @@ import com.ojcoleman.europa.configurable.Parameter;
 public abstract class Evaluator extends ComponentBase {
 	@Parameter(description = "A name for the evaluator, used in logging. Default is the evaluators class name.", optional = true)
 	private String name;
-
+	
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
@@ -49,4 +49,12 @@ public abstract class Evaluator extends ComponentBase {
 	 *            handled is up to the implementing class. If {@link Log#NO_LOG} is given then no logging is required.
 	 */
 	public abstract void evaluate(Individual individual, Log log);
+	
+	/**
+	 * Allows the Evaluator to indicate if the evolutionary run should terminate, usually because a solution has been found.
+	 * This default implementation always returns false.
+	 */
+	public boolean shouldTerminate() {
+		return false;
+	}
 }

@@ -69,13 +69,25 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	 */
 	protected Individual<G, F> fittest;
 
+	/**
+	 * A reference to the "best performing" individual. Cleared when {@link #evaluate() is called} and set when {@link #rank()} is called.
+	 * The performance value used is drawn from the first performance metric defined by the first Evaluator in {@link Run#evaluators} which defines a performance metric. 
+	 */
+	protected Individual<G, F> bestPerforming;
+
 	// Pool of functions to provide to transcriber in case it can re-use them.
 	private final ConcurrentLinkedDeque<F> functionPool;
 
 	// Final reference to Run and transcriber for use in anonymous runnable class.
 	final Run run;
 	final Transcriber<G, F> transcriber;
-
+	
+	// Used in getState()
+	int speciesCount;
+	int avgSpeciesSize;
+	int maxSpeciesSize;
+	int minSpeciesSize;
+	
 	
 	/**
 	 * Constructor for {@link ComponentBase}.
@@ -126,7 +138,7 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	
 	
 	/**
-	 * Remove the given Individual from this population. Overriding methods should call this method.
+	 * Remove the given Individual from this population.
 	 * Also removes the Individual from it's current {@link Species}, if set.
 	 */
 	public void removeIndividual(Individual<G, ?> ind) {
@@ -134,8 +146,13 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 			// Remove the individual from its species (this also clears the Individual.species field).
 			ind.species.removeMember(ind);
 		}
+		remove(ind);
 	}
 	
+	/**
+	 * Implementations must remove the given individual from the underlying collection.
+	 */
+	protected abstract void remove(Individual<G, ?> ind);
 	
 	/**
 	 * Returns the individual with the given {@link Genotype#id}.
@@ -147,6 +164,14 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	 */
 	public Individual<G, F> getFittest() {
 		return fittest;
+	}
+	
+	/**
+	 * Returns a reference to the best performing individual. Cleared when {@link #evaluate() is called} and set when {@link #rank()} is called.
+	 * The performance value used is drawn from the first performance metric defined by the first Evaluator in {@link Run#evaluators} which defines a performance metric. 
+	 */
+	public Individual<G, F> getBestPerforming() {
+		return bestPerforming;
 	}
 	
 	
@@ -191,13 +216,15 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	 * evaluation an Individual will be {@link Transcriber#transcribe(Genotype, Function)}d.
 	 * </p>
 	 * <p>
-	 * Individuals are transcribed and evaluated in parallel using {@link #parallelThreads} threads.
+	 * Individuals are transcribed and evaluated in parallel via {@link Run#parallel}.
 	 * </p>
+	 * @return true iff any of the Evaluators indicated that the evolutionary run should terminate, false otherwise.
 	 */
-	public void evaluate() {
+	public boolean evaluate() {
 		// Clear reference to fittest (highest ranked) member.
 		
 		fittest = null;
+		
 		// Evaluate each member.
 		this.getParentComponent(Run.class).parallel.foreach(getMembers(), new Parallel.Operation<Individual<G, F>>() {
 			public void perform(Individual<G, F> individual) {
@@ -210,7 +237,7 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	
 				// Transcribe a function from the genotype. If there's an available function in the function
 				// pool it will be provided (otherwise null is passed).
-				F function = transcriber.transcribe(individual.genotype, functionExisting, Log.NO_LOG);
+				F function = transcriber.transcribe(individual.genotype, functionExisting);
 				individual.setFunction(function);
 	
 				// If we couldn't get a function from the pool, we could probably use more functions in there,
@@ -242,6 +269,14 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 		});
 		
 		this.fireEvent(Event.PopulationEvaluated, getMembers());
+		
+		// Check if any evaluators think we should terminate.
+		for (Evaluator evaluator : run.getEvaluators()) {
+			if (evaluator.shouldTerminate()) {
+				return true;
+			}
+		}
+		return false;
 	}
 	
 	
@@ -260,10 +295,26 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	public void rank() {
 		ranker.rank(this);
 		
+		EvaluationDescription performanceEvDesc = null;
+		for (Evaluator ev : run.getEvaluators()) {
+			for (EvaluationDescription desc : ev.getEvaluationDescriptions()) {
+				if (desc.isPerformanceIndicator) {
+					performanceEvDesc = desc;
+					break;
+				}
+			}
+			if (performanceEvDesc != null) break;
+		}
+		
 		fittest = null;
+		bestPerforming = null;
 		for (Individual<G, F> ind : getMembers()) {
 			if (fittest == null || ind.rank > fittest.rank) {
 				fittest = ind;
+			}
+			
+			if (performanceEvDesc != null && (bestPerforming == null || ind.evaluationData.getResult(performanceEvDesc) > bestPerforming.evaluationData.getResult(performanceEvDesc))) {
+				bestPerforming = ind;
 			}
 		}
 		
@@ -277,6 +328,17 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	 */
 	public void speciate() {
 		speciator.speciate(this, species);
+
+		speciesCount = species.size();
+		avgSpeciesSize = 0;
+		maxSpeciesSize = 0;
+		minSpeciesSize = Integer.MAX_VALUE;
+		for (Species<?> s : species) {
+			avgSpeciesSize += s.size();
+			if (s.size() > maxSpeciesSize) maxSpeciesSize = s.size();
+			if (s.size() < minSpeciesSize) minSpeciesSize = s.size();
+		}
+		avgSpeciesSize /= species.size();
 		
 		this.fireEvent(Event.PopulationSpeciated, getMembers());
 	}
@@ -307,17 +369,8 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 		List<ComponentStateLog> stats = new ArrayList<>();
 		
 		stats.add(new ComponentStateLog("General", "Population", "Size", getMembers().size()));
-		stats.add(new ComponentStateLog("Species", "Count", species.size()));
+		stats.add(new ComponentStateLog("Species", "Count", speciesCount));
 		
-		int avgSpeciesSize = 0;
-		int maxSpeciesSize = 0;
-		int minSpeciesSize = Integer.MAX_VALUE;
-		for (Species<?> s : species) {
-			avgSpeciesSize += s.size();
-			if (s.size() > maxSpeciesSize) maxSpeciesSize = s.size();
-			if (s.size() < minSpeciesSize) minSpeciesSize = s.size();
-		}
-		avgSpeciesSize /= species.size();
 		stats.add(new ComponentStateLog("Species", "Size", "Minimum", minSpeciesSize));
 		stats.add(new ComponentStateLog("Species", "Size", "Average", avgSpeciesSize));
 		stats.add(new ComponentStateLog("Species", "Size", "Maximum", maxSpeciesSize));
@@ -340,6 +393,16 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 		
 		for (Entry<EvaluationDescription, Double> e : fittest.evaluationData.getFitnessResults().entrySet()) {
 			stats.add(new ComponentStateLog("Evaluation", "Fittest", e.getKey().name, e.getValue()));
+		}
+		for (Entry<EvaluationDescription, Double> e : fittest.evaluationData.getPerformanceResults().entrySet()) {
+			stats.add(new ComponentStateLog("Evaluation", "Fittest", e.getKey().name, e.getValue()));
+		}
+		
+		for (Entry<EvaluationDescription, Double> e : bestPerforming.evaluationData.getFitnessResults().entrySet()) {
+			stats.add(new ComponentStateLog("Evaluation", "Best Performing", e.getKey().name, e.getValue()));
+		}
+		for (Entry<EvaluationDescription, Double> e : bestPerforming.evaluationData.getPerformanceResults().entrySet()) {
+			stats.add(new ComponentStateLog("Evaluation", "Best Performing", e.getKey().name, e.getValue()));
 		}
 		
 		return stats;

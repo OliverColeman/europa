@@ -61,6 +61,15 @@ public class EvaluationData {
 		return Collections.unmodifiableMap(performanceResults);
 	}
 	
+	/**
+	 * Removes all evaluation data.
+	 */
+	public void clear() {
+		allResults.clear();
+		fitnessResults.clear();
+		performanceResults.clear();
+	}
+	
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		boolean first = true;

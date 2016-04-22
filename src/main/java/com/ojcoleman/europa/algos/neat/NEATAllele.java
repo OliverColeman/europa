@@ -87,8 +87,8 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	
 	
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
-		super.getStructuredStringableObject(map);
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
 		map.put("enabled", enabled);
 	}
 }

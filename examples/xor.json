@@ -1,10 +1,16 @@
-  {
-    "maximumIterations": 10,
-    "evaluators": [
-      {
-        "class": "com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
-        "name": "XOR",
-        "pathToCSVFile": "/home/data/ai/datasets/xor.csv"
-      }
-    ]
-  }
+{
+	"maximumIterations":101,
+	"evaluators":[
+		{
+			"class":"com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
+			"name":"XOR",
+			"pathToCSVFile":"examples2/xor.csv",
+			"errorTypeExample":"SAE",
+			"errorTypeOutput":"SAE",
+			"acceptableError":0.499,
+			"fitnessConversionType":"proportional",
+			"performanceMetric":"percent-correct",
+			"terminateOnPerformance":1
+		}
+	]
+}

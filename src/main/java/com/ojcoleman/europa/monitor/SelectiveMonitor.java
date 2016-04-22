@@ -20,7 +20,7 @@ import com.ojcoleman.europa.configurable.Observable;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Monitor;
 import com.ojcoleman.europa.core.Run;
-import com.ojcoleman.europa.util.StructuredStringableStringer;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * 
@@ -36,7 +36,12 @@ public abstract class SelectiveMonitor extends FileOrCLIMonitor {
 	@Parameter(description = "The names of events to print info for. This only works if the event object is an enum. Leave blank to listen to all events. This is case-insensitive.", defaultValue = "[]")
 	protected String[] logEvents;
 	
+	@Parameter (description = "Only log events when the current iteration/generation is a factor of the iterationPeriod.", defaultValue = "1", minimumValue="1")
+	protected int iterationPeriod;
+	
+	
 	private HashSet<String> logEventsSet;
+	private Run run;
 	
 	public SelectiveMonitor(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
@@ -47,11 +52,15 @@ public abstract class SelectiveMonitor extends FileOrCLIMonitor {
 				logEventsSet.add(event.toLowerCase());
 			}
 		}
+		
+		run = this.getParentComponent(Run.class);
 	}
 
 	@Override
 	public void eventOccurred(Observable observed, Object event, Object state) {
-		if ((listenTo == null || listenTo.isAssignableFrom(observed.getClass())) && (logEventsSet.isEmpty() || logEventsSet.contains(event.toString().toLowerCase()))) {
+		if (run.getCurrentIteration() % iterationPeriod == 0 && 
+				(listenTo == null || listenTo.isAssignableFrom(observed.getClass())) && 
+				(logEventsSet.isEmpty() || logEventsSet.contains(event.toString().toLowerCase()))) {
 			log (observed, event, state);
 		}
 	}

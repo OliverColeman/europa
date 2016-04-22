@@ -20,6 +20,7 @@ import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.core.Speciator;
 import com.ojcoleman.europa.core.Species;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Implements speciation according to the original NEAT speciation method with a few difference:
@@ -59,7 +60,7 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 		
 		currentSpeciationThreshold = speciationThreshold;
 	}
-
+	
 	@Override
 	public void speciate(Population<NEATGenotype, ?> population, final List<NEATSpecies> speciesList) {
 		newSpeciesCount = 0;
@@ -74,12 +75,23 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 		Collections.sort(individuals);
 		Collections.reverse(individuals);
 		
+		//System.out.println(Stringer.toString(individuals, 4));
+		
+		//final Run run = this.getParentComponent(Run.class);
+		
+		
 		// If the threshold has been adjusted since the last speciation.
 		if (currentSpeciationThreshold != previousSpeciationThreshold) {
+			//if (run.getCurrentIteration() > 50) System.out.println("st changed");
+			
 			// Check that each individual still belongs in it's current species.
 			parallel.foreach(individuals, new Parallel.Operation<Individual<NEATGenotype, ?>>() {
 				public void perform(Individual<NEATGenotype, ?> ind) {
+					//if (run.getCurrentIteration() > 50) System.out.print(ind.id + "  ");
+					
 					if (ind.hasSpecies()) {
+						//if (run.getCurrentIteration() > 50) System.out.println(ind.getSpecies().id);
+						
 						NEATSpecies species = (NEATSpecies) ind.getSpecies();
 						// If this individual no longer matches it's current species.
 						if (!match(species, ind)) {
@@ -87,6 +99,9 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 								species.removeMember(ind);
 							}
 						}
+					}
+					else {
+						//if (run.getCurrentIteration() > 50) System.out.println(" no species");
 					}
 				}
 			});
@@ -104,28 +119,26 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 				this.getParentComponent(Run.class).getParallel().foreach(speciesList, new Parallel.Operation<NEATSpecies>() {
 					public void perform(NEATSpecies species) {
 						double distance = getDistance(species.representative, indFinal.genotype);
-						synchronized (map) {
-							// If the distance is the same as another species then just keep the first one.
-							if (!map.containsKey(distance)) {
-								map.put(distance, species);
+						
+						// If the individual matches this species.
+						if (distance < speciationThreshold) {
+							synchronized (map) {
+								// If the distance is the same as another species then just keep the first one.
+								if (!map.containsKey(distance)) {
+									map.put(distance, species);
+								}
 							}
 						}
 					}
 				});
 				
-				boolean matched = false;
+				// If we found one or more matching species.
 				if (!map.isEmpty()) {
+					// Add to closest species.
 					NEATSpecies closest = map.firstEntry().getValue();
-					
-					// If the individual matches the closest species.
-					if (match(closest, ind)) {
-						// Add it to that species.
-						closest.addMember(ind);
-						matched = true;
-					}
+					closest.addMember(ind);
 				}
-				// If we couldn't find a matching species.
-				if (!matched) {
+				else {
 					// Otherwise create a new species with this individual's genotype as representative.
 					//new NEATSpecies(speciesPrototype, ind.genotype); //newInstance prototype constructor parameter check.
 					NEATSpecies species = new NEATSpecies(speciesPrototype, ind.genotype); //speciesPrototype.newInstance(ind.genotype);

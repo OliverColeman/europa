@@ -10,11 +10,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.eclipsesource.json.JsonObject;
+import com.google.common.collect.TreeMultimap;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.util.ArrayUtil;
+import com.ojcoleman.europa.util.Stringer;
 import com.ojcoleman.europa.configurable.Component;
 
 /**
@@ -59,8 +61,7 @@ public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	 */
 	private final double[] actualRecombinerProportions;
 	
-	private final Random random;
-
+	
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
@@ -76,8 +77,6 @@ public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 		for (int i = 1; i < actualRecombinerProportions.length; i++) {
 			actualRecombinerProportions[i] += actualRecombinerProportions[i-1];
 		}
-		
-		random = this.getParentComponent(Run.class).random;
 	}
 	
 	
@@ -111,10 +110,14 @@ public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	 * @return A Recombiner or null to represent the clone operation.
 	 */ 
 	public Recombiner<G> selectRandomRecombiner() {
-		int selection = Arrays.binarySearch(actualRecombinerProportions, random.nextDouble());
+		int selection = Arrays.binarySearch(actualRecombinerProportions, this.getParentComponent(Run.class).random.nextDouble());
+		if (selection < 0) selection = -selection - 1;
+		
+		// Last option is clone.
 		if (selection == actualRecombinerProportions.length-1) {
 			return null;
 		}
+		
 		return recombiners[selection];
 	}
 

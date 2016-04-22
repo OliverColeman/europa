@@ -11,6 +11,7 @@ import java.util.Random;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * A default Evolver that selects {@link DefaultEvolver#parentsProportion} of the highest ranked {@link Individual}s from the Population, or
@@ -54,10 +55,12 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 				speciesNewSizeProportional.put(species, avgRank);
 				totalAvgRank += avgRank;
 			}
+
 			// Normalise proportional new sizes.
 			for (Species<G> species : parentSpecies) {
 				speciesNewSizeProportional.put(species, speciesNewSizeProportional.get(species) / totalAvgRank);
 			}
+			
 		}
 		else {
 			// Number of offspring to produce from a species is proportional to the species size.
@@ -80,23 +83,24 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 					Collections.reverse(rankedMembers);
 					
 					int eliteCount = (int) Math.round(elitismProportion * species.size());
+					int numSpeciesOffspring =  (int) Math.round(speciesNewSizeProportional.get(species) * population.getDesiredSize()) - eliteCount;
 					
-					int numSpecieOffspring =  (int) Math.round(speciesNewSizeProportional.get(species) * population.getDesiredSize()) - eliteCount;
-					
-					if (numSpecieOffspring > 0) {
+					if (numSpeciesOffspring > 0) {
 						// Get parents.
 						int parentCount = Math.max(2, (int) Math.round(species.size() * parentsProportion));
+						if (parentCount > rankedMembers.size()) {
+							parentCount = rankedMembers.size();
+						}
 						List<Individual<G, ?>> parents = rankedMembers.subList(0, parentCount);
 						
-						for (int offspringIdx = 0; offspringIdx < numSpecieOffspring; numSpecieOffspring++) {
+						for (int offspringIdx = 0; offspringIdx < numSpeciesOffspring; offspringIdx++) {
 							G newGenotype = null;
 							
 							// Select a recombiner (or cloning) at random, with probability proportional to Evolver#actualRecombinerProportions
 							Recombiner<G> recombiner = selectRandomRecombiner();
 							
-							
 							// If we should use a recombiner (not cloning).
-							if (recombiner != null) {
+							if (recombiner != null && parents.size() >= 2) {
 								// Determine number of parents.
 								int maxParents = recombiner.parentCountMaximum();
 								if (maxParents < 2) {
@@ -117,7 +121,9 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 							}
 							else {
 								// Create a clone of one of the parents.
-								newGenotype = parents.get(random.nextInt(parents.size())).genotype.newInstance();
+								Individual<G, ?> parent = parents.get(random.nextInt(parents.size()));
+								
+								newGenotype = parent.genotype.newInstance();
 							}
 							
 							// Mutate the new genotype as necessary.

@@ -8,57 +8,57 @@ import java.util.TreeMap;
 import org.apache.commons.lang3.StringUtils;
 
 import com.google.common.collect.TreeMultimap;
-import com.ojcoleman.europa.core.StructuredStringable;
+import com.ojcoleman.europa.core.Stringable;
 
 /**
  * Utility class that attempts to convert generic objects into human-readable strings.
  * 
  * @author O. J. Coleman
  */
-public class StructuredStringableStringer {
+public class Stringer {
 	/**
 	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
-	 * Map and {@link StructuredStringable} objects. Recursion will only go 5 levels deep.
+	 * Map and {@link Stringable} objects. Recursion will only go 5 levels deep.
 	 * 
 	 * @param obj The object to convert to a String.
 	 */
-	public static String objectToString(Object obj) {
+	public static String toString(Object obj) {
 		StringBuilder sb = new StringBuilder();
-		objectToString(obj, sb, 0, 5, new HashSet<>());
+		toString(obj, sb, 0, 5, new HashSet<>());
 		return sb.toString();
 	}
 	
 	
 	/**
 	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
-	 * Map and {@link StructuredStringable} objects.
+	 * Map and {@link Stringable} objects.
 	 * 
 	 * @param obj The object to convert to a String.
-	 * @param maxLevel The maximum recursion level.
+	 * @param maxLevel The maximum recursion level. -1 for no limit.
 	 */
-	public static String objectToString(Object obj, int maxLevel) {
+	public static String toString(Object obj, int maxLevel) {
 		StringBuilder sb = new StringBuilder();
-		objectToString(obj, sb, 0, maxLevel, new HashSet<>());
+		toString(obj, sb, 0, maxLevel, new HashSet<>());
 		return sb.toString();
 	}
 	
 	
 	/**
 	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
-	 * Map and {@link StructuredStringable} objects.
+	 * Map and {@link Stringable} objects.
 	 * 
 	 * @param obj The object to convert to a String.
-	 * @param maxLevel The maximum recursion level.
+	 * @param maxLevel The maximum recursion level. -1 for no limit.
 	 * @param initialLevel The initial indentation level.
 	 */
-	public static String objectToString(Object obj, int maxLevel, int initialLevel) {
+	public static String toString(Object obj, int maxLevel, int initialLevel) {
 		StringBuilder sb = new StringBuilder();
-		objectToString(obj, sb, initialLevel, maxLevel, new HashSet<>());
+		toString(obj, sb, initialLevel, maxLevel == -1 ? -1 : maxLevel+initialLevel, new HashSet<>());
 		return sb.toString();
 	}
 	
 	
-	private static void objectToString(Object obj, StringBuilder sb, int level, int maxLevel, HashSet<Object> covered) {
+	private static void toString(Object obj, StringBuilder sb, int level, int maxLevel, HashSet<Object> covered) {
 		sb.append(StringUtils.repeat("    ", level));
 		
 		if (obj == null) {
@@ -70,20 +70,23 @@ public class StructuredStringableStringer {
 			sb.append("<RECURSION>");
 			return;
 		}
-
-		if (level >= 5) {
-			sb.append("<MAXIMUM DEPTH>");
-			return;
-		}
 		
+		if (maxLevel != -1) {
+			if (level > maxLevel || 
+					(level >= maxLevel && (obj instanceof Map || obj instanceof Stringable || obj instanceof Iterable || obj.getClass().isArray()))) {
+				sb.append("<MAXIMUM DEPTH>");
+				return;
+			}
+		}
+
 		covered.add(obj);
 		
-		if (obj instanceof Map || obj instanceof StructuredStringable) {
+		if (obj instanceof Map || obj instanceof Stringable) {
 			Map<?, ?> map;
-			if (obj instanceof StructuredStringable) {
+			if (obj instanceof Stringable) {
 				map = new TreeMap<String, Object>();
 				((Map<String, Object>) map).put("class", obj.getClass().getSimpleName());
-				((StructuredStringable) obj).getStructuredStringableObject((Map<String, Object>) map);
+				((Stringable) obj).getStringableMap((Map<String, Object>) map);
 				
 			}
 			else {
@@ -98,7 +101,7 @@ public class StructuredStringableStringer {
 			for (Map.Entry<?, ?> e : map.entrySet()) {
 				keys[entryIdx] = e.getKey().toString();
 				StringBuilder subSB = new StringBuilder();
-				objectToString(e.getValue(), subSB, 0, maxLevel, covered);
+				toString(e.getValue(), subSB, 0, maxLevel == -1 ? -1 : maxLevel-(level+1), covered);
 				lines[entryIdx] = subSB.toString().split("\n");
 				lineCountToIndex.put(lines[entryIdx].length, entryIdx);
 				entryIdx++;
@@ -126,14 +129,14 @@ public class StructuredStringableStringer {
 			sb.append("[");
 			for (Object o : (Iterable<?>) obj) {
 				sb.append("\n");
-				objectToString(o, sb, level+1, maxLevel, covered);
+				toString(o, sb, level+1, maxLevel, covered);
 			}
 			sb.append("\n").append(StringUtils.repeat("    ", level)).append("]");
 		} else if (obj.getClass().isArray()) {
 			sb.append("[");
 			for (int i = 0; i < Array.getLength(obj); i++) {
 				sb.append("\n");
-				objectToString(Array.get(obj, i), sb, level + 1, maxLevel, covered);
+				toString(Array.get(obj, i), sb, level + 1, maxLevel, covered);
 			}
 			sb.append("\n").append(StringUtils.repeat("    ", level)).append("]");
 		}

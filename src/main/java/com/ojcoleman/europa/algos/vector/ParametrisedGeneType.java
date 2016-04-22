@@ -1,6 +1,7 @@
 package com.ojcoleman.europa.algos.vector;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
@@ -125,5 +126,13 @@ public class ParametrisedGeneType extends ConfigurableBase {
 	 */
 	public Vector createTypeVector() {
 		return new Vector(paramsType);
+	}
+
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("paramsGene", paramsGene);
+		map.put("paramsAllele", paramsAllele);
+		map.put("paramsType", paramsType);
 	}
 }

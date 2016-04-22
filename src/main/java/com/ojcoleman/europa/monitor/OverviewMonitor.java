@@ -140,9 +140,9 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 					labelHeader = labelSB.toString();
 				}
 				
-				System.out.println(categoryHeader);
-				System.out.println(subCategoryHeader);
-				System.out.println(labelHeader);
+				write(observed, event, state, categoryHeader);
+				write(observed, event, state, subCategoryHeader);
+				write(observed, event, state, labelHeader);
 				linesSinceLastHeader = 0;
 			}
 			
@@ -158,7 +158,7 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			StringBuilder valueSB = new StringBuilder();
 			Formatter valueF = new Formatter(valueSB);
 			valueF.format(stateValuesFormat, values.toArray());
-			System.out.println(valueSB);
+			write(observed, event, state, valueSB);
 		}
 	}
 	

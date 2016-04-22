@@ -37,10 +37,16 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 *            to re-use the function objects it generates in the case that they are large and deallocating and
 	 *            recreating them from scratch is inefficient. Note that this will be null at times (for example in the
 	 *            first calls to this method).
-	 * @param log Whether, how and what details to log of the transcription. How the log is interpreted and
-	 *            handled is up to the implementing class. If {@link Log#NO_LOG} is given then no logging is required.
 	 */
-	public abstract F transcribe(G genotype, F function, Log log);
+	public abstract F transcribe(G genotype, F function);
+	
+	/**
+	 * Transcribe the given genotype to a phenotype function, attempting to cast the given genotype and function, if provided, to the appropriate type.
+	 * This is useful when needing to perform a transcription from outside the generics-typed hierarchy of components. 
+	 */
+	public Function transcribeGeneric(Genotype g, Function f) {
+		return this.transcribe((G) g, null);
+	}
 	
 	/**
 	 * Generate and return a template genotype that this Transcriber knows how to transcribe. The template is used to

@@ -10,10 +10,6 @@ import java.lang.annotation.Target;
  * <p>For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user
  * configurable, e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.</p>
  * 
- * <p><strong>Note: setting an initial value for a Parameter field will prevent the fields value being set via a configuration.</strong>
- * This is because Java processes initial field values after calling the super-class's constructor. For more information see 
- * http://stackoverflow.com/questions/8843825/why-are-member-objects-initialized-after-the-super-classs-constructor</p>
- * 
  * @see Configurable
  * @see Prototype
  * @see Component

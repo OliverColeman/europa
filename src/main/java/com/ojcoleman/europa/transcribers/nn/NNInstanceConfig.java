@@ -1,5 +1,8 @@
 package com.ojcoleman.europa.transcribers.nn;
 
+import java.util.Map;
+
+import com.ojcoleman.europa.core.Stringable;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 
 /**
@@ -10,7 +13,7 @@ import com.ojcoleman.europa.functiontypes.VectorFunction;
  * 
  * @author O. J. Coleman
  */
-public class NNInstanceConfig {
+public class NNInstanceConfig implements Stringable {
 	/**
 	 * The total number of neurons in the network.
 	 */
@@ -78,4 +81,14 @@ public class NNInstanceConfig {
 		this.name = name;
 	}
 
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("neuronCount", neuronCount);
+		map.put("synapseCount", synapseCount);
+		map.put("inputCount", inputCount);
+		map.put("outputCount", outputCount);
+		map.put("stepsPerStep", stepsPerStep);
+		map.put("name", name);
+	}
 }

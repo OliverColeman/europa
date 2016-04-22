@@ -88,7 +88,7 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	public Map<String, Double> getAllValuesAsMap(Map<String, Double> map) {
 		map.clear();
 		for (int i = 0; i < gene.vector.metadata.size(); i++) {
-			map.put(vector.metadata.label(i), gene.vector.get(i));
+			map.put(gene.vector.metadata.label(i), gene.vector.get(i));
 		}
 		for (int i = 0; i < vector.metadata.size(); i++) {
 			map.put(vector.metadata.label(i), vector.get(i));
@@ -130,8 +130,8 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
-		super.getStructuredStringableObject(map);
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
 		map.put("vector", vector);
 	}
 }

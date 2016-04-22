@@ -10,7 +10,7 @@ import java.util.Random;
 
 import com.eclipsesource.json.JsonObject;
 import com.google.common.primitives.Doubles;
-import com.ojcoleman.europa.core.StructuredStringable;
+import com.ojcoleman.europa.core.Stringable;
 import com.ojcoleman.europa.util.Interval;
 import com.ojcoleman.europa.util.IntervalDouble;
 import com.sun.swing.internal.plaf.metal.resources.metal;
@@ -24,7 +24,7 @@ import com.sun.swing.internal.plaf.metal.resources.metal;
  * 
  * @author O. J. Coleman
  */
-public class Vector implements StructuredStringable {
+public class Vector implements Stringable {
 	/**
 	 * The largest magnitude (positive or negative) integer that may be stored in a Vector. This is determined by the
 	 * largest integer value for which it and all smaller integer values can be accurately represented by a (IEEE 754)
@@ -312,7 +312,7 @@ public class Vector implements StructuredStringable {
 	
 
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
+	public void getStringableMap(Map<String, Object> map) {
 		map.put("metadata", metadata);
 		map.put("mutable", mutable);
 		for (int i = 0; i < values.length; i++) {

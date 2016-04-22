@@ -145,13 +145,16 @@ public class VectorMetadata extends ConfigurableBase {
 	 */
 	public static class ElementDefaults extends ConfigurableBase {
 		@Parameter(description = "The lower bound for this Vector Element, inclusive.", optional = true)
-		protected double min = Double.NaN;
+		protected double min;
 
 		@Parameter(description = "The upper bound for this Vector Element, inclusive.", optional = true)
-		protected double max = Double.NaN;
+		protected double max;
 
 		@Parameter(description = "Indicates if this Vector Element stores an integer value.", defaultValue="false")
 		protected boolean isInteger;
+		
+		private boolean minSpecified;
+		private boolean maxSpecified;
 		
 		/**
 		 * The minimum and maximum bounds for this Vector Element.
@@ -160,6 +163,9 @@ public class VectorMetadata extends ConfigurableBase {
 
 		public ElementDefaults(Configuration config) {
 			super(config);
+			
+			minSpecified = config.get("min") != null;
+			maxSpecified = config.get("max") != null;
 		}
 		
 		public ElementDefaults(double min, double max, boolean isInteger) {
@@ -168,10 +174,10 @@ public class VectorMetadata extends ConfigurableBase {
 		}
 		
 		protected void updateBounds(double minDefault, double maxDefault) {
-			if (Double.isNaN(min)) {
+			if (!minSpecified) {
 				min = minDefault;
 			}
-			if (Double.isNaN(max)) {
+			if (!maxSpecified) {
 				max = maxDefault;
 			}
 			bounds = new IntervalDouble(min, max);

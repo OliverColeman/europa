@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.Arrays;
 
-import com.ojcoleman.europa.core.Log;
 import com.ojcoleman.europa.evaluators.TargetFitnessCalculator.ErrorType;
 import com.ojcoleman.europa.util.ArrayUtil;
 import com.ojcoleman.europa.util.NiceWriter;
@@ -14,7 +13,7 @@ import com.ojcoleman.europa.util.NiceWriter;
  * 
  * @author O. J. Coleman
  */
-public class TargetFitnessCalculatorLog extends Log {
+public class TargetFitnessCalculatorLog {
 	/**
 	 * Array containing input examples, in the form [example][input].
 	 */
@@ -86,13 +85,22 @@ public class TargetFitnessCalculatorLog extends Log {
 				logOutput.put((errorTypeOutput.squareErrors() ? " (sum of squared)" : ""));
 				logOutput.put("  (" + (correct[example] ? "" : "in") + "correct)\n\n");
 				
-				totalError += error[example];
-				totalCorrect += correct[example] ? 0 : 1;
+				totalError += errorTypeExample.squareErrors() ? error[example] * error[example] : error[example];
+
+				totalCorrect += correct[example] ? 1 : 0;
 			}
 			
+			if (errorTypeExample.avgErrors())
+				totalError /= exampleCount;
+			if (errorTypeExample.rootTotalError())
+				totalError = Math.sqrt(totalError);
+			else if (errorTypeExample.squareTotalError())
+				totalError = totalError * totalError;
+			
 			logOutput.put("\nOverall results:\n");
-			logOutput.put("\n  Average error: ").put(totalError / exampleCount);
-			logOutput.put("\n  Proportional error: ").put((totalError / exampleCount) / maximumError);
+			logOutput.put("\n  Total error: ").put(totalError);
+			logOutput.put("\n  Maximum possible error: ").put(maximumError);
+			logOutput.put("\n  Proportional error: ").put(totalError / maximumError);
 			logOutput.put("\n  Percent correct: ").put(totalCorrect / exampleCount);
 			
 			logOutput.close();

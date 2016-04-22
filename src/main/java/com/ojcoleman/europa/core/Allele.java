@@ -93,8 +93,8 @@ public class Allele<G extends Gene> extends PrototypeBase {
 	}
 
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
-		super.getStructuredStringableObject(map);
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
 		map.put("gene", gene);
 	}
 }

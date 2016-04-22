@@ -100,7 +100,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	private void init() {
 		allAlleles = new HashMap<>();
 		for (NEATAllele<?> allele : alleles) {
-			allAlleles.put(allele.gene.id, (NEATNeuronAllele) allele);
+			allAlleles.put(allele.gene.id, allele);
 		}
 
 		neurons = new TreeMap<>();

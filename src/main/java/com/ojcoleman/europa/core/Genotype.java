@@ -18,7 +18,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.reflect.TypeToken;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
-import com.ojcoleman.europa.util.StructuredStringableStringer;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * <p>
@@ -37,7 +37,7 @@ import com.ojcoleman.europa.util.StructuredStringableStringer;
  * 
  * @author O. J. Coleman
  */
-public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implements StructuredStringable {
+public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implements Stringable {
 	/**
 	 * The parent(s) of this Genotype (as an unmodifiable List).
 	 */
@@ -209,8 +209,8 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 
 	
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
-		super.getStructuredStringableObject(map);
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
 		map.put("alleles", alleles);
 	}
 }

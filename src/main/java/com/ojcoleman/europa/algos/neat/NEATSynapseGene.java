@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.algos.neat;
 
+import java.util.Map;
+
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.Vector;
 import com.ojcoleman.europa.configurable.Configuration;
@@ -47,5 +49,13 @@ public class NEATSynapseGene extends NEATGene {
 		super(prototype, Gene.typeSet(NNPart.SYNAPSE), paramVector);
 		this.sourceID = sourceID;
 		this.destinationID = destinationID;
+	}
+	
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
+		map.put("sourceID", sourceID);
+		map.put("destinationID", destinationID);
 	}
 }

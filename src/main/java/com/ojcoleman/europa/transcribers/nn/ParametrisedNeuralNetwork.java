@@ -9,6 +9,7 @@ import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
+import com.ojcoleman.europa.core.Stringable;
 
 /**
  * <p>
@@ -22,7 +23,7 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
  * {@link ParametrisedGeneType#getParamsType()} for more information.
  * </p>
  */
-public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements VectorFunction {
+public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements VectorFunction, Stringable {
 	/**
 	 * The instance configuration for the neural network to be built.
 	 */
@@ -124,5 +125,13 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 * order to perform any clean-up or other initialisation tasks.
 	 */
 	public void finishedBuilding() {
+	}
+	
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("instanceConfig", instanceConfig);
+		map.put("neuronTypes", neuronTypes);
+		map.put("synapseTypes", synapseTypes);
 	}
 }

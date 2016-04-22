@@ -34,50 +34,82 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multimap;
 import com.google.common.primitives.Primitives;
 import com.google.common.reflect.TypeToken;
-import com.ojcoleman.europa.core.StructuredStringable;
+import com.ojcoleman.europa.core.Stringable;
 
 /**
  * <p>
- * A base class for classes that are configurable via a JSON configuration file. {@link Prototype} and
- * {@link ComponentBase} are based on this class.
+ * A base class for classes that are configurable via a JSON configuration file.
  * </p>
- * 
  * <p>
- * <strong>Fields</strong><br/>
+ * <strong>Parameter Fields</strong><br/>
  * Fields in a ConfigurableBase may be marked as user configurable using the {@link Parameter} annotation. For example:
  * <code>
- * \@Parameter (description="The desired population desiredSize.", defaultValue="100")
- * protected int desiredSize;
- * </code> When the ConfigurableBase is instantiated the field will be assigned the value specified in the JSON
- * configuration file, or the default value if a default value has been set. If sub-classes contain the same field name
- * (overriding the same field in a super-class) then the annotation of the sub-class will be used.
- * </p>
- * <p>
- * <strong>Prototypes</strong><br />
- * If a ConfigurableBase has a Parameter field whose type extends {@link Prototype}, for example <code>
- * \@Parameter (description="The class and configuration for individuals.")
- * protected Individual individualProto;
- * </code> where Individual extends Prototype, then a singleton instance will automatically be initialised for it.
- * {@link ConfigurableBase#newInstance(Class)} may then be used to get new instances, where the argument to
- * <code>newInstance</code> corresponds to the base class of the Prototype type to get, for example
- * <code>someConfigurable.newInstance(Individual.class)</code>. The sub-class to use for the prototype may be specified
- * in the JSON configuration using the key "class". For example: <code>
- * {
- *   ...
- *   "individual": {
- *     "class" : my.custom.Individual",
- *     "otherParam1" : 1,
- *     "otherParam2" : "Two"
- *   }
+ * \@Parameter (description="My first parameter.", defaultValue="100")
+ * protected int myParam1;
+ * \@Parameter (description="My second parameter.", optional=true)
+ * private String myParam2;
+ * </code>
+ * And corresponding JSON:
+ * <code>
+ * "myConfigurable": {
+ *   "myParam1: 123,
+ *   "myParam2: "Ests are the best",
  *   ...
  * }
- * </code> If class is not specified then the base class type of the field will be used (Individual in the preceding
- * example).
+ * </code>
+ * When the ConfigurableBase is instantiated the field will be assigned the value specified in the JSON
+ * configuration file, or the default value if a default value has been set.
+ * Parameter fields may be of the following types:<ul>
+ *   <li>Any of the primitive types;</li>
+ *   <li>Any class that has a constructor accepting a single String argument (in which case the string value specified in the configuration file is passed to this constructor);</li>
+ *   <li>Any class that has a constructor accepting a single JsonValue argument (in which case the JSON value specified in the configuration file is passed to this constructor);</li>
+ *   <li>Enum (in which case the configuration should specify the name of the specific enum);</li>
+ *   <li>Class (in which case the configuration should specify the canonical class name);</li>
+ *   <ul>
+ * Parameter fields may be arrays, in which case the configuration for it should be an array, for example:
+ * <code>
+ * \@Parameter (description="My array parameter.")
+ * protected Class[] myClasses;
+ * </code>
+ * and corresponding JSON:
+ * <code>
+ * {
+ *   "myClasses": [
+ *     "my.Class1",
+ *     "my.sub.Class2",
+ *     "java.lang.Double"
+ *   ]
+ * }
+ * </code>
+ * <p>Sub-classes may not contain fields with the same name.</p>
+ * <p><strong><em>Note: setting an initial value for a Parameter field will prevent the fields value being set via a configuration.</em></strong>
+ * This is because Java processes initial field values after calling the super-class's constructor. For more information see 
+ * http://stackoverflow.com/questions/8843825/why-are-member-objects-initialized-after-the-super-classs-constructor</p>    
+ * </p>
+ * <p>
+ * <strong>ConfigurableBase Fields</strong><br />
+ * If a ConfigurableBase has a field whose type extends {@link ConfigurableBase} and is annotated with {@link Configurable} or {@link Prototype},
+ * then it will be instantiated hierarchically. This supports the {@link #getConfiguration(boolean)} method (and so the "--printConfig" command line argument for 
+ * {@link com.ojcoleman.europa.Main}).
+ * </p>
+ * <p>
+ * <strong>Run-time Sub-class Specification</strong><br />
+ * The user configuration may specify the class of the ConfigurableBase. This class must be a sub-class of the original class.
+ * For example if one wished to customise the behaviour of a {@link Component} (which extends ConfigurableBase), say {@link com.ojcoleman.europa.core.DefaultEvolver}, then a custom
+ * class that extends DefaultEvolver can be created, and the (full canonical) class name specified in the configuration
+ * file for the Component. For example:
+ * <code>
+ * "myConfigurable": {
+ *   "class": "my.custom.Class1",
+ *   "myParam: 123,
+ *   ...
+ * }
+ * </code>
  * </p>
  * 
  * @author O. J. Coleman
  */
-public class ConfigurableBase extends Observable implements StructuredStringable {
+public class ConfigurableBase extends Observable implements Stringable {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurableBase.class);
 
 	/**
@@ -204,7 +236,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 	
 	private void checkFieldAlreadyDefined(Set<String> fieldNames, Field f, Class<?> clazz) {
 		if (fieldNames.contains(f.getName())) {
-			throw new InvalidConfigurableFieldException("A field with the same name, " + f.getName() + ", is declared in a super-class of " + clazz.getName());
+			throw new InvalidConfigurableFieldException("A field with the same name, '" + f.getName() + "', is declared in a super-class of " + clazz.getName());
 		}
 		fieldNames.add(f.getName());
 	}
@@ -319,7 +351,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 						Pattern p = Pattern.compile(annotation.regexValidation().trim());
 						Matcher m = p.matcher(jsonValue.asString().trim());
 						if (!m.matches()) {
-							String error = "The value given for parameter " + field.getName() + " in " + definingClass.getName() + " is invalid, it must match the regular expression /" + p.pattern() + "/.";
+							String error = "The value given for parameter '" + field.getName() + "' in " + definingClass.getName() + " is invalid, it must match the regular expression /" + p.pattern() + "/.";
 							throw new InvalidParameterValueException(error);
 						}
 					}
@@ -331,15 +363,15 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 				
 				// Provide a friendly warning if it looks like the wrong annotation has been applied.
 				if (PrototypeBase.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
+					logger.warn("It looks like Parameter field '" + field.getName() + "' in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 				}
 				else if (ConfigurableBase.class.isAssignableFrom(type)) {
-					logger.warn("It looks like Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of ConfigurableBase, an @Configurable annotation should probably be used for it.");
+					logger.warn("It looks like Parameter field '" + field.getName() + "' in class " + definingClass.getName() + " is of a sub-class of ConfigurableBase, an @Configurable annotation should probably be used for it.");
 				}
 				
 				// Make sure the class is not abstract.
 				if (!type.isPrimitive() && Modifier.isAbstract(type.getModifiers())) {
-					String error = "Parameter field " + field.getName() + " in class " + definingClass.getName() + " is of a type (" + type.getName() + ") which is an abstract class, which can not be instantiated.";
+					String error = "Parameter field '" + field.getName() + "' in class " + definingClass.getName() + " is of a type (" + type.getName() + ") which is an abstract class, which can not be instantiated.";
 					throw new InvalidParameterFieldException(error);
 				}
 				
@@ -366,11 +398,11 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 						}
 					}
 					if (jsonConstructor == null && stringConstructor == null) {
-						String error = "Parameter field " + field.getName() + " in " + definingClass.getName() + " is of a Class that has no Constructor taking either a single JsonValue or String argument.";
+						String error = "Parameter field '" + field.getName() + "' in " + definingClass.getName() + " is of a Class that has no Constructor taking either a single JsonValue or String argument.";
 						throw new InvalidParameterFieldException(error);
 					}
 				}
-
+				
 				// If this is a primitive type, get the min and max values if they're set.
 				Object minValue = null, maxValue = null;
 				String minValueStr = annotation.minimumValue().trim(), maxValueStr = annotation.maximumValue().trim();
@@ -382,7 +414,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 						try {
 							minValue = stringConstructor.newInstance(minValueStr);
 						} catch (NumberFormatException ex) {
-							String error = "The minimum value specified for the parameter " + field.getName() + " in " + definingClass.getName() + " is not a valid number format.";
+							String error = "The minimum value specified for the parameter '" + field.getName() + "' in " + definingClass.getName() + " is not a valid number format.";
 							throw new InvalidConfigurableAnnotationException(error, ex);
 						}
 					}
@@ -390,7 +422,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 						try {
 							maxValue = stringConstructor.newInstance(maxValueStr);
 						} catch (NumberFormatException ex) {
-							String error = "The maximum value specified for the parameter " + field.getName() + " in " + definingClass.getName() + " is not a valid number format.";
+							String error = "The maximum value specified for the parameter '" + field.getName() + "' in " + definingClass.getName() + " is not a valid number format.";
 							throw new InvalidConfigurableAnnotationException(error, ex);
 						}
 					}
@@ -455,10 +487,10 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 					field.set(configurable, val);
 				}
 			} else if (!configurable.isDummy && !annotation.optional()) {
-				throw new RequiredParameterValueMissingException("Value for required parameter " + field.getName() + " in " + definingClass.getName() + " missing.");
+				throw new RequiredParameterValueMissingException("Value for required parameter '" + field.getName() + "' in " + definingClass.getName() + " missing.");
 			}
 		} catch (Exception ex) {
-			String error = "Error setting value for parameter " + field.getName() + " in " + definingClass.getName();
+			String error = "Error setting value for parameter '" + field.getName() + "' in " + definingClass.getName();
 			
 			if (ex instanceof RuntimeException) {
 				// Just throw the actual cause to make it clearer what the problem is.
@@ -477,7 +509,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 		try {
 			Enum.valueOf(enumClass, value);
 		} catch (IllegalArgumentException ex) {
-			String error = "The enum constant " + value + " specified for the parameter " + field.getName() + " in " + definingClass.getName() + " does not exist. Check case?";
+			String error = "The enum constant " + value + " specified for the parameter '" + field.getName() + "' in " + definingClass.getName() + " does not exist. Check case?";
 			throw new InvalidParameterValueException(error);
 		}
 	}
@@ -487,7 +519,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 		try {
 			return Class.forName(clazz);
 		} catch (ClassNotFoundException ex) {
-			String error = "The class " + clazz + " specified for the parameter " + field.getName() + " in " + definingClass.getName() + " could not be found.";
+			String error = "The class " + clazz + " specified for the parameter '" + field.getName() + "' in " + definingClass.getName() + " could not be found.";
 			throw new InvalidParameterValueException(error);
 		}
 	}
@@ -495,17 +527,17 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 	static void testNumericValueBounds(Object val, Object min, Object max, ConfigurableBase configurable, Field field) {
 		if (val instanceof Float || val instanceof Double) {
 			if (min != null && ((Number) val).doubleValue() < ((Number) min).doubleValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
+				throw new InvalidParameterValueException("The value for parameter '" + field.getName() + "' in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
 			}
 			if (max != null && ((Number) val).doubleValue() > ((Number) max).doubleValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
+				throw new InvalidParameterValueException("The value for parameter '" + field.getName() + "' in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
 			}
 		} else if (val instanceof Number) {
 			if (min != null && ((Number) val).longValue() < ((Number) min).longValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
+				throw new InvalidParameterValueException("The value for parameter '" + field.getName() + "' in " + configurable.getClass().getName() + " is less than the minimum of " + min + ".");
 			}
 			if (max != null && ((Number) val).longValue() > ((Number) max).longValue()) {
-				throw new InvalidParameterValueException("The value for parameter " + field.getName() + " in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
+				throw new InvalidParameterValueException("The value for parameter '" + field.getName() + "' in " + configurable.getClass().getName() + " is less than the maximum of " + max + ".");
 			}
 		}
 	}
@@ -529,15 +561,15 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 
 		if (fieldType == FieldType.PROTOTYPE) {
 			// Arrays of prototypes not allowed.
-			if (field.getType().isArray()) {
-				String error = "Arrays of Prototypes not allowed: field " + field.getName() + " in " + definingClass.getName();
+			if (isArray) {
+				String error = "Arrays of Prototypes not allowed: field '" + field.getName() + "' in " + definingClass.getName();
 				throw new InvalidConfigurationException(error);
 			}
 		}
 		else {
 			// Provide a friendly warning if it looks like an Configurable annotation has been applied to a PrototypeBase field.
 			if (PrototypeBase.class.isAssignableFrom(field.getType())) {
-				logger.warn("It looks like ConfigurableBase field " + field.getName() + " in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
+				logger.warn("It looks like ConfigurableBase field '" + field.getName() + "' in class " + definingClass.getName() + " is of a sub-class of PrototypeBase, an @Prototype annotation should probably be used for it.");
 			}
 		}
 		
@@ -601,7 +633,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 				// Just throw the actual cause to make it clearer what the problem is.
 				throw (ConfigurableException) cause;
 			} else {
-				throw new ConfigurableException("Error while initialising field " + field.getName() + " in " + definingClass.getName(), ex);
+				throw new ConfigurableException("Error while initialising field '" + field.getName() + "' in " + definingClass.getName(), ex);
 			}
 		}
 	}
@@ -612,7 +644,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 	 */
 	Constructor<?> getConfigurableConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, FieldType fieldType, String fieldBaseTypeLabel, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
-			String error = "The configuration for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
+			String error = "The configuration for " + fieldBaseTypeLabel + " field '" + field.getName() + "' in " + definingClass.getName() + " must be a JSON object" + (isArray ? " or array of objects" : "") + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
@@ -634,20 +666,20 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 			
 				// Make sure the specified class is a sub-class of the field type.
 				if (!type.isAssignableFrom(newType)) {
-					String error = "The specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + " is not a sub-class of the " + fieldBaseTypeLabel + " field class, " + type.getName() + ".";
+					String error = "The specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field '" + field.getName() + "' in " + definingClass.getName() + " is not a sub-class of the " + fieldBaseTypeLabel + " field class, " + type.getName() + ".";
 					throw new InvalidConfigurationException(error);
 				}
 
 				type = newType;
 			} catch (ClassNotFoundException ex) {
-				String error = "Could not find specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field " + field.getName() + " in " + definingClass.getName() + ".";
+				String error = "Could not find specified class, '" + specifiedClass + "', for " + fieldBaseTypeLabel + " field '" + field.getName() + "' in " + definingClass.getName() + ".";
 				throw new InvalidConfigurationException(error);
 			}
 		}
 
 		// Make sure the type is not abstract.
 		if (Modifier.isAbstract(type.getModifiers())) {
-			String error = "A concrete (non-abstract) class must be specified for " + fieldBaseTypeLabel + " field " + field.getName() + " in class " + definingClass.getName() + ".";
+			String error = "A concrete (non-abstract) class must be specified for " + fieldBaseTypeLabel + " field '" + field.getName() + "' in class " + definingClass.getName() + ".";
 			throw new InvalidConfigurationException(error);
 		}
 
@@ -674,7 +706,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 		try {
 			return type.getConstructor(Configuration.class);
 		} catch (NoSuchMethodException ex) {
-			throw new ConfigurableMissingConfigurationConstructorException("The class specified for " + fieldType + " field " + field.getName() + " in " + configurable.getClass().getName() + " must implement a public constructor accepting a Configuration as its only parameter.");
+			throw new ConfigurableMissingConfigurationConstructorException("The class specified for " + fieldType + " field '" + field.getName() + "' in " + configurable.getClass().getName() + " must implement a public constructor accepting a Configuration as its only parameter.");
 		}
 	}
 
@@ -808,10 +840,10 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 			}
 		}
 		catch (ParseException ex) {
-			throw new RuntimeException("Unable to parse  " + jsonToParse + "  while outputting configuration for field " + field.getName() + " in " + field.getDeclaringClass().getName(), ex);
+			throw new RuntimeException("Unable to parse  " + jsonToParse + "  while outputting configuration for field '" + field.getName() + "' in " + field.getDeclaringClass().getName(), ex);
 		}
 		catch (Exception ex) {
-			throw new RuntimeException("Could not output configuration for field " + field.getName() + " in " + field.getDeclaringClass().getName(), ex);
+			throw new RuntimeException("Could not output configuration for field '" + field.getName() + "' in " + field.getDeclaringClass().getName(), ex);
 		}
 	}
 	
@@ -858,7 +890,7 @@ public class ConfigurableBase extends Observable implements StructuredStringable
 
 
 	@Override
-	public void getStructuredStringableObject(Map<String, Object> map) {
+	public void getStringableMap(Map<String, Object> map) {
 		map.put("id", id);
 	}
 }

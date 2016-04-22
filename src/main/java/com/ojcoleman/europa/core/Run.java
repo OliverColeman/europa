@@ -28,6 +28,7 @@ import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.monitor.OverviewMonitor;
 import com.ojcoleman.europa.util.DecimalFormatConfigurable;
+import com.ojcoleman.europa.util.Stringer;
 import com.thoughtworks.xstream.XStream;
 import com.google.common.collect.Table;
 import com.ojcoleman.europa.configurable.Component;
@@ -185,6 +186,8 @@ public class Run extends ComponentBase {
 				}
 			});
 		}
+		
+		this.fireEvent(Event.Initialised);
 	}
 
 	/**
@@ -210,22 +213,27 @@ public class Run extends ComponentBase {
 		}
 
 		double prevTime = System.currentTimeMillis();
-				
+		
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
 			this.fireEvent(Event.IterationBegin, currentIteration);
 			
 			// Evaluate the population (transcribing from genotype to phenotype as necessary).
-			population.evaluate();
+			// Return value of true indicates we should terminate.
+			stop |= population.evaluate();
 			
 			// Produce a ranking over the population, if applicable.
 			population.rank();
-			
+				
 			// Speciate population if applicable.
 			population.speciate();
 			
-			// Evolve population.
-			population.evolve();
+			// Don't produce new generation if we're terminating.
+			// (We still rank and speciate as this info might be useful).
+			if (!stop) {
+				// Evolve population.
+				population.evolve();
+			}
 			
 			// Time keeping.
 			double currentTime = System.currentTimeMillis();
@@ -241,7 +249,7 @@ public class Run extends ComponentBase {
 			currentIteration++;
 		}
 	}
-
+	
 	
 	/**
 	 * Get a reference to the Transcriber component.
@@ -334,10 +342,9 @@ public class Run extends ComponentBase {
 			}
 		}
 		
-		System.out.println(outputDirectory);
 		return Paths.get(outputDirectory);
 	}
-
+	
 	/**
 	 * Returns the primary evaluator, which is the first evaluator in the list of evaluators by default.
 	 */
@@ -430,6 +437,11 @@ public class Run extends ComponentBase {
 		/**
 		 * An event type indicating that this Run is set to stop when the current cycle is complete.
 		 */
-		Stopping
+		Stopping, 
+		
+		/**
+		 * An event type indicating that this Run and all its sub-Components have finished initialising.
+		 */
+		Initialised
 	}
 }

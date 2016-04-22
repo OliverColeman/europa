@@ -25,9 +25,11 @@ import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Log;
 import com.ojcoleman.europa.core.Run;
+import com.ojcoleman.europa.evaluators.TargetFitnessCalculator.ErrorType;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 import com.ojcoleman.europa.util.IntervalDouble;
 import com.ojcoleman.europa.util.NiceWriter;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * <p>
@@ -39,13 +41,13 @@ import com.ojcoleman.europa.util.NiceWriter;
 public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	private static Logger logger = LoggerFactory.getLogger(TargetFitnessCalculator.class);
 	
-	@Parameter(description="The type of error calculation to perform over the error of each example. Valid values are "
+	@Parameter(description="The type of error calculation to perform over the errors (as calculated by errorTypeOutput) for all examples. Valid values are "
 			+ "'SAE' (Sum of Absolute Errors), 'SSAE' (Squared Sum of Absolute Errors), 'SSE' (Sum of Squared Errors), 'RSSE' (Root of Sum of Squared Errors), "
 			+ "'MAE' (Mean of Absolute Errors), 'SMAE' (Squared Mean of Absolute Errors), 'MSE' (Mean of Squared Errors), 'RMSE' (Root of Mean of Squared Errors). The default is RMSE.",
 			defaultValue="RMSE")
 	protected ErrorType errorTypeExample;
 	
-	@Parameter(description="The type of error calculation to perform over the error of each output. Any type listed for errorTypeExample may be used. Default is SAE.", defaultValue="SAE")
+	@Parameter(description="The type of error calculation to perform over the error of each output within a single example. Any type listed for errorTypeExample may be used. Default is SAE.", defaultValue="SAE")
 	protected ErrorType errorTypeOutput;
 	
 	@Parameter(description="The method for calculating a fitness value from the error value. Valid types are "
@@ -63,6 +65,9 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	@Parameter(description="The absolute value that an output can differ from the target output and still be considered correct (i.e. the acceptable error margin). "
 			+ "Used for calculating the percentage of examples for which the correct output was given. Default is 0.1.", defaultValue="0.1", minimumValue="0")
 	protected double acceptableError;
+
+	@Parameter(description="Terminate when the performance reaches this value. 0 to disable.", defaultValue="0", minimumValue="0", maximumValue="1")
+	protected double terminateOnPerformance;
 	
 	
 	private static boolean outputRangeChecked = false;
@@ -70,6 +75,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	private EvaluationDescription fitnessEvalDesc;
 	private EvaluationDescription performanceEvalDesc;
 	
+	private boolean terminate = false;
 	
 	public TargetFitnessCalculator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
@@ -86,7 +92,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 		}
 		
 		fitnessEvalDesc = new EvaluationDescription(getName()+" fitness", this, IntervalDouble.UNIT, 1, false);
-		performanceEvalDesc = new EvaluationDescription(getName()+" performance", this, new IntervalDouble(0, Double.MAX_VALUE), 0, true);
+		performanceEvalDesc = new EvaluationDescription(getName()+" performance", this, IntervalDouble.UNIT, 1, true);
 		
 		this.getParentComponent(Run.class).monitor(this);
 	}
@@ -112,13 +118,6 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	 * @param logOutput If not null then for each pattern the input, target and output will be written to this.
 	 */
 	public void evaluate(Individual<?, VectorFunction> individual, double[][] input, double[][] targetOutput, double minTargetOutputValue, double maxTargetOutputValue, Log log) {
-		NiceWriter logOutput = null;
-		if (log.specifiesItem("string")) {
-			StringWriter writer = new StringWriter();
-			log.setLog("string", writer);
-			logOutput = new NiceWriter(writer);
-		}
-		
 		VectorFunction function = (VectorFunction) individual.getFunction();
 		
 		Random random = this.getParentComponent(Run.class).random;
@@ -159,13 +158,19 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 			maxError = Math.sqrt(maxError);
 		else if (errorTypeExample.squareTotalError())
 			maxError = maxError * maxError;
-
+		
+		TargetFitnessCalculatorLog logOutput = null;
+		if (log.specifiesItem("string")) {
+			logOutput = new TargetFitnessCalculatorLog(input, targetOutput, responses, new double[exampleCount], new boolean[exampleCount], maxError, errorTypeOutput, errorTypeExample);
+			log.setLog("string", logOutput);
+		}
+		
 		List<Integer> exampleIndexes = new ArrayList<Integer>(exampleCount);
 		for (int i = 0; i < exampleCount; i++)
 			exampleIndexes.add(i);
 		if (logOutput == null) // Keep examples in order when logging.
 			Collections.shuffle(exampleIndexes, random);
-
+		
 		double totalError = 0;
 		double percentCorrect = 0;
 		for (int i = 0; i < exampleCount; i++) {
@@ -178,17 +183,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 				if (diff > acceptableError)
 					correct = false;
 			}
-			if (logOutput != null) {
-				try {
-					logOutput.put(example).put("\tInput:  ").put(input[example]);
-					logOutput.put("\n\tTarget: ").put(targetOutput[example]);
-					logOutput.put("\n\tOutput: ").put(responses[example]);
-					logOutput.put("\n\tError: ").put(exampleError);
-					logOutput.put((errorTypeOutput.squareErrors() ? " (sum of squared)" : "") + "  (" + (correct ? "" : "in") + "correct)\n\n");
-				} catch (IOException e) {
-					logger.info("Error writing to evaluation log file: " + Arrays.toString(e.getStackTrace()));
-				}
-			}
+			
 			if (errorTypeOutput.avgErrors())
 				exampleError /= outputCount;
 			if (errorTypeOutput.rootTotalError())
@@ -196,10 +191,18 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 			else if (errorTypeOutput.squareTotalError())
 				exampleError = exampleError * exampleError;
 
+			if (logOutput != null) {
+				logOutput.error[i] = exampleError;
+			}
+			
 			totalError += errorTypeExample.squareErrors() ? exampleError * exampleError : exampleError;
 
-			if (correct)
+			if (correct) {
 				percentCorrect++;
+			}
+			if (logOutput != null) {
+				logOutput.correct[i] = correct;
+			}
 		}
 
 		if (errorTypeExample.avgErrors())
@@ -214,29 +217,28 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 		double inverseFitness = 1.0 / (1 + totalError);
 		percentCorrect /= exampleCount;
 		
+		//System.out.println(proportionalFitness);
+		
 		double fitness = fitnessConversionType.equals("proportional") ? proportionalFitness : inverseFitness;
 		double performance = performanceMetric.equals("proportional") ? proportionalPerformance : percentCorrect;
 				
 		individual.evaluationData.setResult(fitnessEvalDesc, fitness);
 		individual.evaluationData.setResult(performanceEvalDesc, performance);
 		
-		if (logOutput != null) {
-			try {
-				String out = "fitness: " + fitness;
-				out += "\nperformance: " + performance;
-				out += "\ninverse fitness: " + inverseFitness;
-				out += "\nproportional fitness: " + proportionalFitness;
-				out += "\npercent correct: " + percentCorrect;
-				logOutput.put("\nResults:\n").put(out);
-			} catch (IOException e) {
-				logger.info("Error writing to evaluation log file: " + Arrays.toString(e.getStackTrace()));
-			}
+		if (terminateOnPerformance != 0 && performance >= terminateOnPerformance) {
+			terminate = true;
 		}
 	}
 	
 	
 	public String getFitnessConversionType() {
 		return fitnessConversionType;
+	}
+	
+	
+	@Override
+	public boolean shouldTerminate() {
+		return terminate;
 	}
 	
 	

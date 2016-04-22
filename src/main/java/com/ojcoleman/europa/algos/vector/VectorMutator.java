@@ -4,11 +4,13 @@ import java.util.Collection;
 import java.util.Random;
 
 import com.eclipsesource.json.JsonObject;
+import com.ojcoleman.europa.algos.neat.NEATSynapseAllele;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * 
@@ -36,7 +38,6 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 
 	public VectorMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		// TODO Auto-generated constructor stub
 	}
 
 	/*
@@ -47,7 +48,7 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 	@Override
 	public void mutate(VectorGeneGenotype<VectorAllele<?>> genotype) {
 		Random random = getParentComponent(Run.class).random;
-
+		
 		Collection<VectorAllele<?>> alleles = genotype.getAlleles();
 		for (VectorAllele<?> allele : alleles) {
 			if (random.nextDouble() < alleleApplyRate) {
@@ -62,6 +63,7 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 						if (perturbationMagnitudeNormalise) {
 							perturbation *= allele.vector.metadata.bound(i).range().doubleValue();
 						}
+						
 						double newVal = allele.vector.get(i) + perturbation;
 						allele.vector.set(i, newVal);
 					}

@@ -42,9 +42,7 @@ import com.ojcoleman.europa.core.Allele;
  * {@link Allele#gene} field (which is final and so could not be set after instantiating the copy instance).
  * </p>
  * <p>
- * New instances of prototypes may be created with {@link #newInstance(Object...)}, or if defined by {@link Prototype}
- * fields in {@link ConfigurableBase}s (including {@link ComponentBase} and Prototype itself) with
- * {@link ConfigurableBase#newPrototypeInstance(Class, Object...)}.
+ * New instances of prototypes may be created with {@link #newInstance(Object...)}.
  * </p>
  * <p>
  * All sub-classes must:

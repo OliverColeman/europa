@@ -77,8 +77,8 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		// it.
 		NEATNeuronGene gene = synapseIDToNeuronGene.get(synapseID, geneParams);
 		if (gene == null) {
-			//new NEATNeuronGene(gene, NNPart.NEURON_INPUT, run.getNextID(), geneParams);
-			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, geneParams);
+			//new NEATNeuronGene(gene, NNPart.NEURON_HIDDEN, run.getNextID(), geneParams);
+			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_HIDDEN, geneParams);
 
 			synapseIDToNeuronGene.put(synapseID, geneParams, gene);
 		}

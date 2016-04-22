@@ -1,10 +1,14 @@
 package com.ojcoleman.europa.rankers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
 import com.eclipsesource.json.JsonObject;
+import com.google.common.collect.Ordering;
+import com.google.common.collect.TreeMultimap;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.EvaluationDescription;
@@ -39,16 +43,20 @@ public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> exte
 		// Get a reference to the one and only EvaluationDescription. 
 		EvaluationDescription ed = evDescs.iterator().next();
 		
-		TreeMap<Double, Individual<?, ?>> fitnessIndividualMap = new TreeMap<>();
+		TreeMultimap<Double, Individual<?, ?>> fitnessIndividualMap = TreeMultimap.create();
 		for (Individual<?, ?> ind : population.getMembers()) {
-			fitnessIndividualMap.put(ind.evaluationData.getFitnessResults().get(ed), ind);
-		}
-		int rank = 0;
-		for (Individual<?, ?> ind : fitnessIndividualMap.values()) {
-			ind.setRank(rank++);
+			double fitness = ind.evaluationData.getFitnessResults().get(ed);
+			fitnessIndividualMap.put(fitness, ind);
 		}
 		
-		this.fireEvent(Event.RankingFinished, fitnessIndividualMap.lastEntry().getValue().evaluationData);
+		int rank = 0;
+		Individual<?, ?> fittest = null;
+		for (Individual<?, ?> ind : fitnessIndividualMap.values()) {
+			ind.setRank(rank++);
+			fittest = ind;
+		}
+		
+		this.fireEvent(Event.RankingFinished, fittest);
 	}
 	
 	

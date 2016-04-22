@@ -16,6 +16,7 @@ import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.core.Speciator;
 import com.ojcoleman.europa.core.Species;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Base class for Speciators for NEATGenotypes.
@@ -41,7 +42,7 @@ public abstract class NEATSpeciator<G extends NEATGenotype, S extends Species<G>
 	public NEATSpeciator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
-
+	
 	/**
 	 * Determine the distance between the two given genotypes, according to the parameters set for this speciator.
 	 */	
@@ -61,20 +62,20 @@ public abstract class NEATSpeciator<G extends NEATGenotype, S extends Species<G>
 		else {
 			Iterator<NEATAllele<?>> g1Iter = g1Alleles.iterator(), g2Iter = g2Alleles.iterator();
 			NEATAllele<?> g1Current = g1Iter.next(), g2Current = g2Iter.next();
-			long g1MaxInnoID = g1Alleles.get(g1Alleles.size()-1).id, g2MaxInnoID = g2Alleles.get(g2Alleles.size()-1).id;
+			long g1MaxInnoID = g1Alleles.get(g1Alleles.size()-1).gene.id, g2MaxInnoID = g2Alleles.get(g2Alleles.size()-1).gene.id;
 			// Iterate through g1 and g2 alleles counting up common and disjoint genes as we go.
 			do {
-				if (g1Current.id == g2Current.id) {
+				if (g1Current.gene.id == g2Current.gene.id) {
 					commonCount++;
 					paramDifference += g1Current.difference(g2Current, normaliseParameterValues);
 					g1Current = g1Iter.hasNext() ? g1Iter.next() : null;
 					g2Current = g2Iter.hasNext() ? g2Iter.next() : null;
 				}
 				else {
-					NEATAllele<?> a = g1Current.id < g2Current.id ? g1Current : g2Current;
+					NEATAllele<?> a = g1Current.gene.id < g2Current.gene.id ? g1Current : g2Current;
 					disjointCountOrValueSum += getMismatchValue(a);
 					
-					if (g1Current.id < g2Current.id) {
+					if (g1Current.gene.id < g2Current.gene.id) {
 						g1Current = g1Iter.hasNext() ? g1Iter.next() : null;
 					}
 					else {
@@ -84,14 +85,14 @@ public abstract class NEATSpeciator<G extends NEATGenotype, S extends Species<G>
 			} while (g1Current != null && g2Current != null);
 			
 			// If the last gene pulled from g1 is out of the range of innovation IDs of g2, add it to excess.
-			if (g1Current != null && g1Current.id > g2MaxInnoID) {
+			if (g1Current != null && g1Current.gene.id > g2MaxInnoID) {
 				excessCountOrValueSum += getMismatchValue(g1Current);
 			}
 			// If the last gene pulled from g2 is out of the range of innovation IDs of g1, add it to excess.
-			if (g2Current != null && g2Current.id > g1MaxInnoID) {	
+			if (g2Current != null && g2Current.gene.id > g1MaxInnoID) {	
 				excessCountOrValueSum += getMismatchValue(g2Current);
 			}
-		
+			
 			// Iterate over and count up any remaining excess genes.
 			while (g1Iter.hasNext()) {
 				excessCountOrValueSum += getMismatchValue(g1Iter.next());
@@ -101,9 +102,12 @@ public abstract class NEATSpeciator<G extends NEATGenotype, S extends Species<G>
 			}
 		}
 		
+		//if (Math.random() < 0.001)
+		//	System.out.println(excessCountOrValueSum + " : " + disjointCountOrValueSum + " : " + paramDifference + " : " + (excessGenesFactor * excessCountOrValueSum + disjointGenesFactor * disjointCountOrValueSum + paramValueDifferenceFactor * paramDifference));
+		
 		return excessGenesFactor * excessCountOrValueSum + disjointGenesFactor * disjointCountOrValueSum + paramValueDifferenceFactor * paramDifference;
 	}
-
+	
 	// Distance value of a mismatched allele.
 	private double getMismatchValue(NEATAllele<?> allele) {
 		if (geneMismatchUseValues) {

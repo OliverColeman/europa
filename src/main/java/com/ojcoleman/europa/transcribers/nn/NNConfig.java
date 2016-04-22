@@ -2,6 +2,9 @@ package com.ojcoleman.europa.transcribers.nn;
 
 import com.ojcoleman.europa.configurable.ConfigurableBase;
 import com.ojcoleman.europa.configurable.Configuration;
+
+import java.util.Map;
+
 import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
 import com.ojcoleman.europa.configurable.Configurable;
 import com.ojcoleman.europa.configurable.Parameter;
@@ -58,5 +61,14 @@ public class NNConfig<N extends ParametrisedGeneType, S extends ParametrisedGene
 	 */
 	public int getSimulationStepsPerStep() {
 		return simulationStepsPerStep;
+	}
+
+	
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		map.put("neuron", neuron);
+		map.put("synapse", synapse);
+		map.put("topology", topology);
+		map.put("simulationStepsPerStep", simulationStepsPerStep);
 	}
 }
