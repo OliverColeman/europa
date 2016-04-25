@@ -1,0 +1,15 @@
+com.ojcoleman.europa
+com.ojcoleman.europa.algos
+com.ojcoleman.europa.algos.neat
+com.ojcoleman.europa.algos.vector
+com.ojcoleman.europa.configurable
+com.ojcoleman.europa.core
+com.ojcoleman.europa.evaluators
+com.ojcoleman.europa.functiontypes
+com.ojcoleman.europa.monitor
+com.ojcoleman.europa.populations
+com.ojcoleman.europa.rankers
+com.ojcoleman.europa.speciators
+com.ojcoleman.europa.transcribers.nn
+com.ojcoleman.europa.transcribers.nn.integration
+com.ojcoleman.europa.util

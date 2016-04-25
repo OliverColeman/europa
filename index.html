@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+  <style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+  </style>
+</head>
+<body>
+<h1 id="europa">Europa</h1>
+<p>Europa is a new general purpose evolutionary algorithm framework designed with the following features and goals in mind:</p>
+<ul>
+<li>Very flexible, for example:</li>
+<li>able to support any population-based algorithm;</li>
+<li>genotype-agnostic - genotypes may be programs (for example Genetic Programming), arbitrary sequences of vectors, bit-strings, etc.;</li>
+<li>algorithm-agnostic - can implement GP, neuro-evolution algorithms, swarm-based methods, etc.<br /> This is possible because Europa is built on a &quot;configurable component&quot; architecture. See more below.<br /></li>
+<li>Easily configurable: configuration files are in JSON format. Java's reflection mechanisms are used to configure a hierarchy of<br /> parametrised and pluggable components and prototype objects (see Configurable Component Architecture below).</li>
+<li>Intuitive: the hierarchical organisation of parametrised components allows for an intuitive understanding of how the software is organised.<br /> Sample configuration files with parameter and sub-component descriptions and other meta-data can be automatically generated from the Class field annotations.</li>
+<li>Provide built-in support for multi-objective evaluation.</li>
+<li>Provide built-in support for multi-threaded evaluation of the members of a population.</li>
+<li>Provide built-in support for cluster-computing evaluation of the members of a population (TODO).</li>
+<li>Support generating snap-shots of a run in order to be able to resume from them later.</li>
+<li>Provide implementations of many standard or typical evolutionary algorithms (TODO).</li>
+</ul>
+<p>If you'd like to contribute please contact me at <script type="text/javascript">
+<!--
+h='&#x67;&#x6d;&#x61;&#x69;&#108;&#46;&#x63;&#x6f;&#x6d;';a='&#64;';n='&#x6f;&#108;&#x69;&#118;&#x65;&#114;&#46;&#x63;&#x6f;&#108;&#x65;&#x6d;&#x61;&#110;';e=n+a+h;
+document.write('<a h'+'ref'+'="ma'+'ilto'+':'+e+'" clas'+'s="em' + 'ail">'+e+'<\/'+'a'+'>');
+// -->
+</script><noscript>&#x6f;&#108;&#x69;&#118;&#x65;&#114;&#46;&#x63;&#x6f;&#108;&#x65;&#x6d;&#x61;&#110;&#32;&#x61;&#116;&#32;&#x67;&#x6d;&#x61;&#x69;&#108;&#32;&#100;&#x6f;&#116;&#32;&#x63;&#x6f;&#x6d;</noscript></p>
+<h2 id="links">Links</h2>
+<p>Manual: <a href="http://olivercoleman.github.com/europa/manual.html" class="uri">http://olivercoleman.github.com/europa/manual.html</a><br />API documentation: <a href="http://olivercoleman.github.com/europa/doc/index.html" class="uri">http://olivercoleman.github.com/europa/doc/index.html</a><br />GitHub repository: <a href="https://github.com/OliverColeman/europa" class="uri">https://github.com/OliverColeman/europa</a></p>
+<h2 id="building-and-running">Building and Running</h2>
+<p>Europa requires Java 7 or greater. Europa is built with<br /><a href="http://gradle.org">gradle</a>. To build a runnable JAR file, run the following<br />command from the project directory (it is not necessary to install gradle):</p>
+<pre><code>./gradlew withDeps</code></pre>
+<p>on *nix systems, or</p>
+<pre><code>gradlew withDeps</code></pre>
+<p>on Windows systems. This will create a runnable jar file in build/libs. If you<br />want a jar file that does not include the dependencies replace &quot;withDeps&quot; with<br />&quot;assemble&quot;.</p>
+<h2 id="configurable-component-architecture">Configurable Component Architecture</h2>
+<p>Every significant piece of functionality is a &quot;component&quot; (extending com.ojcoleman.europa.configurable.ComponentBase).<br />A component class can define parameters, general purpose configurable objects, prototype objects and sub-components.<br />These are simply fields in the class with a custom annotation, for example:</p>
+<pre class="sourceCode java"><code class="sourceCode java">    <span class="kw">class</span> MyComponent <span class="kw">extends</span> ComponentBase {
+        <span class="fu">@Parameter</span>(description=<span class="st">&quot;A simple parameter.&quot;</span>, optional=<span class="kw">true</span>)
+        <span class="kw">protected</span> <span class="dt">long</span> randomSeed;
+        
+        <span class="fu">@Parameter</span> (description = <span class="st">&quot;The class to use to generate random numbers. It must extend Java.util.Random.&quot;</span>, defaultValue = <span class="st">&quot;java.util.Random&quot;</span>)
+        <span class="kw">private</span> Class&lt;? <span class="kw">extends</span> Random&gt; randomClass;
+        
+        <span class="fu">@Configurable</span> (description = <span class="st">&quot;Configuration for utility class to perform operations in parallel.&quot;</span>, defaultClass = Parallel.<span class="fu">class</span>)
+        <span class="kw">protected</span> Parallel parallel;
+    
+        <span class="fu">@Prototype</span> (description = <span class="st">&quot;The configuration for the prototype Individual.&quot;</span>, defaultClass = Individual.<span class="fu">class</span>)
+        <span class="kw">protected</span> Individual&lt;G, F&gt; individualPrototype;
+        
+        <span class="fu">@Component</span> (description = <span class="st">&quot;Sub-component for the population of individuals.&quot;</span>, defaultImplementation = SimplePopulation.<span class="fu">class</span>)
+        <span class="kw">protected</span> Population population;
+        
+        ...
+    }</code></pre>
+<p>When Europa is launched it uses the given configuration file or files to build the hierarchy of specified<br />components with the specified parameter values, prototypes and other configurable objects. As well as specifying<br />the parameter values and sub-configurations for configurable objects, prototypes and components, the configuration<br />file may also optionally specify custom classes to use for each of these (the only constraint being that the specified<br />classes must be a sub-class of the default class. Thus alternate implementations of just about any part of the software<br />can easily be deployed.</p>
+<p>All this is achieved via Java's reflection API. However extreme care is taken to make this very efficient and have negligible<br />impact on performance once the system is initialised.</p>
+<h2 id="configuration-files">Configuration Files</h2>
+<p>Configuration files are in JSON format. The structure of these files reflects the organisation of the components that make up the evolutionary algorithm.<br />The descriptions and other meta-data provided in the annotations described above may be used to produce template configuration files in a self-documenting manner.<br />To print out a template or documentation configuration file, specify the --printConfig option on the command line. An abridged example is below.<br />Note that it includes comments, which aren't allowed in JSON but makes the meta-data associated with parameters a lot more readable<br />(Europa can read JSON with comments, and configuration files can be printed with out meta-data comments).</p>
+<pre><code>{
+  // description: The name of the run. Default is the name of the configuration file appended with
+  //            : the current date and time.
+  // type: java.lang.String
+  // optional: true
+  &quot;name&quot;: &quot;neat&quot;,
+
+  // description: The maximum number of iterations/generations to perform. Values &lt;= 0 indicate no
+  //            : limit.
+  // type: int
+  // optional: false
+  // defaultValue: 0
+  &quot;maximumIterations&quot;: 101,
+
+  // description: Component for transcribing a genotype to a &#39;phenotype&#39; function to be evaluated
+  //            : (these may be one and the same).
+  // optional: false
+  // multiple: false
+  // defaultImplementation: com.ojcoleman.europa.core.DummyTranscriber
+  // available implementations: 
+  // :  com.ojcoleman.europa.core.DummyTranscriber
+  // :  com.ojcoleman.europa.algos.neat.NEATTranscriber
+  &quot;transcriber&quot;: {
+    // class: The class to use for &#39;transcriber&#39;, if defaultImplementation is not defined or a custom class is required.
+    &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATTranscriber&quot;,
+
+    // description: The prototype configuration for the genotype.
+    // base class: com.ojcoleman.europa.algos.neat.NEATGenotype
+    &quot;genotype&quot;: {
+      // class: The class to use for &#39;genotype&#39;, if a class other than the base class is required.
+      &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATGenotype&quot;,
+
+      // description: The prototype configuration for the NEATGene (used only for the &quot;type&quot; system,
+      //            : see paramsType in the neuron and synapse configs). This is only useful if a
+      //            : custom sub-class of NEATGene is to be used.
+      // base class: com.ojcoleman.europa.algos.neat.NEATGene
+      // available implementations: 
+      // :  com.ojcoleman.europa.algos.neat.NEATNeuronGene
+      // :  com.ojcoleman.europa.algos.neat.NEATSynapseGene
+      &quot;genePrototype&quot;: {
+        // class: The class to use for &#39;genePrototype&#39;, if a class other than the base class is required.
+        &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATGene&quot;,
+
+      },
+
+      // description: The prototype configuration for the NEATAllele (used only for the &quot;type&quot; system,
+      //            : see paramsType in the neuron and synapse configs). This is only useful if a
+      //            : custom sub-class of NEATAllele is to be used.
+      // base class: com.ojcoleman.europa.algos.neat.NEATAllele
+      // available implementations: 
+      // :  com.ojcoleman.europa.algos.neat.NEATNeuronAllele
+      // :  com.ojcoleman.europa.algos.neat.NEATSynapseAllele
+      &quot;allelePrototype&quot;: {
+        // class: The class to use for &#39;allelePrototype&#39;, if a class other than the base class is required.
+        &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATAllele&quot;,
+
+      },
+
+      ...
+    },
+
+    // description: Component for the population of individuals.
+    // optional: false
+    // multiple: false
+    // defaultImplementation: com.ojcoleman.europa.populations.SimplePopulation
+    // available implementations: 
+    // :  com.ojcoleman.europa.populations.SimplePopulation
+    &quot;population&quot;: {
+      // class: The class to use for &#39;population&#39;, if defaultImplementation is not defined or a custom class is required.
+      &quot;class&quot;: &quot;com.ojcoleman.europa.populations.SimplePopulation&quot;,
+
+      // description: The desired population size.
+      // type: int
+      // optional: false
+      // defaultValue: 100
+      &quot;desiredSize&quot;: 150,
+
+      // description: The configuration for the prototype Individual.
+      // base class: com.ojcoleman.europa.core.Individual
+      &quot;individualPrototype&quot;: {
+        // class: The class to use for &#39;individualPrototype&#39;, if a class other than the base class is required.
+        &quot;class&quot;: &quot;com.ojcoleman.europa.core.Individual&quot;,
+
+      },
+
+      // description: Component for creating the initial population and new individuals from existing
+      //            : individuals via genetic operators.
+      // optional: false
+      // multiple: false
+      // defaultImplementation: com.ojcoleman.europa.core.DefaultEvolver
+      // available implementations: 
+      // :  com.ojcoleman.europa.core.DefaultEvolver
+      // :  com.ojcoleman.europa.algos.neat.NEATEvolver
+      &quot;evolver&quot;: {
+        // class: The class to use for &#39;evolver&#39;, if defaultImplementation is not defined or a custom class is required.
+        &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATEvolver&quot;,
+
+        // description: The relative proportion of children to produce by cloning (relative to the
+        //            : proportions set for recombiners, if any).
+        // type: double
+        // optional: false
+        // defaultValue: 1
+        &quot;relativeCloneProportion&quot;: 0.25,
+
+        ...
+
+        // description: The configuration for the prototype Genotype.
+        // base class: com.ojcoleman.europa.algos.neat.NEATGenotype
+        &quot;genotypePrototype&quot;: {
+          // class: The class to use for &#39;genotypePrototype&#39;, if a class other than the base class is required.
+          &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATGenotype&quot;,
+
+          // description: The prototype configuration for the NEATGene (used only for the &quot;type&quot; system,
+          //            : see paramsType in the neuron and synapse configs). This is only useful if a
+          //            : custom sub-class of NEATGene is to be used.
+          // base class: com.ojcoleman.europa.algos.neat.NEATGene
+          // available implementations: 
+          // :  com.ojcoleman.europa.algos.neat.NEATNeuronGene
+          // :  com.ojcoleman.europa.algos.neat.NEATSynapseGene
+          &quot;genePrototype&quot;: {
+            // class: The class to use for &#39;genePrototype&#39;, if a class other than the base class is required.
+            &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATGene&quot;,
+
+          },
+
+          // description: The prototype configuration for the NEATAllele (used only for the &quot;type&quot; system,
+          //            : see paramsType in the neuron and synapse configs). This is only useful if a
+          //            : custom sub-class of NEATAllele is to be used.
+          // base class: com.ojcoleman.europa.algos.neat.NEATAllele
+          // available implementations: 
+          // :  com.ojcoleman.europa.algos.neat.NEATNeuronAllele
+          // :  com.ojcoleman.europa.algos.neat.NEATSynapseAllele
+          &quot;allelePrototype&quot;: {
+            // class: The class to use for &#39;allelePrototype&#39;, if a class other than the base class is required.
+            &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATAllele&quot;,
+
+          },
+
+          ...
+        },
+
+        // description: Component(s) used to mutate genotypes.
+        // optional: false
+        // multiple: true
+        // defaultImplementation: com.ojcoleman.europa.core.DummyMutator
+        // available implementations: 
+        // :  com.ojcoleman.europa.algos.neat.NEATNeuronAddMutator
+        // :  com.ojcoleman.europa.algos.vector.VectorMutator
+        // :  com.ojcoleman.europa.core.DummyMutator
+        // :  com.ojcoleman.europa.algos.neat.NEATSynapseAddMutator
+        &quot;mutators&quot;: [
+          {
+            // class: The class to use for &#39;mutators&#39;, if defaultImplementation is not defined or a custom class is required.
+            &quot;class&quot;: &quot;com.ojcoleman.europa.algos.vector.VectorMutator&quot;,
+
+            // description: The percentage of clones to apply this mutator to.
+            // type: double
+            // optional: false
+            // defaultValue: 1
+            &quot;applyPercentageClones&quot;: 1.0,
+            ...
+
+          },
+          
+          ...
+        ],
+
+        // description: Component(s) used to recombine genotypes to produce child genotypes.
+        // optional: true
+        // multiple: true
+        // available implementations: 
+        // :  com.ojcoleman.europa.algos.neat.NEATRecombiner
+        &quot;recombiners&quot;: [
+          {
+            // class: The class to use for &#39;recombiners&#39;, if defaultImplementation is not defined or a custom class is required.
+            &quot;class&quot;: &quot;com.ojcoleman.europa.algos.neat.NEATRecombiner&quot;,
+
+            // description: If set to true then the children produced by this recombiner will not be
+            //            : mutated.
+            // type: boolean
+            // optional: false
+            // defaultValue: false
+            &quot;vetoMutation&quot;: false,
+
+            // description: The relative proportion of children to produce with this recombiner.
+            // type: double
+            // optional: false
+            // defaultValue: 1
+            &quot;relativeProportion&quot;: 0.75,
+
+          }
+        ],
+
+      },
+
+      ...
+    },
+
+  },
+  ...
+}</code></pre>
+<h2 id="license">License</h2>
+<p>Europa is licensed under the GNU General Public License v3. A copy of the license<br />is included in the distribution. Please note that Europa is distributed WITHOUT<br />ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS<br />FOR A PARTICULAR PURPOSE. Please refer to the license for details.</p>
+</body>
+</html>
