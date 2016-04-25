@@ -28,12 +28,10 @@ import com.ojcoleman.europa.configurable.Component;
  */
 public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Evolver.class);
-	
-	
-	@Prototype (description="The configuration for the prototype Genotype.", defaultClass=DummyGenotype.class)
+
+	@Prototype(description = "The configuration for the prototype Genotype.", defaultClass = DummyGenotype.class)
 	protected G genotypePrototype;
-	
-	
+
 	/**
 	 * The set of mutators used to mutate genotypes.
 	 */
@@ -53,43 +51,42 @@ public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	 */
 	@Parameter(description = "The relative proportion of children to produce by cloning (relative to the proportions set for recombiners, if any).", defaultValue = "1")
 	protected double relativeCloneProportion;
-	
-	
+
 	/**
-	 * The actual proportion of children to produce from each {@link Recombiner}, the last entry is the clone proportion.
-	 * Each entry is the actual proportion plus the previous entry. This supports {@
+	 * The actual proportion of children to produce from each {@link Recombiner}, the last entry is the clone
+	 * proportion. Each entry is the actual proportion plus the previous entry. This supports {@
 	 */
 	private final double[] actualRecombinerProportions;
-	
-	
+
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
 	public Evolver(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
-		actualRecombinerProportions = new double[recombiners.length+1];
+
+		actualRecombinerProportions = new double[recombiners.length + 1];
 		for (int i = 0; i < recombiners.length; i++) {
 			actualRecombinerProportions[i] = recombiners[i].relativeProportion;
 		}
 		actualRecombinerProportions[recombiners.length] = relativeCloneProportion;
 		ArrayUtil.normaliseSum(actualRecombinerProportions);
 		for (int i = 1; i < actualRecombinerProportions.length; i++) {
-			actualRecombinerProportions[i] += actualRecombinerProportions[i-1];
+			actualRecombinerProportions[i] += actualRecombinerProportions[i - 1];
 		}
 	}
-	
-	
+
 	/**
 	 * Add {@link Individual}s to the given Population based on the current members and optionally species groupings.
 	 * <p>
-	 * For non-swarm/colony based algorithms, implementations should do things like (taking {@link Species} into account if applicable):
+	 * For non-swarm/colony based algorithms, implementations should do things like (taking {@link Species} into account
+	 * if applicable):
 	 * <ul>
 	 * <li>Select some parents.</li>
 	 * <li>Generate new {@link Genotype}s from parents via the {@link #recombiners} and/or cloning and then mutate them
 	 * via the {@link #mutators} or by calling {@link #mutateGenotype(Genotype, boolean)} .</li>
 	 * <li>Select some elites (most likely subset of parents).</li>
-	 * <li>Remove individuals other than elites from population with {@link Population#removeIndividual(Individual)}.</li>
+	 * <li>Remove individuals other than elites from population with {@link Population#removeIndividual(Individual)}.
+	 * </li>
 	 * <li>Add the new Genotypes to the population ({@link Population#addGenotype(Object...)}).</li>
 	 * </ul>
 	 * </p>
@@ -98,29 +95,31 @@ public abstract class Evolver<G extends Genotype<?>> extends ComponentBase {
 	 * <ul>
 	 * <li>For each member of the population:
 	 * <li>Generate an updated version of the genotype of the member via the {@link #mutators}.</li>
-	 * <li>Remove the member with {@link Population#removeIndividual(Individual)} and replace it with the updated genotype via {@link Population#addGenotype(Object...)}
+	 * <li>Remove the member with {@link Population#removeIndividual(Individual)} and replace it with the updated
+	 * genotype via {@link Population#addGenotype(Object...)}
 	 * </ul>
 	 * </p>
 	 */
 	public abstract void evolve(Population<G, ?> population);
-	
-	
+
 	/**
-	 * Selects a Recombiner from {@link #recombiners} at random (or the clone operation), taking into account {@link Recombiner#relativeProportion} and {@link #relativeCloneProportion}.
+	 * Selects a Recombiner from {@link #recombiners} at random (or the clone operation), taking into account
+	 * {@link Recombiner#relativeProportion} and {@link #relativeCloneProportion}.
+	 * 
 	 * @return A Recombiner or null to represent the clone operation.
-	 */ 
+	 */
 	public Recombiner<G> selectRandomRecombiner() {
 		int selection = Arrays.binarySearch(actualRecombinerProportions, this.getParentComponent(Run.class).random.nextDouble());
-		if (selection < 0) selection = -selection - 1;
-		
+		if (selection < 0)
+			selection = -selection - 1;
+
 		// Last option is clone.
-		if (selection == actualRecombinerProportions.length-1) {
+		if (selection == actualRecombinerProportions.length - 1) {
 			return null;
 		}
-		
+
 		return recombiners[selection];
 	}
-
 
 	/**
 	 * Mutate the given genotype. This default implementation calls {@link Mutator#mutate(Genotype)} for each of the

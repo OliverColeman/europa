@@ -54,8 +54,8 @@ public class Gene extends PrototypeBase {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Creates a Gene
-	 * with no {@link #types}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Creates a
+	 * Gene with no {@link #types}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 */

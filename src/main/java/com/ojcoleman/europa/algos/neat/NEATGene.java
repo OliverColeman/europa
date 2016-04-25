@@ -10,8 +10,8 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.configurable.ConfigurableBase;
 
 /**
- * Base class for representations of NEAT genes. Note that the innovation ID required by NEAT is 
- * implemented with {@link ConfigurableBase#id} (which this class extends).
+ * Base class for representations of NEAT genes. Note that the innovation ID required by NEAT is implemented with
+ * {@link ConfigurableBase#id} (which this class extends).
  * 
  * @author O. J. Coleman
  */
@@ -24,8 +24,8 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorGene with specified type(s) and parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorGene with specified type(s) and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param type The type(s) of the gene, if applicable to the evolutionary algorithm in use. Usually these are enum
@@ -37,8 +37,8 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorGene with the specified parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorGene with the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param paramVector The parameter vector for this gene.

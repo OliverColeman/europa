@@ -25,9 +25,9 @@ import com.ojcoleman.europa.util.Stringer;
  * Represents the inheritable genetic material of an {@link Individual}.
  * </p>
  * <p>
- * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)} type
- * copy-constructor accepting only the allele to copy, which should generally just call <em>super()</em> with the given
- * allele.</strong>
+ * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}
+ * type copy-constructor accepting only the allele to copy, which should generally just call <em>super()</em> with the
+ * given allele.</strong>
  * </p>
  * <p>
  * Note that an Allele belongs to a specific Genotype, but may share the same Gene as Alleles in other Genotypes.
@@ -49,21 +49,21 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	protected final Collection<A> alleles;
 
 	private ArrayListMultimap<Object, A> allelesByGeneType;
-	
+
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
 	public Genotype(Configuration config) {
 		super(config);
-		
+
 		parents = Collections.unmodifiableList(new ArrayList<Genotype<?>>());
 		alleles = newAlleleCollection();
 		allelesByGeneType = ArrayListMultimap.create();
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
-	 * with the same alleles and genes as the given genotype. The parent is set to the given prototype.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Genotype with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 */
@@ -73,15 +73,15 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 		List<Genotype<?>> p = new ArrayList<>();
 		p.add(prototype);
 		this.parents = Collections.unmodifiableList(p);
-		
+
 		alleles = newAlleleCollection();
-		
+
 		init(prototype.alleles);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
-	 * with the given alleles and parents.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Genotype with the given alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param alleles The Alleles (backed by {@link Gene}s) that make up the new Genotype. A copy of each allele is made
@@ -92,13 +92,13 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	 */
 	public Genotype(Genotype<A> prototype, Collection<A> alleles, List<Genotype<?>> parents) {
 		super(prototype);
-		
+
 		this.parents = Collections.unmodifiableList(new ArrayList<>(parents));
 		this.alleles = newAlleleCollection();
-		
+
 		init(alleles);
 	}
-	
+
 	private void init(Collection<A> alleles) {
 		for (A allele : alleles) {
 			A newAllele = allele.newInstance();
@@ -207,7 +207,6 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 		}
 	}
 
-	
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		super.getStringableMap(map);

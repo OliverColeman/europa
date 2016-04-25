@@ -33,7 +33,7 @@ public class IntervalLong extends Interval<Long> {
 	public boolean isIn(Long value) {
 		return value >= start && value <= end;
 	}
-	
+
 	@Override
 	public double translateFromUnit(double p) {
 		return start + p * range();

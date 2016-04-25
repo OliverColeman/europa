@@ -16,7 +16,7 @@ public class NEATSpecies extends Species<NEATGenotype> {
 	 * The representative for this species.
 	 */
 	protected NEATGenotype representative;
-	
+
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
@@ -34,7 +34,7 @@ public class NEATSpecies extends Species<NEATGenotype> {
 		super(prototype);
 		this.representative = representative;
 	}
-	
+
 	/**
 	 * Get the representative for this species.
 	 */

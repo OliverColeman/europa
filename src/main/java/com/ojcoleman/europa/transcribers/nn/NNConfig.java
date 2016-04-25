@@ -11,7 +11,8 @@ import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedGeneType;
 
 /**
- * A component describing essential configuration information for a neural network for which the configuration is defined by {@link BainParametrisedGeneType}s.
+ * A component describing essential configuration information for a neural network for which the configuration is
+ * defined by {@link BainParametrisedGeneType}s.
  * 
  * @author O. J. Coleman
  */
@@ -28,11 +29,9 @@ public class NNConfig<N extends ParametrisedGeneType, S extends ParametrisedGene
 	@Parameter(description = "For recurrent neural networks, the number of simulation steps to perform for each application of the input and reading of the output.", defaultValue = "5")
 	protected int simulationStepsPerStep;
 
-	
 	public NNConfig(Configuration config) throws Exception {
 		super(config);
 	}
-	
 
 	/**
 	 * @return the configuration for the neurons.
@@ -63,7 +62,6 @@ public class NNConfig<N extends ParametrisedGeneType, S extends ParametrisedGene
 		return simulationStepsPerStep;
 	}
 
-	
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("neuron", neuron);

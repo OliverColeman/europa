@@ -7,9 +7,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link ComponentBase}, this annotation indicates that the field is 
- * for a user configurable {@link ComponentBase} object or array of objects, e.g. via a JSON configuration file.
- * See {@link ComponentBase} for more information.
+ * For fields in sub-classes of {@link ComponentBase}, this annotation indicates that the field is for a user
+ * configurable {@link ComponentBase} object or array of objects, e.g. via a JSON configuration file. See
+ * {@link ComponentBase} for more information.
  * 
  * @author O. J. Coleman
  */
@@ -23,8 +23,8 @@ public @interface Component {
 	String description();
 
 	/**
-	 * Whether the sub-component is optional. Note that if a defaultClass is specified then this default class 
-	 * will be used even if optional is set to true.
+	 * Whether the sub-component is optional. Note that if a defaultClass is specified then this default class will be
+	 * used even if optional is set to true.
 	 */
 	boolean optional() default false;
 

@@ -36,16 +36,16 @@ import com.thoughtworks.xstream.XStream;
 public class Main {
 	@Parameter(description = "<Configuration file (.json extension) or previously saved run (.europa extension)>")
 	List<String> configOrSavedRun;
-	
+
 	@Parameter(names = "--printConfig", description = "Prints an example configuration file showing available parameters and default sub-components. May be combined with a custom input configuration file or snapshot to see options for custom components or the configuration of the snapshot.")
 	private boolean printConfig = false;
-	
+
 	@Parameter(names = "--noMetadata", description = "If printConfig is provided, disables including the metadata for parameters and components.")
 	private boolean noMetadata = false;
-	
+
 	@Parameter(names = "--strictJSON", description = "If printConfig is provided, disables \"commenting out\" the metadata in the JSON output, thus producing valid JSON. Metadata about parameters and components is commented out by default to improve readability. Note that this program will accept configuration files with comments.")
 	private boolean strictJSON = false;
-	
+
 	public static void main(String[] args) {
 		try {
 			Main main = new Main();
@@ -81,26 +81,26 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private synchronized void launchFromSaved(String configOrSavedRun) throws Exception {
 		XStream xstream = new XStream();
 		xstream.setMarshallingStrategy(null);
-		
+
 		Run run = (Run) xstream.fromXML(new FileReader(configOrSavedRun));
 		run.run();
 	}
-	
+
 	private synchronized void launchFromConfig(JsonObject config) throws Exception {
 		JsonArray configFilePaths = new JsonArray();
 		for (String confPath : configOrSavedRun) {
 			configFilePaths.add(confPath);
 		}
 		config.add("configFilePaths", configFilePaths);
-		
+
 		Run run = new Run(null, new Configuration(config, false, new DefaultIDFactory()));
 		run.run();
 	}
-	
+
 	private synchronized void launch(final Run run) throws Exception {
 		run.run();
 	}
@@ -119,7 +119,7 @@ public class Main {
 
 	private void printConfigOptionsFromDefault() throws Exception {
 		JsonObject configObject = new JsonObject();
-		
+
 		Run run = new Run(null, new Configuration(configObject, true, new DefaultIDFactory()));
 		printConfig(run);
 	}
@@ -133,9 +133,9 @@ public class Main {
 			// comments in the standard.
 			configOut = Pattern.compile("^(\\s*)\"_metadata(?:.*?) ([^\"]*)\"\\s*:\\s*\"?(.*?)\"?,?$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1// $2: $3");
 			// Blank lines.
-			configOut = Pattern.compile("^\\s*//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll(""); 
+			configOut = Pattern.compile("^\\s*//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll("");
 		}
-		
+
 		// Replace \" with " in comment lines.
 		StringBuilder configOutSB = new StringBuilder(configOut.length());
 		Pattern comment = Pattern.compile("^\\s*//.*");
@@ -147,15 +147,15 @@ public class Main {
 			}
 			configOutSB.append("\n");
 		}
-		
+
 		System.out.println(configOutSB.toString());
 	}
-	
+
 	private static String stripComments(String jsonWithComments) {
 		List<String> jsonLines = Arrays.asList(jsonWithComments.split("\n"));
 		return stripComments(jsonLines);
 	}
-	
+
 	private static String stripComments(List<String> jsonWithComments) {
 		StringBuffer config = new StringBuffer();
 		for (String line : jsonWithComments) {
@@ -167,13 +167,13 @@ public class Main {
 
 		// Remove commas before closing brace (occurs as an artifact of the commenting process).
 		json = Pattern.compile(",\\s*}").matcher(json).replaceAll(" }");
-		
+
 		return json;
 	}
-	
+
 	private static JsonObject mergeConfigs(List<String> configPaths) throws IOException {
 		JsonObject mergedConfig = new JsonObject();
-		
+
 		for (String confPath : configPaths) {
 			List<String> configLines = Files.readAllLines(Paths.get(confPath), StandardCharsets.UTF_8);
 			String configStr = stripComments(configLines);
@@ -181,15 +181,14 @@ public class Main {
 				JsonObject config = Json.parse(configStr).asObject();
 
 				recursiveMerge(mergedConfig, config);
-			}
-			catch (ParseException ex) {
+			} catch (ParseException ex) {
 				throw new IllegalArgumentException("Could not parse configuration file " + confPath, ex);
 			}
 		}
-		
+
 		return mergedConfig;
 	}
-	
+
 	/**
 	 * Recursively merge o2 into o1. Values in o2 overwrite those in o1 if set.
 	 */
@@ -199,8 +198,7 @@ public class Main {
 			// If o1 does not define this value or the value is not an object then replace/set the value in o1.
 			if (o1.get(key) == null || !o1.get(key).isObject()) {
 				o1.set(key, val2);
-			}
-			else if (o1.get(key).isObject()) {
+			} else if (o1.get(key).isObject()) {
 				// Otherwise recursively merge the object values.
 				JsonObject merged = o1.get(key).asObject();
 				recursiveMerge(merged, val2.asObject());

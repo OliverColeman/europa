@@ -60,21 +60,21 @@ public class EvaluationData {
 	public Map<EvaluationDescription, Double> getPerformanceResults() {
 		return Collections.unmodifiableMap(performanceResults);
 	}
-	
+
 	/**
 	 * Returns the number of fitness results recorded.
 	 */
-	public int getFitnessResultCount(){
+	public int getFitnessResultCount() {
 		return fitnessResults.size();
 	}
-	
+
 	/**
 	 * Returns the number of performance results recorded.
 	 */
-	public int getPerformanceResultCount(){
+	public int getPerformanceResultCount() {
 		return performanceResults.size();
 	}
-	
+
 	/**
 	 * Removes all evaluation data.
 	 */
@@ -83,7 +83,7 @@ public class EvaluationData {
 		fitnessResults.clear();
 		performanceResults.clear();
 	}
-	
+
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		boolean first = true;

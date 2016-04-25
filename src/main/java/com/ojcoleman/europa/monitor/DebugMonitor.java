@@ -25,11 +25,10 @@ public class DebugMonitor extends SelectiveMonitor {
 			String stateStr = Stringer.toString(state, 10, 1);
 			if (stateStr.contains("\n")) {
 				write(observed, event, state, observed.getClass().getSimpleName() + ": " + event + ":\n" + stateStr);
-			}
-			else {
+			} else {
 				write(observed, event, state, observed.getClass().getSimpleName() + ": " + event + ": " + stateStr.trim());
 			}
-				
+
 		} else {
 			write(observed, event, state, observed.getClass().getSimpleName() + ": " + event);
 		}

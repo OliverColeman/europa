@@ -48,7 +48,7 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 	@Override
 	public void mutate(VectorGeneGenotype<VectorAllele<?>> genotype) {
 		Random random = getParentComponent(Run.class).random;
-		
+
 		Collection<VectorAllele<?>> alleles = genotype.getAlleles();
 		for (VectorAllele<?> allele : alleles) {
 			if (random.nextDouble() < alleleApplyRate) {
@@ -63,7 +63,7 @@ public class VectorMutator extends Mutator<VectorGeneGenotype<VectorAllele<?>>> 
 						if (perturbationMagnitudeNormalise) {
 							perturbation *= allele.vector.metadata.bound(i).range().doubleValue();
 						}
-						
+
 						double newVal = allele.vector.get(i) + perturbation;
 						allele.vector.set(i, newVal);
 					}

@@ -38,50 +38,47 @@ import edu.princeton.cs.algorithms.EdgeWeightedDigraph;
  */
 public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	private final Logger logger = LoggerFactory.getLogger(BainNeuralNetwork.class);
-	
-	@Configurable (description="The general or base configuration for the neural networks.")
+
+	@Configurable(description = "The general or base configuration for the neural networks.")
 	protected BainNNConfig config;
-	
+
 	/**
 	 * The Bain neural network.
 	 */
 	protected NeuralNetwork nn;
-	
+
 	// Record of how many neurons have been added via addNeuron()
 	private int addedNeuronCount;
 	// Record of how many synapses have been added via addSynapse()
 	private int addedSynapseCount;
-	
+
 	// Number of input neurons.
 	private int inputSize;
 	// Index of the first output neuron.
 	private int outputIndex;
-	
+
 	/**
-	 * Mapping from neuronTypes index to Bain NeuronCollection configuration index.
-	 * This exists because we can't guarantee that the neuronType configs will map
-	 * onto Bain configurations until we've started adding neurons, at which point
-	 * the configurations can be added in any order to the Bain NeuronCollection.
+	 * Mapping from neuronTypes index to Bain NeuronCollection configuration index. This exists because we can't
+	 * guarantee that the neuronType configs will map onto Bain configurations until we've started adding neurons, at
+	 * which point the configurations can be added in any order to the Bain NeuronCollection.
 	 */
 	protected Map<Integer, Integer> neuronTypeToBainConfig;
 	/**
 	 * See {@link #neuronTypeToBainConfig}.
 	 */
 	protected Map<Integer, Integer> synapseTypeToBainConfig;
-	
-	
+
 	/**
-	 * The number of simulation steps to perform for each request to apply input to the network and retrieve output,
-	 * for example via {@link #apply(double[])}.
+	 * The number of simulation steps to perform for each request to apply input to the network and retrieve output, for
+	 * example via {@link #apply(double[])}.
 	 */
 	protected int stepsPerStep;
-	
+
 	/**
 	 * The topology class of the network.
 	 */
 	protected Topology topology;
-	
-	
+
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
@@ -93,14 +90,15 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
 	 * Create a Bain neural network with the given base configuration and instance configuration.
+	 * 
 	 * @param prototype The prototype neural network instance to copy.
 	 * @param instConfig The instance configuration for the neural network, for example number of inputs and outputs.
 	 */
 	public BainNeuralNetwork(BainNeuralNetwork prototype, NNInstanceConfig instConfig) {
 		super(prototype, instConfig);
-		
+
 		config = prototype.config;
-		
+
 		NeuronCollection<?> neurons = null;
 		SynapseCollection<?> synapses = null;
 		try {
@@ -113,26 +111,24 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		} catch (Exception e) {
 			throw new RuntimeException("Error creating synapses for Bain neural network.", e);
 		}
-		
+
 		inputSize = instConfig.inputCount;
 		outputIndex = instConfig.neuronCount - instConfig.outputCount;
-		
+
 		// stepsPerStep and topology may be changed by setStepsPerStepForNonLayeredFF()
 		stepsPerStep = instConfig.stepsPerStep;
 		topology = config.getTopology();
-		
+
 		nn = new NeuralNetwork(config.simulationResolution, neurons, synapses, config.aparapiExecutionMode);
-		
+
 		neuronTypeToBainConfig = new HashMap<>();
 	}
-	
-	
+
 	@Override
 	public BainNNConfig getConfig() {
 		return config;
 	}
-	
-	
+
 	/**
 	 * Add a neuron to this neural network.
 	 * 
@@ -145,27 +141,26 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	@Override
 	public int addNeuron(Map<String, Double> config) {
 		NeuronCollection<?> neurons = nn.getNeurons();
-		
+
 		// addedNeuronCount is the index for the new neuron.
-		
+
 		// Set bias first if specified.
 		if (config.containsKey("bias")) {
 			if (nn.getNeurons() instanceof NeuronCollectionWithBias) {
 				((NeuronCollectionWithBias<?>) neurons).setBias(addedNeuronCount, config.get("bias"));
-			}
-			else {
+			} else {
 				logger.warn("bias parameter specified in neuron configuration but neuron class does not extend NeuronCollectionWithBias, bias parameter ignored.");
 			}
 			config.remove("bias");
 		}
-		
+
 		setComponentConfig(neurons, addedNeuronCount, config, neuronTypes, neuronTypeToBainConfig);
-		
+
 		addedNeuronCount++;
-		
-		return addedNeuronCount-1;
+
+		return addedNeuronCount - 1;
 	}
-	
+
 	/**
 	 * Add a synapse to this neural network.
 	 * 
@@ -179,45 +174,46 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	@Override
 	public void addSynapse(Map<String, Double> config, int source, int dest) {
 		SynapseCollection<?> synapses = nn.getSynapses();
-		
+
 		// addedSynapseCount is the index for the new synapse.
-		
+
 		synapses.setPreAndPostNeurons(addedSynapseCount, source, dest);
-		
+
 		// Set weight/efficacy first if specified.
 		if (config.containsKey("weight")) {
 			synapses.setEfficacy(addedSynapseCount, config.get("weight"));
 			config.remove("weight");
 		}
-		
+
 		setComponentConfig(synapses, addedSynapseCount, config, synapseTypes, synapseTypeToBainConfig);
-		
+
 		addedSynapseCount++;
 	}
-	
-	
+
 	/**
-	 * Sets the specified Bain "component" (eg a neuron or synapse) in the specified collection to have the specified parameters.
+	 * Sets the specified Bain "component" (eg a neuron or synapse) in the specified collection to have the specified
+	 * parameters.
 	 * 
 	 * @param componentCollection The collection to add the component to.
 	 * @param componentIndex The index of the component in the collection.
 	 * @param config The configuration parameters.
-	 * @param types The list of component types (eg {@link #neuronTypes}). 
-	 * @param typeToBainConfig Mapping from component type indexes to Bain ConfigurableComponentCollection configuration index (eg {@link #neuronTypeToBainConfig}).
+	 * @param types The list of component types (eg {@link #neuronTypes}).
+	 * @param typeToBainConfig Mapping from component type indexes to Bain ConfigurableComponentCollection configuration
+	 *            index (eg {@link #neuronTypeToBainConfig}).
 	 */
 	protected static void setComponentConfig(ConfigurableComponentCollection<?> componentCollection, int componentIndex, Map<String, Double> config, List<Map<String, Double>> types, Map<Integer, Integer> typeToBainConfig) {
-		//TODO not adding configs when it should?
-		
+		// TODO not adding configs when it should?
+
 		TreeMap<String, Object> dbg = new TreeMap<>();
 		dbg.put("0compIndex", componentIndex);
 		dbg.put("1config", config);
-		
+
 		// Params specific to each component.
 		Map<String, Double> nonTypeConfig = new HashMap<>(config);
-		
+
 		// Params specific to a type of component.
 		Map<String, Double> typeConfig = null;
-		
+
 		// Get the index of the type parameters and the parameter values, if available.
 		int typeIndex = -1;
 		if (config.containsKey("typeReference")) {
@@ -229,40 +225,36 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 		// Remove "typeReference" parameter if present.
 		nonTypeConfig.remove("typeReference");
-		
+
 		dbg.put("2typeConfig", typeConfig);
 		dbg.put("3nonTypeConfig", nonTypeConfig);
-		
-		
-		// If a type is specified and there are no more parameters specified in the nonTypeConfig, we can use a Bain 
-		// ComponentConfiguration to encapsulate the type params (which is more efficient than creating a 
+
+		// If a type is specified and there are no more parameters specified in the nonTypeConfig, we can use a Bain
+		// ComponentConfiguration to encapsulate the type params (which is more efficient than creating a
 		// ComponentConfiguration for every single component).
 		if (typeConfig != null && !typeConfig.isEmpty() && nonTypeConfig.isEmpty()) {
 			int bainConfigIndex;
-			
+
 			if (!typeToBainConfig.containsKey(typeIndex)) {
 				// Add a new configuration to the component collection.
 				bainConfigIndex = addBainConfiguration(componentCollection, typeConfig);
-				
+
 				// Record the mapping from the component type index to the Bain configuration index.
 				typeToBainConfig.put(typeIndex, bainConfigIndex);
-			}
-			else {
+			} else {
 				bainConfigIndex = typeToBainConfig.get(typeIndex);
 			}
-			
+
 			// Set the configuration for this component.
 			componentCollection.setComponentConfiguration(componentIndex, bainConfigIndex);
-		}
-		else {
+		} else {
 			// Collect all the params together.
 			if (typeConfig != null) {
 				nonTypeConfig.putAll(typeConfig);
 			}
-			
+
 			dbg.put("4nonTypeConfig", nonTypeConfig);
-			
-			
+
 			// If there are any params to set.
 			if (!nonTypeConfig.isEmpty()) {
 				// Add a new configuration to the component collection.
@@ -271,15 +263,15 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				componentCollection.setComponentConfiguration(componentIndex, configIndex);
 			}
 		}
-		
+
 		dbg.put("9typeToBainConfig", typeToBainConfig);
-		
-		//System.out.println(Stringer.toString(dbg));
+
+		// System.out.println(Stringer.toString(dbg));
 	}
-	
+
 	/**
-	 * Add a Bain ComponentConfiguration to the given Bain ConfigurableComponentCollection (eg collection of neurons or synapses),
-	 * setting the parameter values for the configuration to those provided.
+	 * Add a Bain ComponentConfiguration to the given Bain ConfigurableComponentCollection (eg collection of neurons or
+	 * synapses), setting the parameter values for the configuration to those provided.
 	 */
 	protected static int addBainConfiguration(ConfigurableComponentCollection<?> componentCollection, Map<String, Double> params) {
 		// Create a new Bain ComponentConfiguration.
@@ -288,20 +280,20 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		for (Map.Entry<String, Double> param : params.entrySet()) {
 			config.setParameterValue(param.getKey(), param.getValue(), true);
 		}
-		
+
 		// Add the configuration to the collection.
 		componentCollection.addConfiguration(config);
-		
+
 		// Return the index of the added configuration.
 		return componentCollection.getConfigurationCount() - 1;
 	}
-	
-	
+
 	@Override
 	public void finishedBuilding() {
 		setStepsPerStepForNonLayeredFF();
-		
-		// Add default configs to the neuron and synapse collections if no other configs added and a default is available.
+
+		// Add default configs to the neuron and synapse collections if no other configs added and a default is
+		// available.
 		if (nn.getNeurons().getConfigurationCount() == 0) {
 			ComponentConfiguration config = nn.getNeurons().getConfigSingleton();
 			if (config != null) {
@@ -315,22 +307,20 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			}
 		}
 	}
-	
 
 	/**
 	 * (Re)calculates the number of steps required to fully activate a non-layered feed-forward network. If this network
-	 * is not of type {@link Topology#FEED_FORWARD} then this method does nothing and returns
-	 * immediately.
+	 * is not of type {@link Topology#FEED_FORWARD} then this method does nothing and returns immediately.
 	 */
 	public void setStepsPerStepForNonLayeredFF() {
 		if (topology != Topology.FEED_FORWARD)
 			return;
-		
+
 		// To find the longest path from any output node to any input node
 		// create a directed acyclic graph representing the network where
-		// each edge has the opposite direction of the corresponding 
-		// connection and has weight/value = -1. Then use the Bellman-Ford 
-		// algorithm for finding the lowest value path starting from each 
+		// each edge has the opposite direction of the corresponding
+		// connection and has weight/value = -1. Then use the Bellman-Ford
+		// algorithm for finding the lowest value path starting from each
 		// output node/vertex to each input node/vertex. The lowest value path
 		// corresponds to the longest path since the edges have value -1.
 		EdgeWeightedDigraph graph = new EdgeWeightedDigraph(instanceConfig.neuronCount);
@@ -339,18 +329,18 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			graph.addEdge(new DirectedEdge(synapses.getPostNeuron(c), synapses.getPreNeuron(c), -1));
 		}
 
-		// Apply Bellman-Ford algo for each output neuron, query for lowest 
+		// Apply Bellman-Ford algo for each output neuron, query for lowest
 		// value path to each input.
 		int maxDepth = 0;
 		boolean cyclic = false;
 		for (int o = outputIndex; o < instanceConfig.neuronCount && !cyclic; o++) {
 			BellmanFordSP bfsp = new BellmanFordSP(graph, o);
-			
+
 			if (bfsp.hasNegativeCycle()) {
 				cyclic = true;
 				break;
 			}
-			
+
 			for (int i = 0; i < instanceConfig.inputCount; i++) {
 				double dist = bfsp.distTo(i);
 				if (dist != Double.POSITIVE_INFINITY && -dist > maxDepth) {
@@ -358,7 +348,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				}
 			}
 		}
-		
+
 		if (!cyclic) {
 			stepsPerStep = maxDepth - 1;
 		} else {
@@ -366,20 +356,18 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			topology = Topology.RECURRENT;
 		}
 	}
-	
-	
-	
+
 	@Override
 	public double[] apply(double[] stimuli) {
 		double[] outputs = new double[instanceConfig.outputCount];
 		return apply(stimuli, outputs);
 	}
-	
+
 	@Override
 	public double[] apply(double[] stimuli, double[] output) {
 		// Get a reference to (all) neuron outputs.
 		double[] nnOutputs = nn.getNeurons().getOutputs();
-		
+
 		if (config.getTopology() == Topology.FEED_FORWARD) {
 			// For non-layered FF networks we have to run the network stepsPerStep times to propagate the
 			// signals all the way through, while making sure the input neurons have the input values
@@ -399,9 +387,9 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			}
 			nn.run(stepsPerStep);
 		}
-		
+
 		System.arraycopy(nnOutputs, outputIndex, output, 0, instanceConfig.outputCount);
-		
+
 		return output;
 	}
 
@@ -411,12 +399,12 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		apply(input, output);
 		return output;
 	}
-	
+
 	@Override
 	public double[][] apply(double[][] input, double[][] output) {
 		// Get a reference to (all) neuron outputs.
 		double[] nnOutputs = nn.getNeurons().getOutputs();
-				
+
 		int stimuliCount = input.length;
 		// Optimisation for layered FF networks.
 
@@ -438,7 +426,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				output[s] = apply(input[s]);
 			}
 		}
-		
+
 		return output;
 	}
 
@@ -451,17 +439,15 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	public double getMaximumOutputValue() {
 		return nn.getNeurons().getMaximumPossibleOutputValue();
 	}
-	
-	
+
 	public boolean isInput(int neuronIndex) {
 		return neuronIndex < inputSize;
 	}
-	
+
 	public boolean isOutput(int neuronIndex) {
 		return neuronIndex >= outputIndex;
 	}
-	
-	
+
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("bainNNConfig", config);
@@ -469,8 +455,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		map.put("stepsPerStep", stepsPerStep);
 		map.put("bainNN", this.toString());
 	}
-	
-	
+
 	/**
 	 * Returns a string describing this network and its connectivity.
 	 */
@@ -478,28 +463,28 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	public String toString() {
 		int neuronCount = nn.getNeurons().getSize();
 		int synapseCount = nn.getSynapses().getSize();
-		//int neuronDisabledCount = 0;
-		
-		//for (int i = 0; i < neuronCount; i++) {
-		//	if (!neuronDisabled[i]) neuronDisabledCount++;
-		//}
+		// int neuronDisabledCount = 0;
+
+		// for (int i = 0; i < neuronCount; i++) {
+		// if (!neuronDisabled[i]) neuronDisabledCount++;
+		// }
 		DecimalFormat floatf = new DecimalFormat(" 0.00;-0.00");
 		DecimalFormat intf = new DecimalFormat("000000000");
 		DecimalFormat nfInt = new DecimalFormat("0000");
 		StringBuilder out = new StringBuilder(125 + synapseCount * 30);
 		out.append("Neuron class: " + nn.getNeurons().getClass());
 		out.append("\nSynapse class: " + nn.getSynapses().getClass());
-		//out.append("\nNeuron count: " + neuronCount + "  Populated/enabled size: " + neuronDisabledCount);
+		// out.append("\nNeuron count: " + neuronCount + " Populated/enabled size: " + neuronDisabledCount);
 		out.append("\nSynapse count: " + synapseCount + "  Populated/enabled size: " + nn.getSynapses().getSizePopulated());
 		out.append("\nTopology type: " + topology);
 		out.append("\nCycles per step: " + stepsPerStep);
 
-		//out.append("\nNeurons:\n\tEnabled\t");
+		// out.append("\nNeurons:\n\tEnabled\t");
 		out.append("\nNeurons:\n");
 		NeuronCollectionWithBias biasNeurons = (nn.getNeurons() instanceof NeuronCollectionWithBias) ? (NeuronCollectionWithBias) nn.getNeurons() : null;
-		//if (coordsEnabled()) {
-		//	out.append("Coordinates\t\t\t\t");
-		//}
+		// if (coordsEnabled()) {
+		// out.append("Coordinates\t\t\t\t");
+		// }
 		if (biasNeurons != null) {
 			out.append("bias\t");
 		}
@@ -512,24 +497,24 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 		out.append("\n");
 		for (int i = 0; i < neuronCount; i++) {
-			//out.append("\n\t" + (neuronDisabled[i] ? "0" : "1"));
-			//if (coordsEnabled()) {
-			//	out.append("\t(" + floatf.format(getXCoord(i)) + ", " + floatf.format(getYCoord(i)) + ", " + floatf.format(getZCoord(i)) + ")");
-			//}
+			// out.append("\n\t" + (neuronDisabled[i] ? "0" : "1"));
+			// if (coordsEnabled()) {
+			// out.append("\t(" + floatf.format(getXCoord(i)) + ", " + floatf.format(getYCoord(i)) + ", " +
+			// floatf.format(getZCoord(i)) + ")");
+			// }
 			if (biasNeurons != null) {
 				out.append(floatf.format(biasNeurons.getBias(i)));
 			}
 			if (paramNames != null) {
 				if (nn.getNeurons().getComponentConfiguration(i) != null) {
 					out.append("\t" + nn.getNeurons().getComponentConfigurationIndex(i) + "\t" + ArrayUtil.toString(nn.getNeurons().getComponentConfiguration(i).getParameterValues(), "\t", floatf));
-				}
-				else {
+				} else {
 					out.append("<no config>");
 				}
 			}
 			out.append("\n");
 		}
-		
+
 		if (nn.getNeurons().getConfigurationCount() > 0) {
 			out.append("\n\nNeuron configurations:\n");
 			for (int p = 0; p < paramNames.length; p++) {
@@ -540,7 +525,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				out.append("\t" + ArrayUtil.toString(nn.getNeurons().getConfiguration(i).getParameterValues(), ",\t", floatf) + "\n");
 			}
 		}
-		
+
 		out.append("\nSynapses:");
 		out.append("\n\tpre > post\tEnabled\tweight");
 		paramNames = nn.getSynapses().getConfigSingleton() != null ? nn.getSynapses().getConfigSingleton().getParameterNames() : null;
@@ -557,24 +542,26 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			String preType = isInput(pre) ? "i" : isOutput(pre) ? "o" : "h";
 			String postType = isInput(post) ? "i" : isOutput(post) ? "o" : "h";
 			String enabled = nn.getSynapses().isNotUsed(i) ? "0" : "1";
-			//if (!nn.getSynapses().isNotUsed(i)) {
-			//	System.err.println(i + "\t" + nn.getSynapses().getEfficacy(i) + "\t " + nn.getSynapses().getInitialEfficacy(i) + "\t " + nn.getSynapses().getComponentConfiguration(i).getParameterValue("n"));
-			//}
+			// if (!nn.getSynapses().isNotUsed(i)) {
+			// System.err.println(i + "\t" + nn.getSynapses().getEfficacy(i) + "\t " +
+			// nn.getSynapses().getInitialEfficacy(i) + "\t " +
+			// nn.getSynapses().getComponentConfiguration(i).getParameterValue("n"));
+			// }
 			String efficacy = floatf.format(nn.getSynapses().getInitialEfficacy(i));
 			String zero = nn.getSynapses().getInitialEfficacy(i) == 0 ? "z" : " ";
-			
+
 			String key = intf.format(pre) + ":" + intf.format(post) + ":" + intf.format(i);
 			String value = preType + ":" + pre + " > " + postType + ":" + post + "\t" + enabled + "\t" + efficacy + zero;
 			if (paramNames != null && nn.getSynapses().getComponentConfiguration(i) != null) {
 				value += "\t" + nn.getSynapses().getComponentConfigurationIndex(i) + "\t" + ArrayUtil.toString(nn.getSynapses().getComponentConfiguration(i).getParameterValues(), "\t", floatf);
 			}
-			//sortedSynapses.put(key, value);			
+			// sortedSynapses.put(key, value);
 			sortedSynapses.put(nfInt.format(i), value);
 		}
 		for (String cs : sortedSynapses.values()) {
 			out.append("\n\t" + cs);
 		}
-		
+
 		if (nn.getSynapses().getConfigurationCount() > 0) {
 			out.append("\n\nSynapse configurations:\n");
 			for (int p = 0; p < paramNames.length; p++) {
@@ -585,7 +572,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				out.append("\t" + ArrayUtil.toString(nn.getSynapses().getConfiguration(i).getParameterValues(), ",\t", floatf) + "\n");
 			}
 		}
-		
+
 		out.append("\n");
 		return out.toString();
 	}

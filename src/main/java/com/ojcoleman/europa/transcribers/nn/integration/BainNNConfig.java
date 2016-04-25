@@ -26,7 +26,6 @@ public class BainNNConfig extends NNConfig<BainParametrisedGeneType, BainParamet
 		super(config);
 	}
 
-	
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("simulationResolution", simulationResolution);

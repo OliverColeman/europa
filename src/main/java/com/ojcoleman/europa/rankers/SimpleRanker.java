@@ -30,36 +30,35 @@ public class SimpleRanker<G extends Genotype<?>, F extends Function<?, ?>> exten
 	 */
 	public SimpleRanker(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
+
 		this.getParentComponent(Run.class).monitor(this);
 	}
-	
+
 	@Override
 	public void rank(Population<G, F> population) {
 		Set<EvaluationDescription> evDescs = population.getMembers().iterator().next().evaluationData.getFitnessResults().keySet();
 		if (evDescs.size() != 1) {
 			throw new IllegalArgumentException("The SimpleRanker can only be used when a single fitness evaluation is defined.");
 		}
-		// Get a reference to the one and only EvaluationDescription. 
+		// Get a reference to the one and only EvaluationDescription.
 		EvaluationDescription ed = evDescs.iterator().next();
-		
+
 		TreeMultimap<Double, Individual<?, ?>> fitnessIndividualMap = TreeMultimap.create();
 		for (Individual<?, ?> ind : population.getMembers()) {
 			double fitness = ind.evaluationData.getFitnessResults().get(ed);
 			fitnessIndividualMap.put(fitness, ind);
 		}
-		
+
 		int rank = 0;
 		Individual<?, ?> fittest = null;
 		for (Individual<?, ?> ind : fitnessIndividualMap.values()) {
 			ind.setRank(rank++);
 			fittest = ind;
 		}
-		
+
 		this.fireEvent(Event.RankingFinished, fittest);
 	}
-	
-	
+
 	/**
 	 * Ranker event types.
 	 */

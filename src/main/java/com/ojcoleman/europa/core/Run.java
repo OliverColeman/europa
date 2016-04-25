@@ -33,7 +33,6 @@ import com.thoughtworks.xstream.XStream;
 import com.google.common.collect.Table;
 import com.ojcoleman.europa.configurable.Component;
 
-
 /**
  * <p>
  * Initiates and manages an evolutionary run, implementing the basic core cycle of evaluating a population and then
@@ -64,7 +63,6 @@ import com.ojcoleman.europa.configurable.Component;
 public class Run extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Run.class);
 
-	
 	@Parameter(description = "The path(s) to the original configuration file(s) (.json extension). NOTE: this is informational only, setting it has no effect.", optional = true)
 	protected String[] configFilePaths;
 
@@ -76,9 +74,10 @@ public class Run extends ComponentBase {
 
 	@Parameter(description = "The default format for printing floating point numbers. Pattern string format is defined by java.text.DecimalFormat.", defaultValue = "0.0000")
 	protected DecimalFormatConfigurable defaultNumberFormat;
-	
+
 	/**
-	 * Static reference to the (most recent) {@link #defaultNumberFormat}. This should only be used in classes which do not have a reference to the Component hierarchy. 
+	 * Static reference to the (most recent) {@link #defaultNumberFormat}. This should only be used in classes which do
+	 * not have a reference to the Component hierarchy.
 	 */
 	protected static DecimalFormat defaultNumberFormatStatic;
 
@@ -105,11 +104,10 @@ public class Run extends ComponentBase {
 
 	@Component(description = "Components for monitoring the evolutionary process.", defaultClass = OverviewMonitor.class)
 	protected Monitor[] monitors;
-	
+
 	@Configurable(description = "Configuration for utility class to perform operations in parallel.", defaultClass = Parallel.class)
 	protected Parallel parallel;
-	
-	
+
 	/**
 	 * The current iteration/generation.
 	 */
@@ -127,9 +125,9 @@ public class Run extends ComponentBase {
 	 * If set then this Run will stop (exit {@link #mainLoop()} when the current cycle is complete.
 	 */
 	protected boolean stop;
-	
+
 	private final List<Evaluator> evaluatorsList;
-	
+
 	// Running average of how long each iteration takes in seconds.
 	private double avgIterationTime;
 
@@ -138,13 +136,13 @@ public class Run extends ComponentBase {
 	 */
 	public Run(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
+
 		defaultNumberFormatStatic = defaultNumberFormat;
 
 		if (savePath == null || savePath.equals("")) {
 			savePath = getName();
 		}
-		
+
 		evaluatorsList = Collections.unmodifiableList(Arrays.asList(evaluators));
 
 		// if (singleton != null) {
@@ -164,9 +162,9 @@ public class Run extends ComponentBase {
 		random = this.newGenericInstance(randomClass);
 
 		currentIteration = 0;
-		
+
 		monitor(this);
-		
+
 		// If we should save the run state periodically.
 		if (saveFrequency > 0) {
 			addEventListener(new Observer() {
@@ -186,7 +184,7 @@ public class Run extends ComponentBase {
 				}
 			});
 		}
-		
+
 		this.fireEvent(Event.Initialised);
 	}
 
@@ -205,7 +203,7 @@ public class Run extends ComponentBase {
 	protected void mainLoop() {
 		// Get a reference to the Population Component.
 		Population<?, ?> population = transcriber.getPopulation();
-		
+
 		// If this is the first iteration.
 		if (currentIteration == 0) {
 			// Create initial population.
@@ -213,28 +211,28 @@ public class Run extends ComponentBase {
 		}
 
 		double prevTime = System.currentTimeMillis();
-		
+
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
 			this.fireEvent(Event.IterationBegin, currentIteration);
-			
+
 			// Evaluate the population (transcribing from genotype to phenotype as necessary).
 			// Return value of true indicates we should terminate.
 			stop |= population.evaluate();
-			
+
 			// Produce a ranking over the population, if applicable.
 			population.rank();
-				
+
 			// Speciate population if applicable.
 			population.speciate();
-			
+
 			// Don't produce new generation if we're terminating.
 			// (We still rank and speciate as this info might be useful).
 			if (!stop) {
 				// Evolve population.
 				population.evolve();
 			}
-			
+
 			// Time keeping.
 			double currentTime = System.currentTimeMillis();
 			double duration = (currentTime - prevTime) / 1000d;
@@ -243,21 +241,20 @@ public class Run extends ComponentBase {
 				avgIterationTime = duration;
 			else
 				avgIterationTime = avgIterationTime * 0.9 + duration * 0.1;
-			
+
 			this.fireEvent(Event.IterationComplete, currentIteration);
-			
+
 			currentIteration++;
 		}
 	}
-	
-	
+
 	/**
 	 * Get a reference to the Transcriber component.
 	 */
 	public Transcriber<?, ?> getTranscriber() {
 		return transcriber;
 	}
-	
+
 	/**
 	 * Get a reference to the Population component (specified in the Transcriber).
 	 */
@@ -265,14 +262,13 @@ public class Run extends ComponentBase {
 		return transcriber.getPopulation();
 	}
 
-
 	/**
 	 * Get a reference to the evaluators (as an unmodifiable list).
-	 */	
+	 */
 	public List<Evaluator> getEvaluators() {
 		return evaluatorsList;
 	}
-	
+
 	/**
 	 * Get a reference to the utility component for performing operations in parallel.
 	 */
@@ -280,7 +276,6 @@ public class Run extends ComponentBase {
 		return parallel;
 	}
 
-	
 	/**
 	 * If set then this Run will stop when the current cycle is complete.
 	 */
@@ -296,7 +291,6 @@ public class Run extends ComponentBase {
 		return stop;
 	}
 
-	
 	/**
 	 * Returns the current iteration/generation.
 	 */
@@ -333,7 +327,7 @@ public class Run extends ComponentBase {
 			}
 			outputDirectory = outputDirectory + (id == 0 ? "" : "_" + formatter.format(id));
 		}
-		
+
 		if (!Files.exists(Paths.get(outputDirectory))) {
 			try {
 				Files.createDirectories(Paths.get(outputDirectory));
@@ -341,32 +335,31 @@ public class Run extends ComponentBase {
 				logger.error(" Could not create output directory.", e);
 			}
 		}
-		
+
 		return Paths.get(outputDirectory);
 	}
-	
+
 	/**
 	 * Returns the primary evaluator, which is the first evaluator in the list of evaluators by default.
 	 */
 	public Evaluator getPrimaryEvaluator() {
 		return evaluators[0];
 	}
-	
+
 	/**
-	 * Set the {@link #monitors} to monitor the given Observable.
-	 * This is typically called by the Observable, for example with:
-	 * <code>
+	 * Set the {@link #monitors} to monitor the given Observable. This is typically called by the Observable, for
+	 * example with: <code>
 	 * this.getParentComponent(Run.class).monitor(this);
 	 * </code>
 	 */
 	public void monitor(Observable o) {
-		// Use getSubComponent as this method may be called from the constructors of other Components before monitor is initialised.
-		Monitor[] monitors =  (Monitor[]) getSubComponent("monitors", this);
+		// Use getSubComponent as this method may be called from the constructors of other Components before monitor is
+		// initialised.
+		Monitor[] monitors = (Monitor[]) getSubComponent("monitors", this);
 		for (Monitor monitor : monitors) {
 			o.addEventListener(monitor);
 		}
 	}
-	
 
 	/**
 	 * Returns the path to the (first) original configuration file, or null if none specified.
@@ -377,7 +370,6 @@ public class Run extends ComponentBase {
 		}
 		return null;
 	}
-	
 
 	/**
 	 * @return The default formatter for printing floating point numbers.
@@ -385,22 +377,22 @@ public class Run extends ComponentBase {
 	public DecimalFormat getDefaultNumberFormat() {
 		return defaultNumberFormat;
 	}
-	
+
 	/**
-	 * @return Reference to the formatter returned by {@link #getDefaultNumberFormat()} for the most recently instantiated Base. 
-	 * This should only be used in classes which do not have a reference to the Component hierarchy. 
+	 * @return Reference to the formatter returned by {@link #getDefaultNumberFormat()} for the most recently
+	 *         instantiated Base. This should only be used in classes which do not have a reference to the Component
+	 *         hierarchy.
 	 */
 	public static DecimalFormat getDefaultNumberFormatStatic() {
 		return defaultNumberFormatStatic;
 	}
-	
-	
+
 	@Override
 	public List<ComponentStateLog> getState() {
 		List<ComponentStateLog> stats = new ArrayList<>();
-		
+
 		stats.add(new ComponentStateLog("General", "Iteration", currentIteration));
-		
+
 		Runtime runtime = Runtime.getRuntime();
 		long memTotal = Math.round(runtime.totalMemory() / 1048576);
 		long memFree = Math.round(runtime.freeMemory() / 1048576);
@@ -408,15 +400,15 @@ public class Run extends ComponentBase {
 		stats.add(new ComponentStateLog("General", "Memory", "Available", memTotal, "MB"));
 		stats.add(new ComponentStateLog("General", "Memory", "Free", memFree, "MB"));
 		stats.add(new ComponentStateLog("General", "Memory", "Used", memUsed, "MB"));
-		
+
 		stats.add(new ComponentStateLog("General", "Time", "Iteration duration", avgIterationTime, "seconds"));
-		
+
 		double eta = avgIterationTime * (maximumIterations - currentIteration);
 		stats.add(new ComponentStateLog("General", "Time", "Estimated remaining", eta, "seconds"));
-		
+
 		return stats;
 	}
-	
+
 	/**
 	 * Run event types.
 	 */
@@ -426,10 +418,10 @@ public class Run extends ComponentBase {
 		 * individuals generated from fittest) is starting.
 		 */
 		IterationBegin,
-		
+
 		/**
 		 * An event type indicating that an iteration of the main cycle (evaluation of individuals; replacement of some
-		 * individuals generated from fittest) is complete. This event is fired before incrementing the iteration 
+		 * individuals generated from fittest) is complete. This event is fired before incrementing the iteration
 		 * counter {@link Run#getCurrentIteration()}.
 		 */
 		IterationComplete,
@@ -437,8 +429,8 @@ public class Run extends ComponentBase {
 		/**
 		 * An event type indicating that this Run is set to stop when the current cycle is complete.
 		 */
-		Stopping, 
-		
+		Stopping,
+
 		/**
 		 * An event type indicating that this Run and all its sub-Components have finished initialising.
 		 */

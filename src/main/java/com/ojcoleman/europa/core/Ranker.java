@@ -18,8 +18,8 @@ public abstract class Ranker<G extends Genotype<?>, F extends Function<?, ?>> ex
 	}
 
 	/**
-	 * Assign rank values ({@link Individual#setRank(double)}) to the members of the given population.
-	 * A higher rank value indicates a higher overall fitness value.
+	 * Assign rank values ({@link Individual#setRank(double)}) to the members of the given population. A higher rank
+	 * value indicates a higher overall fitness value.
 	 * 
 	 * @param population The speciated (if applicable) population.
 	 */

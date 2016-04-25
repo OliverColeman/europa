@@ -65,11 +65,11 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 		}
 		List<Double> ranks = new ArrayList<>(parentsRanker.keySet());
 		List<NEATGenotype> parentsRanked = new ArrayList<>(parentsRanker.values());
-		
+
 		// If one parent dominates (all the) other(s).
 		if (ranks.get(0) > ranks.get(1)) {
 			// Child inherits all structure/genes from dominant parent.
-			//new NEATGenotype(parentsRanked.get(0), parentsRanked.get(0).getAlleles(), genericParents);
+			// new NEATGenotype(parentsRanked.get(0), parentsRanked.get(0).getAlleles(), genericParents);
 			child = parentsRanked.get(0).newInstance(parentsRanked.get(0).getAlleles(), genericParents);
 
 			// Set values for each allele in the new genotype based on all values for same allele in all parents with
@@ -95,9 +95,9 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 			// Child inherits structure/genes from all parents.
 
 			// Create an empty genotype (genes will be added one by one).
-			//new NEATGenotype(parentsRanked.get(0), new ArrayList<NEATAllele<?>>(), genericParents);
-			child = parentsRanked.get(0).newInstance(new ArrayList<NEATAllele<?>>(), genericParents); 
-			
+			// new NEATGenotype(parentsRanked.get(0), new ArrayList<NEATAllele<?>>(), genericParents);
+			child = parentsRanked.get(0).newInstance(new ArrayList<NEATAllele<?>>(), genericParents);
+
 			// Get a list of all gene IDs across all parents, with associated alleles from each parent.
 			TreeMultimap<Long, NEATAllele<?>> allAlleles = TreeMultimap.create();
 			for (NEATGenotype parent : parents) {

@@ -53,12 +53,13 @@ public abstract class Observable {
 			listener.eventOccurred(this, event, null);
 		}
 	}
-	
+
 	/**
 	 * Notifies all observers of the given event or change.
 	 * 
 	 * @param type The type of event or change. This should be tied to a constant defined in the Subject sub-class.
-	 * @param state An arbitrary object typically describing the current state of the Observable or information about the event.
+	 * @param state An arbitrary object typically describing the current state of the Observable or information about
+	 *            the event.
 	 * 
 	 * @see Observer
 	 * @see #addEventListener(Observer)

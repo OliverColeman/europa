@@ -30,34 +30,35 @@ import com.ojcoleman.europa.util.Stringer;
  * @author O. J. Coleman
  */
 public abstract class FileOrCLIMonitor extends Monitor {
-	@Parameter(description = "The name of this monitor. Output to console will be prefixed with this. Optional.", defaultValue="")
+	@Parameter(description = "The name of this monitor. Output to console will be prefixed with this. Optional.", defaultValue = "")
 	protected String name;
-	
-	@Parameter(description = "Whether to print the output to the standard output stream.", defaultValue="false")
+
+	@Parameter(description = "Whether to print the output to the standard output stream.", defaultValue = "false")
 	protected boolean printToConsole;
 
-	@Parameter(description = "The name of the file(s) to print to, or leave blank to not print to any files. "
-			+ "The filename may contain tokens that will be replaced with values. "
-			+ "Valid tokens are %itr (iteration number), %observed (class name of observed object) and %event (event name, if an enum)", optional=true)
+	@Parameter(description = "The name of the file(s) to print to, or leave blank to not print to any files. " + "The filename may contain tokens that will be replaced with values. " + "Valid tokens are %itr (iteration number), %observed (class name of observed object) and %event (event name, if an enum)", optional = true)
 	protected String printToFile;
-	
+
 	private String previousFileName;
 	private FileWriter outputFile;
 	private Run run;
 
 	public FileOrCLIMonitor(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
+
 		run = this.getParentComponent(Run.class);
 	}
-	
+
 	/**
-	 * Write the given CharSequence as a new line (for example a String) to the console and/or file according to the settings.
+	 * Write the given CharSequence as a new line (for example a String) to the console and/or file according to the
+	 * settings.
+	 * 
 	 * @param observed The subject (the object being observed). Provided for context, may be ignored.
 	 * @param event An object indicating the type of change or event, this is usually an {@Link java.lang.Enum} defined
 	 *            by the Subject. If null is given then the Observer(s) will be passed
 	 *            {@link Observable.Event.Unspecified}. Provided for context, may be ignored.
-	 * @param state An arbitrary object typically describing the current state of the Observable or information about the event. Provided for context, may be ignored.
+	 * @param state An arbitrary object typically describing the current state of the Observable or information about
+	 *            the event. Provided for context, may be ignored.
 	 * @param s The character sequence to write.
 	 * 
 	 * @see Observer#eventOccurred(Observable, Object, Object)
@@ -66,18 +67,18 @@ public abstract class FileOrCLIMonitor extends Monitor {
 		if (printToFile != null) {
 			try {
 				String eventName = event.getClass().isEnum() ? event.toString() : "";
-				String newFileName = printToFile.replace("%itr", ""+run.getCurrentIteration()).replace("%observed", observed.getClass().getSimpleName()).replace("%event", eventName);
-				
+				String newFileName = printToFile.replace("%itr", "" + run.getCurrentIteration()).replace("%observed", observed.getClass().getSimpleName()).replace("%event", eventName);
+
 				if (previousFileName == null || !previousFileName.equals(newFileName)) {
 					if (outputFile != null) {
 						outputFile.close();
 					}
-					
+
 					outputFile = new FileWriter(run.getOutputDirectory().resolve(newFileName).toFile());
-					
+
 					previousFileName = newFileName;
 				}
-				
+
 				outputFile.append(s);
 				outputFile.append("\n");
 				outputFile.flush();

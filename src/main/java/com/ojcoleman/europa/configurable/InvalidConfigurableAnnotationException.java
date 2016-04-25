@@ -9,7 +9,7 @@ public class InvalidConfigurableAnnotationException extends ConfigurableExceptio
 	public InvalidConfigurableAnnotationException(String message) {
 		super(message);
 	}
-	
+
 	public InvalidConfigurableAnnotationException(String message, Throwable cause) {
 		super(message, cause);
 	}

@@ -39,11 +39,12 @@ import com.google.common.reflect.TypeToken;
 
 /**
  * <p>
- * A base class for classes that represent a user-configurable component of the software. ComponentBase extends {@link ConfigurableBase}
- * so supports user-configurable fields, such as "value" fields and {link Prototype} fields. It also provides functionality
- * to support working with components whose sub-class may be specified at run-time, the instantiation of components which may
- * depend on other components being initialised first (and the detection of dependency cycles), organising components hierarchically, a unified approach to monitoring 
- * the state of components, and retrieving the current configuration of a component (and all-subcomponents hierarchically).
+ * A base class for classes that represent a user-configurable component of the software. ComponentBase extends
+ * {@link ConfigurableBase} so supports user-configurable fields, such as "value" fields and {link Prototype} fields. It
+ * also provides functionality to support working with components whose sub-class may be specified at run-time, the
+ * instantiation of components which may depend on other components being initialised first (and the detection of
+ * dependency cycles), organising components hierarchically, a unified approach to monitoring the state of components,
+ * and retrieving the current configuration of a component (and all-subcomponents hierarchically).
  * </p>
  * 
  * @author O. J. Coleman

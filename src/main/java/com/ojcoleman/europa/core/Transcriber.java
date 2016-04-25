@@ -16,11 +16,10 @@ import com.ojcoleman.europa.populations.SimplePopulation;
 public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?>> extends ComponentBase {
 	@Prototype(description = "The prototype configuration for the genotype.")
 	protected G genotype;
-	
+
 	@Component(description = "Component for the population of individuals.", defaultClass = SimplePopulation.class)
 	protected Population<G, F> population;
-	
-	
+
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
@@ -39,15 +38,16 @@ public abstract class Transcriber<G extends Genotype<?>, F extends Function<?, ?
 	 *            first calls to this method).
 	 */
 	public abstract F transcribe(G genotype, F function);
-	
+
 	/**
-	 * Transcribe the given genotype to a phenotype function, attempting to cast the given genotype and function, if provided, to the appropriate type.
-	 * This is useful when needing to perform a transcription from outside the generics-typed hierarchy of components. 
+	 * Transcribe the given genotype to a phenotype function, attempting to cast the given genotype and function, if
+	 * provided, to the appropriate type. This is useful when needing to perform a transcription from outside the
+	 * generics-typed hierarchy of components.
 	 */
 	public Function transcribeGeneric(Genotype g, Function f) {
 		return this.transcribe((G) g, null);
 	}
-	
+
 	/**
 	 * Generate and return a template genotype that this Transcriber knows how to transcribe. The template is used to
 	 * seed an evolutionary run.

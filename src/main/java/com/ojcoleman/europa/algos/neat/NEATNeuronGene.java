@@ -24,8 +24,8 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATNeuronGene with specified type and parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATNeuronGene with specified type and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param type The type of the neuron. Generally one of {@link NNPart#NEURON_INPUT}, {@link NNPart#NEURON_HIDDEN},
@@ -37,8 +37,8 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATNeuronGene with same type as the prototype and the specified parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATNeuronGene with same type as the prototype and the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param paramVector The parameter vector for this gene.

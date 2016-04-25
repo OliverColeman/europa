@@ -20,8 +20,9 @@ public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATNeuronAllele referencing the same underlying Gene but storing an independent copy of the original parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATNeuronAllele referencing the same underlying Gene but storing an independent copy of the original
+	 * parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
 	 * 
@@ -32,8 +33,8 @@ public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATNeuronAllele with the specified underlying Gene and storing the specified parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATNeuronAllele with the specified underlying Gene and storing the specified parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
 	 * @param gene the underlying gene for the new allele.
@@ -46,8 +47,9 @@ public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATNeuronAllele based on a specified neural network configuration and with parameter values initialised to 0.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATNeuronAllele based on a specified neural network configuration and with parameter values initialised to
+	 * 0.
 	 * 
 	 * @param gene The gene to underlie the new allele.
 	 * @param nnConfig The configuration parameters for the neural network.

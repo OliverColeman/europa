@@ -36,9 +36,9 @@ public class NEATSynapseGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are initialised
-	 * with random values.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are
+	 * initialised with random values.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param sourceID The NEAT ID of the source neuron gene.
@@ -50,8 +50,7 @@ public class NEATSynapseGene extends NEATGene {
 		this.sourceID = sourceID;
 		this.destinationID = destinationID;
 	}
-	
-	
+
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		super.getStringableMap(map);

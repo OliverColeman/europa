@@ -13,9 +13,11 @@ import com.ojcoleman.europa.util.Stringer;
 public interface Stringable {
 	/**
 	 * Populate the given map, which is typically to be converted into a String by {@link Stringer#toString(Object)}.
-	 * When overriding this method in a sub-class the super-class implementation should usually be called from the overriding implementation.
+	 * When overriding this method in a sub-class the super-class implementation should usually be called from the
+	 * overriding implementation.
 	 * 
-	 * @param map Mapping from descriptive labels to Objects that can be converted into a String by {@link Stringer#toString(Object)}.
+	 * @param map Mapping from descriptive labels to Objects that can be converted into a String by
+	 *            {@link Stringer#toString(Object)}.
 	 */
 	public void getStringableMap(Map<String, Object> map);
 }

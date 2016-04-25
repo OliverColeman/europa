@@ -25,26 +25,26 @@ import com.ojcoleman.europa.configurable.Parameter;
  */
 public class Parallel extends ConfigurableBase {
 	private final static Logger logger = LoggerFactory.getLogger(Evolver.class);
-	
-	@Parameter(description="The number of threads to use for parallel operations. If set to 0 or not set then the number of CPU cores is used.", minimumValue = "0", defaultValue="0")
+
+	@Parameter(description = "The number of threads to use for parallel operations. If set to 0 or not set then the number of CPU cores is used.", minimumValue = "0", defaultValue = "0")
 	private int threadCount;
-	
+
 	private ExecutorService executor;
 
-	
 	public Parallel(Configuration config) {
 		super(config);
-		
+
 		if (threadCount <= 0) {
 			threadCount = Runtime.getRuntime().availableProcessors();
 		}
-		
+
 		executor = Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(Parallel.class.getName()));
 	}
-	
 
 	/**
-	 * Perform the given {@link Parallel.Operation} on the given elements. Returns when all elements have been processed.
+	 * Perform the given {@link Parallel.Operation} on the given elements. Returns when all elements have been
+	 * processed.
+	 * 
 	 * @param elements The Collection of elements to apply the operation to.
 	 * @param threads The number of threads to use. If set to 0 then the default number will be used.
 	 * @param operation The operation to apply to each element.
@@ -52,9 +52,11 @@ public class Parallel extends ConfigurableBase {
 	public <T> void foreach(final Collection<T> elements, final Operation<T> operation) {
 		submitAndWait(elements, operation, elements.size());
 	}
-	
+
 	/**
-	 * Perform the given {@link Parallel.Operation} on the given elements. Returns when all elements have been processed.
+	 * Perform the given {@link Parallel.Operation} on the given elements. Returns when all elements have been
+	 * processed.
+	 * 
 	 * @param elements An Iterator over elements to apply the operation to.
 	 * @param threads The number of threads to use. If set to 0 then the default number will be used.
 	 * @param operation The operation to apply to each element.
@@ -62,8 +64,7 @@ public class Parallel extends ConfigurableBase {
 	public <T> void foreach(final Iterable<T> elements, final Operation<T> operation) {
 		submitAndWait(elements, operation, 8);
 	}
-	
-	
+
 	private <T> void submitAndWait(final Iterable<T> elements, final Operation<T> operation, int size) {
 		try {
 			List<Future<Void>> futures = executor.invokeAll(createCallables(elements, operation, size));
@@ -93,7 +94,6 @@ public class Parallel extends ConfigurableBase {
 		return callables;
 	}
 
-	
 	/**
 	 * An operation to be performed on a single element. The perform method will be invoked for each element in the
 	 * given collection, with the element passed as the parameter.
@@ -101,23 +101,24 @@ public class Parallel extends ConfigurableBase {
 	public static interface Operation<T> {
 		public void perform(T parameter);
 	}
-	
-	
-	
+
 	/**
-	 * ThreadFactory to create daemon threads. Uses the factory given by {@link Executors#defaultThreadFactory()} to create the threads, then makes them daemons.
+	 * ThreadFactory to create daemon threads. Uses the factory given by {@link Executors#defaultThreadFactory()} to
+	 * create the threads, then makes them daemons.
 	 */
 	public static class DaemonThreadFactory implements ThreadFactory {
 		final String name;
 		final ThreadGroup group;
 		final AtomicInteger threadNumber = new AtomicInteger(1);
-		
+
 		public DaemonThreadFactory() {
 			this("DaemonThreadFactory");
 		}
+
 		public DaemonThreadFactory(String name) {
 			this(name, new ThreadGroup(name));
 		}
+
 		public DaemonThreadFactory(String name, ThreadGroup group) {
 			this.name = name;
 			this.group = group;

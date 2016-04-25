@@ -21,9 +21,9 @@ import com.ojcoleman.europa.core.Stringable;
 import com.ojcoleman.europa.util.Stringer;
 
 /**
- * This class implements the non-dominated sorting selection method (according to rank and then crowding
- * comparison operator) based on the multi-objective genetic algorithm NSGA-II as described in DEB, Kalyanmoy ; PRATAP,
- * Amrit ; AGARWAL, Sameer A. ; MEYARIVAN, T.: "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II". In: IEEE
+ * This class implements the non-dominated sorting selection method (according to rank and then crowding comparison
+ * operator) based on the multi-objective genetic algorithm NSGA-II as described in DEB, Kalyanmoy ; PRATAP, Amrit ;
+ * AGARWAL, Sameer A. ; MEYARIVAN, T.: "A Fast and Elitist Multiobjective Genetic Algorithm: NSGA-II". In: IEEE
  * Transactions on Evolutionary Computation, vol. 6, no. 2, April 2002, pp. 182-197.
  * 
  * This code is based on JNSGA2 by Joachim Melcher, Institut AIFB, Universitaet Karlsruhe (TH), Germany
@@ -37,14 +37,14 @@ public class NSGAII<G extends Genotype<?>, F extends Function<?, ?>> extends Ran
 	@Override
 	public void rank(Population<G, F> population) {
 		List<List<Individual<G, F>>> fronts = fastNonDominatedSort(population.getMembers());
-		
+
 		// Assign ranks to members from each successive pareto front. The first front is the highest ranked.
 		int rank = population.size();
 		for (List<Individual<G, F>> front : fronts) {
 			// Sort within fronts/ranks by crowding distance, highest distance (best) to lowest.
 			sortByCrowdedComparison(front);
 			Collections.reverse(front);
-			
+
 			for (Individual<G, F> ind : front) {
 				ind.setRank(rank);
 				rank--;
@@ -131,14 +131,14 @@ public class NSGAII<G extends Genotype<?>, F extends Function<?, ?>> extends Ran
 
 	private void sortByCrowdedComparison(List<Individual<G, F>> individuals) {
 		List<IndWrapper> crowdingDistances = new ArrayList<>(individuals.size());
-		
+
 		// Set initial crowding distances to 0.
 		for (Individual<G, F> ind : individuals) {
 			crowdingDistances.add(new IndWrapper(ind));
 		}
-		
+
 		int last = individuals.size() - 1;
-		for (EvaluationDescription evDesc : individuals.get(0).evaluationData.getFitnessResults().keySet()) {	
+		for (EvaluationDescription evDesc : individuals.get(0).evaluationData.getFitnessResults().keySet()) {
 			// Sort using this objective.
 			Collections.sort(individuals, new FitnessValueComparator(evDesc));
 
@@ -155,23 +155,23 @@ public class NSGAII<G extends Genotype<?>, F extends Function<?, ?>> extends Ran
 				}
 			}
 		}
-		
+
 		Collections.sort(crowdingDistances);
-		
+
 		individuals.clear();
 		for (IndWrapper ind : crowdingDistances) {
 			individuals.add(ind.individual);
 		}
 	}
-	
+
 	private class IndWrapper implements Comparable<IndWrapper>, Stringable {
 		public final Individual<G, F> individual;
 		public double crowdingDistance = 0;
-		
+
 		public IndWrapper(Individual<G, F> individual) {
 			this.individual = individual;
 		}
-		
+
 		@Override
 		public int compareTo(IndWrapper other) {
 			if (crowdingDistance < other.crowdingDistance) {
@@ -188,7 +188,6 @@ public class NSGAII<G extends Genotype<?>, F extends Function<?, ?>> extends Ran
 			}
 			return 0;
 		}
-		
 
 		@Override
 		public void getStringableMap(Map<String, Object> map) {
@@ -196,12 +195,12 @@ public class NSGAII<G extends Genotype<?>, F extends Function<?, ?>> extends Ran
 			map.put("crowdingDistance", crowdingDistance);
 		}
 	}
-	
+
 	/**
-	 * Returns true iff the first individual dominates the second individual, i.e. the first is at least as good as the second
-	 * in all fitness objectives and for at least one objective it is better (has higher fitness value).
-	 * Special cases: If the first individual has any NaN results then it cannot dominate the second.
-     * If the second individual has any NaN results and the first does not then the first dominates the second.
+	 * Returns true iff the first individual dominates the second individual, i.e. the first is at least as good as the
+	 * second in all fitness objectives and for at least one objective it is better (has higher fitness value). Special
+	 * cases: If the first individual has any NaN results then it cannot dominate the second. If the second individual
+	 * has any NaN results and the first does not then the first dominates the second.
 	 */
 	public boolean dominates(Individual<G, F> ind1, Individual<G, F> otherIndividual) {
 		// Check for NaN results first.

@@ -141,7 +141,7 @@ public class Vector implements Stringable {
 
 	/**
 	 * Set the value at the specified index. If the element at the given index is intended to store an integer then the
-	 * given value will be rounded. If the value is outside of the bounds specified by the {@link #metadata} then it 
+	 * given value will be rounded. If the value is outside of the bounds specified by the {@link #metadata} then it
 	 * will be clamped to the lower or upper bound as necessary.
 	 * 
 	 * @throws UnsupportedOperationException if the values are not {@link #mutable} or if the value at the specified
@@ -155,7 +155,7 @@ public class Vector implements Stringable {
 		value = metadata.bound(index).clamp(value);
 		setIgnoreMutable(index, value);
 	}
-	
+
 	private void setIgnoreMutable(int index, double value) {
 		if (metadata.isInteger(index)) {
 			if (value > maximumIntegerValue || value < -maximumIntegerValue) {
@@ -214,7 +214,7 @@ public class Vector implements Stringable {
 			set(i, newValues[i]);
 		}
 	}
-	
+
 	private void setValuesIgnoreMutable(double[] newValues) {
 		if (newValues.length != values.length) {
 			throw new IllegalArgumentException("The source values array and the Vector must be of equal length.");
@@ -232,9 +232,9 @@ public class Vector implements Stringable {
 		return Collections.unmodifiableList(Doubles.asList(values));
 	}
 
-
 	/**
-	 * Get a reference to the underlying values array. Be careful. Do not modify the values if {@link #mutable} is not set.
+	 * Get a reference to the underlying values array. Be careful. Do not modify the values if {@link #mutable} is not
+	 * set.
 	 */
 	public double[] getValuesReference() {
 		return values;
@@ -295,11 +295,10 @@ public class Vector implements Stringable {
 		for (Vector v : vectors) {
 			if (avg == null) {
 				avg = new Vector(v.metadata);
-			}
-			else if (!avg.metadata.equals(v.metadata)) {
+			} else if (!avg.metadata.equals(v.metadata)) {
 				throw new IllegalArgumentException("Can not average over Vectors with different metadata.");
 			}
-			
+
 			for (int i = 0; i < avg.size(); i++) {
 				avg.values[i] += v.values[i];
 			}
@@ -309,7 +308,6 @@ public class Vector implements Stringable {
 		}
 		return avg;
 	}
-	
 
 	@Override
 	public void getStringableMap(Map<String, Object> map) {

@@ -43,8 +43,9 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorAllele referencing the same underlying Gene but storing an independent copy of the Vector in the original allele.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorAllele referencing the same underlying Gene but storing an independent copy of the Vector in the
+	 * original allele.
 	 * 
 	 * @param paramVector The vector for the new allele, copied by reference.
 	 * 
@@ -56,8 +57,8 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorAllele with the specified underlying Gene and storing the specified Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorAllele with the specified underlying Gene and storing the specified Vector.
 	 * 
 	 * @param allele The allele to copy.
 	 * @param gene the underlying gene for the new allele.
@@ -95,20 +96,22 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 		}
 		return map;
 	}
-	
+
 	/**
-	 * Returns the sum of the absolute differences between corresponding values in this and the given VectorAllele, ignoring the "typeReference" parameter if present.
+	 * Returns the sum of the absolute differences between corresponding values in this and the given VectorAllele,
+	 * ignoring the "typeReference" parameter if present.
 	 * 
 	 * @param other The VectorAllele to get the difference from.
-	 * @param normalise Whether the difference for each element should be normalised to a unit range, and the sum of the differences should be normalised to a unit range.
+	 * @param normalise Whether the difference for each element should be normalised to a unit range, and the sum of the
+	 *            differences should be normalised to a unit range.
 	 * 
 	 * @throws IllegalArgumentException If this and the given VectorAllele have different Vector metadata.
-	 */ 
+	 */
 	public double difference(VectorAllele<?> other, boolean normalise) {
 		if (!vector.metadata.equals(other.vector.metadata)) {
 			throw new IllegalArgumentException("Can't compute difference of Vectors with different metadata.");
 		}
-		
+
 		double diff = 0;
 		if (!normalise) {
 			for (int i = 0; i < vector.metadata.size(); i++) {
@@ -116,8 +119,7 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 					diff += Math.abs(vector.get(i) - other.vector.get(i));
 				}
 			}
-		}
-		else {
+		} else {
 			for (int i = 0; i < vector.metadata.size(); i++) {
 				if (!vector.metadata.label(i).equals("typeReference")) {
 					Interval<?> bounds = (IntervalDouble) vector.metadata.bound(i);

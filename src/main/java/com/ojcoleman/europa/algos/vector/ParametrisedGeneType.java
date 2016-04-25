@@ -41,11 +41,11 @@ public class ParametrisedGeneType extends ConfigurableBase {
 	 */
 	public final int paramsTypeCount;
 
-
 	public ParametrisedGeneType(Configuration config) throws Exception {
 		super(config);
-		
-		// If a dummy instance is being set-up then a default element will be added to paramsType. However this causes an exception below, so make paramsType empty.
+
+		// If a dummy instance is being set-up then a default element will be added to paramsType. However this causes
+		// an exception below, so make paramsType empty.
 		if (config.isDummy) {
 			paramsType = VectorMetadata.EMPTY;
 		}
@@ -128,7 +128,6 @@ public class ParametrisedGeneType extends ConfigurableBase {
 		return new Vector(paramsType);
 	}
 
-	
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("paramsGene", paramsGene);

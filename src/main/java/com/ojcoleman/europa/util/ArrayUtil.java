@@ -21,7 +21,7 @@ public class ArrayUtil {
 		}
 		return c;
 	}
-	
+
 	/**
 	 * @param a The array to print.
 	 * @param separator A string to separate each element.

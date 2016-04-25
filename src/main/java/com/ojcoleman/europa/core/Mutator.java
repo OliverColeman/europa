@@ -31,8 +31,8 @@ public abstract class Mutator<G extends Genotype<?>> extends ComponentBase {
 	 * Determine if this mutator should be applied to the given genotype. This may be influenced by randomised processes
 	 * so can not be relied upon to return the same value for the same genotype. This default implementation checks if
 	 * the genotype is a clone of a single parent or a child of multiple parents and then compares either
-	 * {@link #applyPercentageClones} or {@link #applyPercentageRecombined} accordingly to a randomly generated number to
-	 * determine if this mutator should be applied.
+	 * {@link #applyPercentageClones} or {@link #applyPercentageRecombined} accordingly to a randomly generated number
+	 * to determine if this mutator should be applied.
 	 */
 	public boolean shouldMutate(G genotype) {
 		if (genotype.parents.size() == 1) {

@@ -13,10 +13,13 @@ import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
 
 /**
- * <p>Base class for representations of NEAT alleles.</p>
+ * <p>
+ * Base class for representations of NEAT alleles.
+ * </p>
  * <p>
  * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
- * and which should generally just call <em>super()</em> with the allele to copy.</strong> See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+ * and which should generally just call <em>super()</em> with the allele to copy.</strong> See
+ * {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
  * <p>
  * 
  * @author O. J. Coleman
@@ -35,10 +38,11 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	public NEATAllele(Configuration config) {
 		super(config);
 	}
-	
+
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATAllele referencing the same underlying Gene but storing an independent copy of the original parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATAllele referencing the same underlying Gene but storing an independent copy of the original parameter
+	 * Vector.
 	 * 
 	 * @param prototype The allele to copy.
 	 * 
@@ -49,8 +53,8 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * NEATAllele with the specified underlying Gene and storing the specified parameter Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new NEATAllele with the specified underlying Gene and storing the specified parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
 	 * @param gene the underlying gene for the new allele.
@@ -84,8 +88,7 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	public void setEnabled(boolean enabled) {
 		this.enabled = enabled;
 	}
-	
-	
+
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		super.getStringableMap(map);

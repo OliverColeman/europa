@@ -76,7 +76,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	 */
 	public NEATGenotype(NEATGenotype prototype) {
 		super(prototype);
-		
+
 		init();
 	}
 

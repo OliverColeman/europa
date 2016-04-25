@@ -32,8 +32,8 @@ public abstract class VectorGene extends Gene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorGene with specified type(s) and Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorGene with specified type(s) and Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param type The type(s) of the gene, if applicable to the evolutionary algorithm in use. Usually these are enum
@@ -52,8 +52,8 @@ public abstract class VectorGene extends Gene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a new
-	 * VectorGene with the specified Vector.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * new VectorGene with the specified Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
 	 * @param vector The vector for this gene. Copied by reference.
@@ -89,7 +89,6 @@ public abstract class VectorGene extends Gene {
 	public int hashCode() {
 		return vector.hashCode();
 	}
-	
 
 	@Override
 	public void getStringableMap(Map<String, Object> map) {

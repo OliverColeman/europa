@@ -15,8 +15,7 @@ public abstract class Recombiner<G extends Genotype<?>> extends ComponentBase {
 
 	@Parameter(description = "The relative proportion of children to produce with this recombiner.", defaultValue = "1")
 	protected double relativeProportion;
-	
-	
+
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
@@ -25,7 +24,8 @@ public abstract class Recombiner<G extends Genotype<?>> extends ComponentBase {
 	}
 
 	/**
-	 * Produce a new genotype from the given genotypes. This method must be able to accept at least two parents (and up to {@link #parentCountMaximum()).
+	 * Produce a new genotype from the given genotypes. This method must be able to accept at least two parents (and up
+	 * to {@link #parentCountMaximum()).
 	 * 
 	 * @param parents The parent genotypes.
 	 */
@@ -35,7 +35,6 @@ public abstract class Recombiner<G extends Genotype<?>> extends ComponentBase {
 	 * Return the maximum number of parents that {@link #recombine(Genotype...)} accepts. Must be >= 2.
 	 */
 	public abstract int parentCountMaximum();
-	
 
 	/**
 	 * Returns true iff the children produced by this recombiner should not be mutated.

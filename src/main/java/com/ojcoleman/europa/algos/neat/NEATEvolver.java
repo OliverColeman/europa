@@ -42,7 +42,6 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 	private Run run;
 	private NNConfig nnConfig;
 
-	
 	public NEATEvolver(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
@@ -52,7 +51,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 
 		run = getParentComponent(Run.class);
 	}
-	
+
 	private NNConfig getNNConfig() {
 		if (nnConfig == null) {
 			nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
@@ -60,7 +59,6 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		return nnConfig;
 	}
 
-	
 	/**
 	 * Create a new neuron allele for a neuron that is replacing the given synapse (see {@link NEATNeuronAddMutator}).
 	 * If a previous mutation added a neuron by splitting this synapse then the gene from that neuron will be reused.
@@ -77,7 +75,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		// it.
 		NEATNeuronGene gene = synapseIDToNeuronGene.get(synapseID, geneParams);
 		if (gene == null) {
-			//new NEATNeuronGene(gene, NNPart.NEURON_HIDDEN, run.getNextID(), geneParams);
+			// new NEATNeuronGene(gene, NNPart.NEURON_HIDDEN, run.getNextID(), geneParams);
 			gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_HIDDEN, geneParams);
 
 			synapseIDToNeuronGene.put(synapseID, geneParams, gene);
@@ -107,7 +105,7 @@ public class NEATEvolver extends DefaultEvolver<NEATGenotype> {
 		if (gene == null) {
 			// new NEATSynapseGene(genotype.synapseGenePrototype, sourceID, destinationID, geneParams);
 			gene = genotype.synapseGenePrototype.newInstance(sourceID, destinationID, geneParams);
-			
+
 			connectionToGene.put(neuronIDs, geneParams, gene);
 		}
 		// new NEATSynapseAllele(genotype.synapseAllelePrototype, gene, nnConfig.synapse().createAlleleVector());

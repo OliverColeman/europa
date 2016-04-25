@@ -7,9 +7,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is 
- * for a user configurable object, e.g. via a JSON configuration file. The field must be of a type
- * that extends  {@link com.ojcoleman.europa.configurable.ConfigurableBase}. See {@link ConfigurableBase} for more information.
+ * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is for a user
+ * configurable object, e.g. via a JSON configuration file. The field must be of a type that extends
+ * {@link com.ojcoleman.europa.configurable.ConfigurableBase}. See {@link ConfigurableBase} for more information.
  * 
  * @see Parameter
  * @see Prototype
@@ -25,10 +25,11 @@ public @interface Configurable {
 	 * Description for the prototype.
 	 */
 	String description();
-	
+
 	/**
 	 * Optional. The default implementation for the sub-component (if "class" not specified in configuration file).
 	 */
 	Class<?> defaultClass() default Void.class;
-	// We're setting the default to Void.class as a work-around to Java annotations not allowing null values for a default value.
+	// We're setting the default to Void.class as a work-around to Java annotations not allowing null values for a
+	// default value.
 }

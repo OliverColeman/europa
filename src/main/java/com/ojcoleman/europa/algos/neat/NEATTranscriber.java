@@ -36,12 +36,11 @@ import com.ojcoleman.europa.util.Stringer;
 public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 	@Prototype(description = "The neural network prototype.", defaultClass = BainNeuralNetwork.class)
 	protected ParametrisedNeuralNetwork neuralNetwork;
-	
-	
+
 	public NEATTranscriber(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -52,23 +51,24 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 	public VectorFunction transcribe(NEATGenotype genotype, VectorFunction function) {
 		List<NEATAllele<?>> neuronTypes = genotype.getAllelesOfType(NNPart.NEURON_TYPE, null);
 		List<NEATAllele<?>> synapseTypes = genotype.getAllelesOfType(NNPart.SYNAPSE_TYPE, null);
-		
+
 		Collection<NEATNeuronAllele> neuronAlleles = genotype.getNeurons().values();
 		Collection<NEATSynapseAllele> remainingConnAlleles = genotype.getSynapses().values();
-		
-		if (genotype.getAllelesOfType(NNPart.NEURON_INPUT).size() > 2) System.out.println(genotype.getAllelesOfType(NNPart.NEURON_INPUT).size());
-		
+
+		if (genotype.getAllelesOfType(NNPart.NEURON_INPUT).size() > 2)
+			System.out.println(genotype.getAllelesOfType(NNPart.NEURON_INPUT).size());
+
 		// Build the neural network.
 		NNInstanceConfig nnConfig = new NNInstanceConfig(neuronAlleles.size(), remainingConnAlleles.size(), genotype.getAllelesOfType(NNPart.NEURON_INPUT).size(), genotype.getAllelesOfType(NNPart.NEURON_OUTPUT).size(), "NN-" + genotype.id);
-		
-		//new BainNeuralNetwork(null, nnConfig);
+
+		// new BainNeuralNetwork(null, nnConfig);
 		ParametrisedNeuralNetwork nnWrapper = this.neuralNetwork.newInstance(nnConfig);
-		
+
 		// Add neuron types.
 		if (neuronTypes != null) {
 			// Map from genotype neuron type reference to neuron type index in ParametrisedNeuralNetwork.
 			int[] neuronTypeReftoIndex = new int[neuronTypes.size()];
-			
+
 			for (int ref = 0; ref < neuronTypes.size(); ref++) {
 				NEATAllele<?> allele = neuronTypes.get(ref);
 				int index = nnWrapper.addNeuronType(allele.getAllValuesAsMap());
@@ -80,7 +80,7 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 		if (synapseTypes != null) {
 			// Map from genotype synapse type reference to synapse type index in ParametrisedNeuralNetwork.
 			int[] synapseTypeReftoIndex = new int[synapseTypes.size()];
-			
+
 			for (int ref = 0; ref < synapseTypes.size(); ref++) {
 				NEATAllele<?> allele = synapseTypes.get(ref);
 				int index = nnWrapper.addNeuronType(allele.getAllValuesAsMap());
@@ -96,12 +96,12 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 			// If this neuron is enabled (should be expressed).
 			if (neuronAllele.enabled()) {
 				neuronAllele.getAllValuesAsMap(neuronParams);
-				//System.out.println("\n\nneuronParams:\n" + Stringer.toString(neuronParams, 1000, 1));
+				// System.out.println("\n\nneuronParams:\n" + Stringer.toString(neuronParams, 1000, 1));
 				int index = nnWrapper.addNeuron(neuronParams);
 				neuronIDtoIndex.put(neuronAllele.gene.id, index);
 			}
 		}
-		
+
 		// Synapses.
 		Map<String, Double> synapseParams = new HashMap<String, Double>(); // Re-usable param label:value map.
 		for (NEATSynapseAllele synapseAllele : remainingConnAlleles) {
@@ -112,31 +112,29 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 			if (synapseAllele.enabled() && neuronIDtoIndex.containsKey(sourceID) && neuronIDtoIndex.containsKey(destID)) {
 				int srcIdx = neuronIDtoIndex.get(sourceID);
 				int destIdx = neuronIDtoIndex.get(destID);
-				
+
 				synapseAllele.getAllValuesAsMap(synapseParams);
-				//System.out.println("\n\nsynapseParams:\n" + Stringer.toString(synapseParams, 1000, 1));
+				// System.out.println("\n\nsynapseParams:\n" + Stringer.toString(synapseParams, 1000, 1));
 				nnWrapper.addSynapse(synapseParams, srcIdx, destIdx);
 			}
 		}
-		
+
 		nnWrapper.finishedBuilding();
-		
+
 		return nnWrapper;
 	}
-	
-	
+
 	@Override
 	public ParametrisedNeuralNetwork getNeuralNetworkPrototype() {
 		return neuralNetwork;
 	}
 
-	
 	@Override
 	public NEATGenotype getTemplateGenotype() {
 		Run run = this.getParentComponent(Run.class);
 
 		SortedSet<NEATAllele<?>> alleles = new TreeSet<NEATAllele<?>>();
-		
+
 		ParametrisedGeneType neuronConfig = neuralNetwork.getConfig().neuron();
 		ParametrisedGeneType synapseConfig = neuralNetwork.getConfig().synapse();
 
@@ -158,7 +156,8 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 
 		// Add genes for input and output neurons.
 		for (int gi = 0; gi < getFunctionInputSize(); gi++) {
-			//new NEATNeuronGene(genotype.neuronGenePrototype, NNPart.NEURON_INPUT, neuronConfig.createGeneVector(run.random));
+			// new NEATNeuronGene(genotype.neuronGenePrototype, NNPart.NEURON_INPUT,
+			// neuronConfig.createGeneVector(run.random));
 			NEATNeuronGene gene = genotype.neuronGenePrototype.newInstance(NNPart.NEURON_INPUT, neuronConfig.createGeneVector(run.random));
 			NEATNeuronAllele allele = genotype.neuronAllelePrototype.newInstance(gene, neuronConfig.createAlleleVector());
 			alleles.add(allele);
@@ -168,8 +167,8 @@ public class NEATTranscriber extends NeuralNetworkTranscriber<NEATGenotype> {
 			NEATNeuronAllele allele = genotype.neuronAllelePrototype.newInstance(gene, neuronConfig.createAlleleVector());
 			alleles.add(allele);
 		}
-		
-		//new NEATGenotype(genotype, alleles, new ArrayList<Genotype<?>>());
+
+		// new NEATGenotype(genotype, alleles, new ArrayList<Genotype<?>>());
 		return genotype.newInstance(alleles, new ArrayList<Genotype<?>>());
 	}
 }

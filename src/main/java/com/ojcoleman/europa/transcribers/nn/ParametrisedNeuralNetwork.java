@@ -126,8 +126,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 */
 	public void finishedBuilding() {
 	}
-	
-	
+
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("instanceConfig", instanceConfig);

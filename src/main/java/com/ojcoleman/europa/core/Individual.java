@@ -23,14 +23,15 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 * The genotype represented by this individual.
 	 */
 	public final G genotype;
-	
+
 	/**
 	 * Contains the results of evaluating this individual.
 	 */
 	public final EvaluationData evaluationData;
 
 	/**
-	 * The rank of this individual within the population, according to a {@link Ranker}. A higher value indicates a higher (better) rank.
+	 * The rank of this individual within the population, according to a {@link Ranker}. A higher value indicates a
+	 * higher (better) rank.
 	 */
 	protected double rank;
 
@@ -38,14 +39,12 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 * The {@link Function} to be evaluated (transcribed from the Genotype if the Genotype is not also the Function).
 	 */
 	protected F function;
-	
-	
+
 	/**
 	 * The Species this Individual is currently associated with.
 	 */
 	Species<G> species;
-	
-	
+
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
 	 */
@@ -55,7 +54,6 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 		evaluationData = null;
 	}
 
-
 	/**
 	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
 	 * 
@@ -64,7 +62,7 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	 */
 	public Individual(Individual<G, F> prototype, G genotype) {
 		super(prototype);
-		
+
 		this.genotype = genotype;
 		evaluationData = new EvaluationData();
 	}
@@ -84,23 +82,24 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	}
 
 	/**
-	 * Sets the function transcribed from the genotype of this individual. 
-	 * This is generally called by the {@link Population} component.
+	 * Sets the function transcribed from the genotype of this individual. This is generally called by the
+	 * {@link Population} component.
 	 */
 	public void setFunction(Function<?, ?> function) {
 		this.function = (F) function;
 	}
-	
+
 	/**
-	 * Clears the reference to the function transcribed from the genotype of this individual. 
-	 * This is generally called by the {@link Population} component if a function instances are being recycled.
+	 * Clears the reference to the function transcribed from the genotype of this individual. This is generally called
+	 * by the {@link Population} component if a function instances are being recycled.
 	 */
 	public void clearFunction() {
 		this.function = null;
 	}
-	
+
 	/**
-	 * Returns the rank of this individual within the {@link Population}. A higher value indicates a higher (better) rank.
+	 * Returns the rank of this individual within the {@link Population}. A higher value indicates a higher (better)
+	 * rank.
 	 * 
 	 * @see Ranker
 	 */
@@ -109,21 +108,19 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	}
 
 	/**
-	 * Sets the rank of this individual within the {@link Population}. Generally only a {@link Ranker} should
-	 * call this.
+	 * Sets the rank of this individual within the {@link Population}. Generally only a {@link Ranker} should call this.
 	 */
 	public void setRank(double rank) {
 		this.rank = rank;
 	}
-	
-	
+
 	/**
 	 * Get the Species this Individual is currently in.
 	 */
 	public Species<G> getSpecies() {
 		return species;
 	}
-	
+
 	/**
 	 * Returns true iff this Individual belongs to a {@link Species}
 	 */
@@ -131,10 +128,8 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 		return species != null;
 	}
 
-
-	/** 
-	 * Compares Individuals by their {@link #rank}. 
-	 * If rank is equal then compares them by ID.
+	/**
+	 * Compares Individuals by their {@link #rank}. If rank is equal then compares them by ID.
 	 */
 	@Override
 	public int compareTo(Individual<?, ?> other) {
@@ -152,7 +147,6 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 		}
 		return 0;
 	}
-	
 
 	@Override
 	public void getStringableMap(Map<String, Object> map) {

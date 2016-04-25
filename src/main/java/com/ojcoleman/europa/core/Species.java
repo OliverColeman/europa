@@ -56,7 +56,7 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 		if (member.species != null) {
 			throw new IllegalStateException("Attempted to add an Individual to a Species when it's already in a Species.");
 		}
-		
+
 		members.add(member);
 		member.species = this;
 	}
@@ -71,9 +71,10 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 		members.remove(member);
 		member.species = null;
 	}
-	
+
 	/**
-	 * Adds the given Individual to this Species., removing it if necessary from it's current Species. This should generally only be called by a {@link Speciator}.
+	 * Adds the given Individual to this Species., removing it if necessary from it's current Species. This should
+	 * generally only be called by a {@link Speciator}.
 	 */
 	public void addMemberRemoveFromCurrent(Individual<G, ?> member) {
 		if (member.hasSpecies()) {
@@ -127,7 +128,6 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 	public boolean isEmpty() {
 		return members.size() == 0;
 	}
-	
 
 	/**
 	 * Removes all the members from this Species.

@@ -18,7 +18,7 @@ public class BainParametrisedGeneType extends ParametrisedGeneType {
 
 	@Parameter(description = "The class of the model to use for the neural network component, if applicable.")
 	protected Class<? extends ComponentCollection> modelClass;
-	
+
 	/**
 	 * Returns the class to use for the neural network component, if applicable/specified.
 	 */

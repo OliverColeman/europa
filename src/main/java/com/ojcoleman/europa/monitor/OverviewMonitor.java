@@ -24,30 +24,29 @@ import com.ojcoleman.europa.core.Run;
 
 /**
  * 
- * Implementation of {@link Monitor} that prints out a line of statistics every
- * <em>N</em> generations to the standard output (console).
+ * Implementation of {@link Monitor} that prints out a line of statistics every <em>N</em> generations to the standard
+ * output (console).
  * 
  * @author O. J. Coleman
  */
 public class OverviewMonitor extends FileOrCLIMonitor {
-	@Parameter (description = "How many iterations between printing a line of information.", defaultValue = "1")
+	@Parameter(description = "How many iterations between printing a line of information.", defaultValue = "1")
 	protected int period;
-	
-	@Parameter (description = "How many lines to print before re-printing the header lines, or -1 = never, 0 = only once.", defaultValue = "20")
+
+	@Parameter(description = "How many lines to print before re-printing the header lines, or -1 = never, 0 = only once.", defaultValue = "20")
 	protected int headerPerLines;
-	
-	@Parameter (description = "The precision of printed floating point values.", defaultValue = "6")
+
+	@Parameter(description = "The precision of printed floating point values.", defaultValue = "6")
 	protected int floatPrecision;
-	
-	@Parameter (description = "The minumum column width.", defaultValue = "6")
+
+	@Parameter(description = "The minumum column width.", defaultValue = "6")
 	protected int minColumnWidth;
-	
-	@Parameter (description = "The number of spaces between columns.", defaultValue = "2")
+
+	@Parameter(description = "The number of spaces between columns.", defaultValue = "2")
 	protected int columnMargin;
-	
-	
+
 	private Run run;
-	
+
 	private Map<String, Category> categories = new TreeMap<>();
 	private int linesSinceLastHeader;
 	private String categoryHeader;
@@ -55,34 +54,32 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 	private String labelHeader;
 	private String stateValuesFormat;
 	private String floatFormat;
-	
+
 	public OverviewMonitor(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
+
 		floatFormat = "%0$ " + floatPrecision + "." + floatPrecision + "G";
-		
+
 		run = this.getParentComponent(Run.class);
 	}
-	
-	
+
 	@Override
 	public void eventOccurred(Observable observed, Object event, Object state) {
 		if (event == Run.Event.IterationComplete && run.getCurrentIteration() % period == 0) {
 			Multimap<String, ComponentStateLog> stateData = this.getParentComponent(Run.class).getAllStateData();
-			
+
 			// Collate all the logs, organised by category, sub-category and label.
 			// Detect if any new logs have been added or old logs removed or changed widths.
 			boolean changed = false;
 			for (ComponentStateLog log : stateData.values()) {
 				if (categories.containsKey(log.category)) {
 					changed |= categories.get(log.category).addLog(log);
-				}
-				else {
+				} else {
 					categories.put(log.category, new Category(log));
 					changed = true;
 				}
 			}
-			
+
 			// Remove any log entries that weren't present in the current batch (unlikely, but possible).
 			Iterator<Map.Entry<String, Category>> itr = categories.entrySet().iterator();
 			while (itr.hasNext()) {
@@ -92,7 +89,7 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 					itr.remove();
 				}
 			}
-			
+
 			linesSinceLastHeader++;
 			if (headerPerLines != -1 && (headerPerLines > 0 && linesSinceLastHeader == headerPerLines || changed)) {
 				if (changed) {
@@ -102,50 +99,50 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 					Formatter subCatF = new Formatter(subCatSB);
 					StringBuilder labelSB = new StringBuilder("| ");
 					Formatter labelF = new Formatter(labelSB);
-					
+
 					stateValuesFormat = "| ";
-					
+
 					int valueIdx = 0;
 					boolean firstCat = true;
 					for (Map.Entry<String, Category> cat : categories.entrySet()) {
-						String name = makeNameFit(cat.getKey(), cat.getValue().getWidth()-3);
-						
-						catF.format("%0$-" + (cat.getValue().getWidth()-1) + "." + (cat.getValue().getWidth()-3) + "s| ", name);
-						
+						String name = makeNameFit(cat.getKey(), cat.getValue().getWidth() - 3);
+
+						catF.format("%0$-" + (cat.getValue().getWidth() - 1) + "." + (cat.getValue().getWidth() - 3) + "s| ", name);
+
 						int subCatRemain = cat.getValue().subCategories.size();
-						
+
 						for (Map.Entry<String, SubCategory> subCat : cat.getValue().subCategories.entrySet()) {
 							subCatRemain--;
 							int width = subCat.getValue().getWidth();
-							name = makeNameFit(subCat.getKey(), width-2);
-							subCatF.format("%0$-" + width + "." + (width-2) + "s" + (subCatRemain == 0 ? "| " : ""), name);
-							
+							name = makeNameFit(subCat.getKey(), width - 2);
+							subCatF.format("%0$-" + width + "." + (width - 2) + "s" + (subCatRemain == 0 ? "| " : ""), name);
+
 							int labelRemain = subCat.getValue().labels.size();
 							for (String label : subCat.getValue().labelsOrdered) {
 								labelRemain--;
 								Label log = subCat.getValue().labels.get(label);
 								width = log.getWidth();
-								name = makeNameFit(label, width-2);
-								labelF.format("%0$-" + width + "." + (width-2) + "s" + (subCatRemain == 0 && labelRemain == 0 ? "| " : ""), name);
-								
+								name = makeNameFit(label, width - 2);
+								labelF.format("%0$-" + width + "." + (width - 2) + "s" + (subCatRemain == 0 && labelRemain == 0 ? "| " : ""), name);
+
 								stateValuesFormat += "%" + valueIdx + "$-" + log.getWidth() + "s" + (subCatRemain == 0 && labelRemain == 0 ? "| " : "");
 							}
 						}
-						
+
 						firstCat = false;
 					}
-					
+
 					categoryHeader = catSB.toString();
 					subCategoryHeader = subCatSB.toString();
 					labelHeader = labelSB.toString();
 				}
-				
+
 				write(observed, event, state, categoryHeader);
 				write(observed, event, state, subCategoryHeader);
 				write(observed, event, state, labelHeader);
 				linesSinceLastHeader = 0;
 			}
-			
+
 			List<String> values = new ArrayList<>(stateData.size());
 			for (Map.Entry<String, Category> cat : categories.entrySet()) {
 				for (Map.Entry<String, SubCategory> subCat : cat.getValue().subCategories.entrySet()) {
@@ -161,7 +158,7 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			write(observed, event, state, valueSB);
 		}
 	}
-	
+
 	private String makeNameFit(String name, int width) {
 		if (name.length() > width) {
 			// Remove repeated letters and white space.
@@ -173,7 +170,7 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 				String newName = name;
 				for (int i = Math.min(10, name.length()); i > 0 && newName.length() > width; i--) {
 					// regex from http://stackoverflow.com/a/10916103/1133481
-					newName = name.substring(0, i) + name.substring(i).replaceAll("(?<!^)([aeiouAEIOU]|[yY](?![aeiouyAEIOUY]))(?!$)","");
+					newName = name.substring(0, i) + name.substring(i).replaceAll("(?<!^)([aeiouAEIOU]|[yY](?![aeiouyAEIOUY]))(?!$)", "");
 				}
 				name = newName;
 				// If still too long, chop it.
@@ -184,22 +181,20 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 		}
 		return name;
 	}
-	
-	
+
 	public class Category {
 		protected Map<String, SubCategory> subCategories = new TreeMap<>();
 		private int width;
-		
+
 		public Category(ComponentStateLog log) {
 			addLog(log);
 		}
-		
+
 		protected boolean addLog(ComponentStateLog log) {
 			boolean changed = true;
 			if (subCategories.containsKey(log.subCategory)) {
 				changed = subCategories.get(log.subCategory).addLog(log);
-			}
-			else {
+			} else {
 				subCategories.put(log.subCategory, new SubCategory(log));
 			}
 			if (changed) {
@@ -207,18 +202,18 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			}
 			return changed;
 		}
-		
+
 		protected int getWidth() {
 			return width;
 		}
-		
+
 		private void calcWidth() {
 			width = 1; // 1 to allow for | separator.
 			for (SubCategory subCat : subCategories.values()) {
 				width += subCat.getWidth();
 			}
 		}
-		
+
 		private boolean removeOld() {
 			Iterator<Map.Entry<String, SubCategory>> itr = subCategories.entrySet().iterator();
 			boolean changed = false;
@@ -232,23 +227,22 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			return changed;
 		}
 	}
-	
+
 	public class SubCategory {
 		private List<String> labelsOrdered = new ArrayList<>();
 		private Map<String, Label> labels = new HashMap<>();
 		private int width;
 		private int lastLabelIndex;
-		
+
 		public SubCategory(ComponentStateLog log) {
 			addLog(log);
 		}
-		
+
 		protected boolean addLog(ComponentStateLog log) {
 			boolean changed = true;
 			if (labels.containsKey(log.label)) {
 				changed = labels.get(log.label).setLog(log);
-			}
-			else {
+			} else {
 				labels.put(log.label, new Label(log));
 				labelsOrdered.add(lastLabelIndex, log.label);
 			}
@@ -258,11 +252,11 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			}
 			return changed;
 		}
-		
+
 		protected int getWidth() {
 			return width;
 		}
-		
+
 		private void calcWidth() {
 			width = 0;
 			for (Label label : labels.values()) {
@@ -279,15 +273,14 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 				if (!entry.getValue().current) {
 					changed = true;
 					itr.remove();
-				}
-				else {
+				} else {
 					entry.getValue().current = false;
 				}
 			}
 			return changed;
 		}
 	}
-	
+
 	public class Label {
 		private ComponentStateLog log;
 		protected LogType type;
@@ -295,13 +288,14 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 		protected String stringValue;
 		// Indicates if this log is present in the current batch of logs.
 		protected boolean current;
-		
+
 		public Label(ComponentStateLog log) {
 			setLog(log);
 		}
-		/** 
+
+		/**
 		 * Returns true iff the given log has a different type to the previous type or requires a larger width.
-		 */ 
+		 */
 		protected boolean setLog(ComponentStateLog log) {
 			current = true;
 			LogType newType = getType(log);
@@ -314,31 +308,31 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			this.type = newType;
 			return changed;
 		}
-		
+
 		protected int getWidth() {
 			return Math.max(maxWidth, minColumnWidth) + columnMargin;
 		}
-		
+
 		private String convertToString(LogType type) {
 			if (type == LogType.BOOL) {
 				return (boolean) log.state ? "True" : "False";
 			}
 			if (type == LogType.FLOAT) {
 				StringBuilder sb = new StringBuilder();
-			    Formatter f = new Formatter(sb);
-			    f.format(floatFormat, log.state);
-			    String str = sb.toString();
-			    // Trim numbers < 1 that have zero valued digits immediately after the decimal point 
-			    // (the formatter makes them longer to show floatPrecision non-zero digits).
-			    if (str.length() > floatPrecision && str.indexOf("E") == -1 && str.indexOf(".") != -1 && str.length() >= floatPrecision+2) {
-			    	str = str.substring(0, floatPrecision+2);
-			    }
-			    str += getUnitString();
-			    return str;
+				Formatter f = new Formatter(sb);
+				f.format(floatFormat, log.state);
+				String str = sb.toString();
+				// Trim numbers < 1 that have zero valued digits immediately after the decimal point
+				// (the formatter makes them longer to show floatPrecision non-zero digits).
+				if (str.length() > floatPrecision && str.indexOf("E") == -1 && str.indexOf(".") != -1 && str.length() >= floatPrecision + 2) {
+					str = str.substring(0, floatPrecision + 2);
+				}
+				str += getUnitString();
+				return str;
 			}
 			return log.state.toString() + getUnitString();
 		}
-		
+
 		private String getUnitString() {
 			if (log.unit == null) {
 				return "";
@@ -355,23 +349,20 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 			return unit;
 		}
 	}
-	
+
 	protected LogType getType(ComponentStateLog log) {
 		if (log.state instanceof Boolean) {
 			return LogType.BOOL;
-		}
-		else if (log.state instanceof Integer || log.state instanceof Long) {
+		} else if (log.state instanceof Integer || log.state instanceof Long) {
 			return LogType.INT;
-		}
-		else if (log.state instanceof Float || log.state instanceof Double) {
+		} else if (log.state instanceof Float || log.state instanceof Double) {
 			return LogType.FLOAT;
-		}
-		else if (log.state instanceof CharSequence) {
+		} else if (log.state instanceof CharSequence) {
 			return LogType.STRING;
 		}
 		return LogType.OTHER;
 	}
-	
+
 	public static enum LogType {
 		BOOL, INT, FLOAT, STRING, OTHER
 	}

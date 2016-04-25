@@ -41,22 +41,21 @@ public class VectorMetadata extends ConfigurableBase {
 
 	private Map<String, Element> labelMap;
 	private List<String> labels;
-	
 
 	/**
 	 * Creates new VectorMetadata from the given Configuration.
 	 */
 	public VectorMetadata(Configuration config) {
 		super(config);
-		
+
 		// Set default bounds if necessary.
 		elementDefaults.updateBounds(0, 1);
-		
-		// Set bounds for elements whose bounds were not set. This also populates Element.bounds. 
+
+		// Set bounds for elements whose bounds were not set. This also populates Element.bounds.
 		for (Element el : elements) {
 			el.updateBounds(elementDefaults.min, elementDefaults.max);
 		}
-		
+
 		labels = new ArrayList<>(elements.length);
 		labelMap = new HashMap<String, Element>();
 		for (int i = 0; i < elements.length; i++) {
@@ -64,14 +63,13 @@ public class VectorMetadata extends ConfigurableBase {
 			labelMap.put(elements[i].label, elements[i]);
 		}
 	}
-	
-	
+
 	/**
 	 * Creates new VectorMetadata from the given specifications.
 	 */
 	public VectorMetadata(List<String> labels, double[] minValues, double[] maxValues, boolean[] isInteger) {
 		elements = new Element[labels.size()];
-		
+
 		for (int e = 0; e < elements.length; e++) {
 			elements[e] = new Element(labels.get(e), minValues[e], maxValues[e], isInteger[e]);
 		}
@@ -83,7 +81,6 @@ public class VectorMetadata extends ConfigurableBase {
 			labelMap.put(elements[i].label, elements[i]);
 		}
 	}
-	
 
 	/**
 	 * Returns the size of the vector(s) this VectorMetadata is intended to contain information about.
@@ -150,12 +147,12 @@ public class VectorMetadata extends ConfigurableBase {
 		@Parameter(description = "The upper bound for this Vector Element, inclusive.", optional = true)
 		protected double max;
 
-		@Parameter(description = "Indicates if this Vector Element stores an integer value.", defaultValue="false")
+		@Parameter(description = "Indicates if this Vector Element stores an integer value.", defaultValue = "false")
 		protected boolean isInteger;
-		
+
 		private boolean minSpecified;
 		private boolean maxSpecified;
-		
+
 		/**
 		 * The minimum and maximum bounds for this Vector Element.
 		 */
@@ -163,16 +160,16 @@ public class VectorMetadata extends ConfigurableBase {
 
 		public ElementDefaults(Configuration config) {
 			super(config);
-			
+
 			minSpecified = config.get("min") != null;
 			maxSpecified = config.get("max") != null;
 		}
-		
+
 		public ElementDefaults(double min, double max, boolean isInteger) {
 			this.isInteger = isInteger;
 			bounds = new IntervalDouble(min, max);
 		}
-		
+
 		protected void updateBounds(double minDefault, double maxDefault) {
 			if (!minSpecified) {
 				min = minDefault;
@@ -182,7 +179,7 @@ public class VectorMetadata extends ConfigurableBase {
 			}
 			bounds = new IntervalDouble(min, max);
 		}
-		
+
 		/**
 		 * Get the lower and upper bounds for this Vector Element, inclusive.
 		 */
@@ -204,7 +201,7 @@ public class VectorMetadata extends ConfigurableBase {
 	public static class Element extends ElementDefaults {
 		@Parameter(description = "The label for this Vector Element.", optional = true)
 		protected String label;
-		
+
 		public Element(Configuration config) {
 			super(config);
 		}

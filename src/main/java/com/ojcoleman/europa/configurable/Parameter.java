@@ -7,8 +7,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * <p>For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user
- * configurable, e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.</p>
+ * <p>
+ * For fields in sub-classes of {@link ConfigurableBase}, this annotation indicates that the field is user configurable,
+ * e.g. via a JSON configuration file. See {@link ConfigurableBase} for more information.
+ * </p>
  * 
  * @see Configurable
  * @see Prototype
@@ -21,7 +23,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Parameter {
 	static final String PARAMETER_NO_DEFAULT = "<NO DEFAULT VALUE>";
-	
+
 	/**
 	 * Description for the sub-component.
 	 */

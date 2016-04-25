@@ -1,8 +1,8 @@
 package com.ojcoleman.europa.configurable;
 
 /**
- * Indicates that a sub-class of {@link ConfigurableBase} does not implement a constructor accepting a single parameter of type
- * Configuration.
+ * Indicates that a sub-class of {@link ConfigurableBase} does not implement a constructor accepting a single parameter
+ * of type Configuration.
  * 
  * @author O. J. Coleman
  */

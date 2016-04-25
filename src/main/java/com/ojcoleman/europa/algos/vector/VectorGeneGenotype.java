@@ -26,8 +26,8 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
-	 * with the same alleles and genes as the given genotype. The parent is set to the given prototype.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Genotype with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 */
@@ -36,8 +36,8 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a Genotype
-	 * with the given ID (should generally be unique) and parents.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Genotype with the given ID (should generally be unique) and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param alleles The Alleles (backed by {@link Gene}s) that make up the new Genotype. A copy of each allele is made

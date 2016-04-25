@@ -13,7 +13,8 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
  * </p>
  * <p>
  * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
- * and which should generally just call <em>super()</em> with the allele to copy.</strong> See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+ * and which should generally just call <em>super()</em> with the allele to copy.</strong> See
+ * {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
  * <p>
  * Note that an Allele belongs to a specific Genotype, but may share the same Gene as Alleles in other Genotypes.
  * Alleles and Genotypes directly reference one another, but a Gene is only referenced by Alleles. A given Gene should
@@ -42,8 +43,8 @@ public class Allele<G extends Gene> extends PrototypeBase {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. The underlying
-	 * {@link Gene} will be the same as the Allele to copy.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. The
+	 * underlying {@link Gene} will be the same as the Allele to copy.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param allele The Allele to copy.

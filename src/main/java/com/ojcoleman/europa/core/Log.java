@@ -18,12 +18,10 @@ public class Log {
 	 * Log object to indicate no logging is required.
 	 */
 	public static final Log NO_LOG = new Log();
-	
-	
+
 	// Keys are the specified log item labels, non-null values are the log item values.
 	HashMap<String, Object> logs = new HashMap<>();
 
-	
 	/**
 	 * Creates a new Log for which the specified log items should be recorded.
 	 */
@@ -32,21 +30,21 @@ public class Log {
 			logs.put(l, null);
 		}
 	}
-	
+
 	/**
 	 * Returns true iff this Log specifies the given log item.
 	 */
 	public boolean specifiesItem(String item) {
 		return logs.containsKey(item);
 	}
-	
+
 	/**
 	 * Returns true iff the given log item has been set.
 	 */
 	public boolean hasItem(String item) {
 		return logs.get(item) != null;
 	}
-	
+
 	/**
 	 * Get all the log items that have been specified (note that they may not have been set).
 	 */
@@ -80,14 +78,14 @@ public class Log {
 	public String getStringLog(String item) {
 		return getLog(item).toString();
 	}
-	
+
 	/**
 	 * Get all the items and their corresponding log values (which may not be set).
 	 */
 	public Map<String, Object> getAllLogs() {
 		return Collections.unmodifiableMap(logs);
 	}
-	
+
 	/**
 	 * Get all the items for which a log value has been set.
 	 */

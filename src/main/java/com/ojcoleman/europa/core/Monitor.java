@@ -6,9 +6,13 @@ import com.ojcoleman.europa.configurable.Observable;
 import com.ojcoleman.europa.configurable.Observer;
 
 /**
- * <p>Base class of classes that monitor the state of the evolutionary process.</p>
+ * <p>
+ * Base class of classes that monitor the state of the evolutionary process.
+ * </p>
  * 
- * <p>Typically an {@link Observable} will call {@link Run#monitor(Observable)} so that it may be monitored.</p>
+ * <p>
+ * Typically an {@link Observable} will call {@link Run#monitor(Observable)} so that it may be monitored.
+ * </p>
  * 
  * @author O. J. Coleman
  */

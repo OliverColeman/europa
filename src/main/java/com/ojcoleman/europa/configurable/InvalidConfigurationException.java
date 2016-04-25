@@ -9,6 +9,7 @@ public class InvalidConfigurationException extends ConfigurableException {
 	public InvalidConfigurationException(String string) {
 		super(string);
 	}
+
 	public InvalidConfigurationException(String string, Exception cause) {
 		super(string, cause);
 	}

@@ -40,64 +40,52 @@ import com.ojcoleman.europa.util.Stringer;
  */
 public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	private static Logger logger = LoggerFactory.getLogger(TargetFitnessCalculator.class);
-	
-	@Parameter(description="The type of error calculation to perform over the errors (as calculated by errorTypeOutput) for all examples. Valid values are "
-			+ "'SAE' (Sum of Absolute Errors), 'SSAE' (Squared Sum of Absolute Errors), 'SSE' (Sum of Squared Errors), 'RSSE' (Root of Sum of Squared Errors), "
-			+ "'MAE' (Mean of Absolute Errors), 'SMAE' (Squared Mean of Absolute Errors), 'MSE' (Mean of Squared Errors), 'RMSE' (Root of Mean of Squared Errors). The default is RMSE.",
-			defaultValue="RMSE")
+
+	@Parameter(description = "The type of error calculation to perform over the errors (as calculated by errorTypeOutput) for all examples. Valid values are " + "'SAE' (Sum of Absolute Errors), 'SSAE' (Squared Sum of Absolute Errors), 'SSE' (Sum of Squared Errors), 'RSSE' (Root of Sum of Squared Errors), " + "'MAE' (Mean of Absolute Errors), 'SMAE' (Squared Mean of Absolute Errors), 'MSE' (Mean of Squared Errors), 'RMSE' (Root of Mean of Squared Errors). The default is RMSE.", defaultValue = "RMSE")
 	protected ErrorType errorTypeExample;
-	
-	@Parameter(description="The type of error calculation to perform over the error of each output within a single example. Any type listed for errorTypeExample may be used. Default is SAE.", defaultValue="SAE")
+
+	@Parameter(description = "The type of error calculation to perform over the error of each output within a single example. Any type listed for errorTypeExample may be used. Default is SAE.", defaultValue = "SAE")
 	protected ErrorType errorTypeOutput;
-	
-	@Parameter(description="The method for calculating a fitness value from the error value. Valid types are "
-			+ "'proportional': the fitness is calculated as a proportion of the maximum possible error value; "
-			+ "'inverse': the fitness is calculated as the inverse of the error. The default is proportional.",
-			defaultValue="proportional")
+
+	@Parameter(description = "The method for calculating a fitness value from the error value. Valid types are " + "'proportional': the fitness is calculated as a proportion of the maximum possible error value; " + "'inverse': the fitness is calculated as the inverse of the error. The default is proportional.", defaultValue = "proportional")
 	protected String fitnessConversionType;
-	
-	@Parameter(description="The method used to calculate the performance. Valid types are: "
-			+ "'proportional': the performance is calculated as a proportion of the maximum possible error; "
-			+ "'percent-correct': the performance is calculated as the percentage of correct examples. Default is proportional.",
-			defaultValue="proportional")
+
+	@Parameter(description = "The method used to calculate the performance. Valid types are: " + "'proportional': the performance is calculated as a proportion of the maximum possible error; " + "'percent-correct': the performance is calculated as the percentage of correct examples. Default is proportional.", defaultValue = "proportional")
 	protected String performanceMetric;
-	
-	@Parameter(description="The absolute value that an output can differ from the target output and still be considered correct (i.e. the acceptable error margin). "
-			+ "Used for calculating the percentage of examples for which the correct output was given. Default is 0.1.", defaultValue="0.1", minimumValue="0")
+
+	@Parameter(description = "The absolute value that an output can differ from the target output and still be considered correct (i.e. the acceptable error margin). " + "Used for calculating the percentage of examples for which the correct output was given. Default is 0.1.", defaultValue = "0.1", minimumValue = "0")
 	protected double acceptableError;
 
-	@Parameter(description="Terminate when the performance reaches this value. 0 to disable.", defaultValue="0", minimumValue="0", maximumValue="1")
+	@Parameter(description = "Terminate when the performance reaches this value. 0 to disable.", defaultValue = "0", minimumValue = "0", maximumValue = "1")
 	protected double terminateOnPerformance;
-	
-	
+
 	private static boolean outputRangeChecked = false;
-	
+
 	private EvaluationDescription fitnessEvalDesc;
 	private EvaluationDescription performanceEvalDesc;
-	
+
 	private boolean terminate = false;
-	
+
 	public TargetFitnessCalculator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		if (errorTypeOutput.rootTotalError() && errorTypeExample.squareErrors()) {
 			logger.warn("It doesn't make sense to take the square root of the total error over all outputs for a single example (errorTypeOutput=" + errorTypeOutput + ") and then square the error for each example in calculating the error over all examples (errorTypeExample=" + errorTypeExample + ").");
 		}
-		
+
 		if (!fitnessConversionType.equals("proportional") && !fitnessConversionType.equals("inverse")) {
 			throw new IllegalArgumentException("fitnessConversionType must be one of \"proportional\" or \"inverse\".");
 		}
-		
+
 		if (!performanceMetric.equals("proportional") && !performanceMetric.equals("percent-correct")) {
 			throw new IllegalArgumentException("performanceMetric property must be one of \"proportional\" or \"percent-correct\".");
 		}
-		
-		fitnessEvalDesc = new EvaluationDescription(getName()+" fitness", this, IntervalDouble.UNIT, 1, false);
-		performanceEvalDesc = new EvaluationDescription(getName()+" performance", this, IntervalDouble.UNIT, 1, true);
-		
+
+		fitnessEvalDesc = new EvaluationDescription(getName() + " fitness", this, IntervalDouble.UNIT, 1, false);
+		performanceEvalDesc = new EvaluationDescription(getName() + " performance", this, IntervalDouble.UNIT, 1, true);
+
 		this.getParentComponent(Run.class).monitor(this);
 	}
-	
-	
+
 	@Override
 	public Set<EvaluationDescription> getEvaluationDescriptions() {
 		Set<EvaluationDescription> evalDescs = new HashSet<>();
@@ -105,10 +93,10 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 		evalDescs.add(performanceEvalDesc);
 		return evalDescs;
 	}
-	
-	
+
 	/**
-	 * Evaluate the given function on the given input and target output pairs. Subclasses should call this from {@link Evaluator#evaluate(Individual)}.
+	 * Evaluate the given function on the given input and target output pairs. Subclasses should call this from
+	 * {@link Evaluator#evaluate(Individual)}.
 	 * 
 	 * @param Individual The individual to evaluate.
 	 * @param input Array containing input examples, in the form [example][input].
@@ -119,29 +107,29 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	 */
 	public void evaluate(Individual<?, VectorFunction> individual, double[][] input, double[][] targetOutput, double minTargetOutputValue, double maxTargetOutputValue, Log log) {
 		VectorFunction function = (VectorFunction) individual.getFunction();
-		
+
 		Random random = this.getParentComponent(Run.class).random;
-		
+
 		double[][] responses = function.apply(input);
-		
+
 		double maxError = 0;
 		int exampleCount = input.length;
 		int outputCount = targetOutput[0].length;
-		
+
 		double maxResponse = function.getMaximumOutputValue();
 		double minResponse = function.getMinimumOutputValue();
-		
+
 		if (minResponse > minTargetOutputValue || maxResponse < maxTargetOutputValue) {
 			throw new IllegalStateException("The response range of the function does not encompass the target output range.");
 		}
-		
+
 		if (!outputRangeChecked && maxResponse - minResponse > 100) {
 			logger.warn("The substrate output range seems quite large (" + (maxResponse - minResponse) + "), you might want to consider using a more tightly bounded activation function for the output neuron(s) to facilitate calculating the target error.");
 			outputRangeChecked = true;
 		}
-		
+
 		double maxErrorPerOutput = Math.max(maxResponse - minTargetOutputValue, maxTargetOutputValue - minResponse);
-		
+
 		if (errorTypeOutput.squareErrors())
 			maxErrorPerOutput = maxErrorPerOutput * maxErrorPerOutput;
 		if (errorTypeOutput.sumErrors())
@@ -150,7 +138,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 			maxErrorPerOutput = Math.sqrt(maxErrorPerOutput);
 		else if (errorTypeOutput.squareTotalError())
 			maxErrorPerOutput = maxErrorPerOutput * maxErrorPerOutput;
-		
+
 		maxError = errorTypeExample.squareErrors() ? maxErrorPerOutput * maxErrorPerOutput : maxErrorPerOutput;
 		if (errorTypeExample.sumErrors())
 			maxError = exampleCount * maxError;
@@ -158,19 +146,19 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 			maxError = Math.sqrt(maxError);
 		else if (errorTypeExample.squareTotalError())
 			maxError = maxError * maxError;
-		
+
 		TargetFitnessCalculatorLog logOutput = null;
 		if (log.specifiesItem("string")) {
 			logOutput = new TargetFitnessCalculatorLog(input, targetOutput, responses, new double[exampleCount], new boolean[exampleCount], maxError, errorTypeOutput, errorTypeExample);
 			log.setLog("string", logOutput);
 		}
-		
+
 		List<Integer> exampleIndexes = new ArrayList<Integer>(exampleCount);
 		for (int i = 0; i < exampleCount; i++)
 			exampleIndexes.add(i);
 		if (logOutput == null) // Keep examples in order when logging.
 			Collections.shuffle(exampleIndexes, random);
-		
+
 		double totalError = 0;
 		double percentCorrect = 0;
 		for (int i = 0; i < exampleCount; i++) {
@@ -183,7 +171,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 				if (diff > acceptableError)
 					correct = false;
 			}
-			
+
 			if (errorTypeOutput.avgErrors())
 				exampleError /= outputCount;
 			if (errorTypeOutput.rootTotalError())
@@ -194,7 +182,7 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 			if (logOutput != null) {
 				logOutput.error[i] = exampleError;
 			}
-			
+
 			totalError += errorTypeExample.squareErrors() ? exampleError * exampleError : exampleError;
 
 			if (correct) {
@@ -216,32 +204,29 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 		double proportionalFitness = proportionalPerformance;
 		double inverseFitness = 1.0 / (1 + totalError);
 		percentCorrect /= exampleCount;
-		
-		//System.out.println(proportionalFitness);
-		
+
+		// System.out.println(proportionalFitness);
+
 		double fitness = fitnessConversionType.equals("proportional") ? proportionalFitness : inverseFitness;
 		double performance = performanceMetric.equals("proportional") ? proportionalPerformance : percentCorrect;
-				
+
 		individual.evaluationData.setResult(fitnessEvalDesc, fitness);
 		individual.evaluationData.setResult(performanceEvalDesc, performance);
-		
+
 		if (terminateOnPerformance != 0 && performance >= terminateOnPerformance) {
 			terminate = true;
 		}
 	}
-	
-	
+
 	public String getFitnessConversionType() {
 		return fitnessConversionType;
 	}
-	
-	
+
 	@Override
 	public boolean shouldTerminate() {
 		return terminate;
 	}
-	
-	
+
 	/**
 	 * The type of error calculation to use.
 	 * 

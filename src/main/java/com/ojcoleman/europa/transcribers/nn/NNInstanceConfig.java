@@ -33,10 +33,10 @@ public class NNInstanceConfig implements Stringable {
 	 * The number of output neurons in the network.
 	 */
 	public final int outputCount;
-	
+
 	/**
-	 * If applicable, the number of simulation steps to perform for each request to apply input to the network and retrieve output,
-	 * for example via {@link VectorFunction#apply(double[])}.
+	 * If applicable, the number of simulation steps to perform for each request to apply input to the network and
+	 * retrieve output, for example via {@link VectorFunction#apply(double[])}.
 	 */
 	public final int stepsPerStep;
 
@@ -68,7 +68,7 @@ public class NNInstanceConfig implements Stringable {
 		this.stepsPerStep = 1;
 		this.name = name;
 	}
-	
+
 	/**
 	 * Creates an NNInstanceConfig initialised with the given metadata.
 	 */
@@ -81,7 +81,6 @@ public class NNInstanceConfig implements Stringable {
 		this.name = name;
 	}
 
-	
 	@Override
 	public void getStringableMap(Map<String, Object> map) {
 		map.put("neuronCount", neuronCount);

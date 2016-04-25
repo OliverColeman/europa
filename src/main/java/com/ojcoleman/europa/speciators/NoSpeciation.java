@@ -21,13 +21,13 @@ import com.ojcoleman.europa.core.Species;
  */
 public class NoSpeciation<G extends Genotype<?>> extends Speciator<G, Species<G>> {
 	private final Species<G> theOnlySpecies;
-	
+
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
 	public NoSpeciation(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		
+
 		theOnlySpecies = this.speciesPrototype.newInstance();
 	}
 
