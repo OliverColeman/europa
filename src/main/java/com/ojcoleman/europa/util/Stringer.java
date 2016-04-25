@@ -17,7 +17,7 @@ import com.ojcoleman.europa.core.Stringable;
  */
 public class Stringer {
 	/**
-	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
+	 * Convert an object to a pretty-printed JSON-esque string, with automatic recursive handling of arrays, Iterable,
 	 * Map and {@link Stringable} objects. Recursion will only go 5 levels deep.
 	 * 
 	 * @param obj The object to convert to a String.
@@ -27,11 +27,10 @@ public class Stringer {
 		toString(obj, sb, 0, 5, new HashSet<>());
 		return sb.toString();
 	}
-	
-	
+
 	/**
-	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
-	 * Map and {@link Stringable} objects.
+	 * Convert an object to a to a pretty-printed JSON-esque string, with automatic recursive handling of arrays,
+	 * Iterable, Map and {@link Stringable} objects.
 	 * 
 	 * @param obj The object to convert to a String.
 	 * @param maxLevel The maximum recursion level. -1 for no limit.
@@ -41,11 +40,10 @@ public class Stringer {
 		toString(obj, sb, 0, maxLevel, new HashSet<>());
 		return sb.toString();
 	}
-	
-	
+
 	/**
-	 * Convert an object to a string, with automatic recursive handling of arrays, Iterable,
-	 * Map and {@link Stringable} objects.
+	 * Convert an object to a to a pretty-printed JSON-esque string, with automatic recursive handling of arrays,
+	 * Iterable, Map and {@link Stringable} objects.
 	 * 
 	 * @param obj The object to convert to a String.
 	 * @param maxLevel The maximum recursion level. -1 for no limit.
@@ -53,14 +51,13 @@ public class Stringer {
 	 */
 	public static String toString(Object obj, int maxLevel, int initialLevel) {
 		StringBuilder sb = new StringBuilder();
-		toString(obj, sb, initialLevel, maxLevel == -1 ? -1 : maxLevel+initialLevel, new HashSet<>());
+		toString(obj, sb, initialLevel, maxLevel == -1 ? -1 : maxLevel + initialLevel, new HashSet<>());
 		return sb.toString();
 	}
-	
-	
+
 	private static void toString(Object obj, StringBuilder sb, int level, int maxLevel, HashSet<Object> covered) {
 		sb.append(StringUtils.repeat("    ", level));
-		
+
 		if (obj == null) {
 			sb.append("<NULL>");
 			return;
@@ -70,29 +67,27 @@ public class Stringer {
 			sb.append("<RECURSION>");
 			return;
 		}
-		
+
 		if (maxLevel != -1) {
-			if (level > maxLevel || 
-					(level >= maxLevel && (obj instanceof Map || obj instanceof Stringable || obj instanceof Iterable || obj.getClass().isArray()))) {
+			if (level > maxLevel || (level >= maxLevel && (obj instanceof Map || obj instanceof Stringable || obj instanceof Iterable || obj.getClass().isArray()))) {
 				sb.append("<MAXIMUM DEPTH>");
 				return;
 			}
 		}
 
 		covered.add(obj);
-		
+
 		if (obj instanceof Map || obj instanceof Stringable) {
 			Map<?, ?> map;
 			if (obj instanceof Stringable) {
 				map = new TreeMap<String, Object>();
 				((Map<String, Object>) map).put("class", obj.getClass().getSimpleName());
 				((Stringable) obj).getStringableMap((Map<String, Object>) map);
-				
-			}
-			else {
+
+			} else {
 				map = (Map<?, ?>) obj;
 			}
-			
+
 			sb.append("{");
 			String[][] lines = new String[map.size()][];
 			String[] keys = new String[map.size()];
@@ -101,35 +96,32 @@ public class Stringer {
 			for (Map.Entry<?, ?> e : map.entrySet()) {
 				keys[entryIdx] = e.getKey().toString();
 				StringBuilder subSB = new StringBuilder();
-				toString(e.getValue(), subSB, 0, maxLevel == -1 ? -1 : maxLevel-(level+1), covered);
+				toString(e.getValue(), subSB, 0, maxLevel == -1 ? -1 : maxLevel - (level + 1), covered);
 				lines[entryIdx] = subSB.toString().split("\n");
 				lineCountToIndex.put(lines[entryIdx].length, entryIdx);
 				entryIdx++;
 			}
 			if (lines.length == 1 && lines[0].length == 1) {
 				sb.append(" ").append(keys[0]).append(": ").append(lines[0][0]).append(" }");
-			}
-			else {
-				for (Map.Entry<Integer, Integer> lci: lineCountToIndex.entries()) {
+			} else {
+				for (Map.Entry<Integer, Integer> lci : lineCountToIndex.entries()) {
 					int l = lci.getValue();
-					sb.append("\n").append(StringUtils.repeat("    ", level+1)).append(keys[l]).append(":");
+					sb.append("\n").append(StringUtils.repeat("    ", level + 1)).append(keys[l]).append(":");
 					if (lines[l].length == 1) {
 						sb.append(" ").append(lines[l][0]);
-					}
-					else {
+					} else {
 						for (String subLine : lines[l]) {
-							sb.append("\n").append(StringUtils.repeat("    ", level+2)).append(subLine);
+							sb.append("\n").append(StringUtils.repeat("    ", level + 2)).append(subLine);
 						}
 					}
 				}
 				sb.append("\n").append(StringUtils.repeat("    ", level)).append("}");
 			}
-		}
-		else if (obj instanceof Iterable) {
+		} else if (obj instanceof Iterable) {
 			sb.append("[");
 			for (Object o : (Iterable<?>) obj) {
 				sb.append("\n");
-				toString(o, sb, level+1, maxLevel, covered);
+				toString(o, sb, level + 1, maxLevel, covered);
 			}
 			sb.append("\n").append(StringUtils.repeat("    ", level)).append("]");
 		} else if (obj.getClass().isArray()) {
@@ -139,11 +131,10 @@ public class Stringer {
 				toString(Array.get(obj, i), sb, level + 1, maxLevel, covered);
 			}
 			sb.append("\n").append(StringUtils.repeat("    ", level)).append("]");
-		}
-		else {
+		} else {
 			sb.append(obj);
 		}
-		
+
 		covered.remove(obj);
 	}
 }

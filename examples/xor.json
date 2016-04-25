@@ -4,7 +4,7 @@
 		{
 			"class":"com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
 			"name":"XOR",
-			"pathToCSVFile":"examples2/xor.csv",
+			"pathToCSVFile":"examples/xor.csv",
 			"errorTypeExample":"SAE",
 			"errorTypeOutput":"SAE",
 			"acceptableError":0.499,

@@ -24,11 +24,11 @@ import com.ojcoleman.europa.core.Run;
  * 
  * @author O. J. Coleman
  */
-public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> extends Ranker<G, F> {
+public class SimpleRanker<G extends Genotype<?>, F extends Function<?, ?>> extends Ranker<G, F> {
 	/**
 	 * Constructor for {@link ComponentBase}.
 	 */
-	public DefaultRanker(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
+	public SimpleRanker(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 		
 		this.getParentComponent(Run.class).monitor(this);
@@ -38,7 +38,7 @@ public class DefaultRanker<G extends Genotype<?>, F extends Function<?, ?>> exte
 	public void rank(Population<G, F> population) {
 		Set<EvaluationDescription> evDescs = population.getMembers().iterator().next().evaluationData.getFitnessResults().keySet();
 		if (evDescs.size() != 1) {
-			throw new IllegalArgumentException("The DefaultRanker can only be used when a single fitness evaluation is defined.");
+			throw new IllegalArgumentException("The SimpleRanker can only be used when a single fitness evaluation is defined.");
 		}
 		// Get a reference to the one and only EvaluationDescription. 
 		EvaluationDescription ed = evDescs.iterator().next();

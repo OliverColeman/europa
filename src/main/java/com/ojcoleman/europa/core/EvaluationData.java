@@ -62,6 +62,20 @@ public class EvaluationData {
 	}
 	
 	/**
+	 * Returns the number of fitness results recorded.
+	 */
+	public int getFitnessResultCount(){
+		return fitnessResults.size();
+	}
+	
+	/**
+	 * Returns the number of performance results recorded.
+	 */
+	public int getPerformanceResultCount(){
+		return performanceResults.size();
+	}
+	
+	/**
 	 * Removes all evaluation data.
 	 */
 	public void clear() {

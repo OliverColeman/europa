@@ -82,6 +82,7 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 					Collections.sort(rankedMembers);
 					Collections.reverse(rankedMembers);
 					
+					
 					int eliteCount = (int) Math.round(elitismProportion * species.size());
 					int numSpeciesOffspring =  (int) Math.round(speciesNewSizeProportional.get(species) * population.getDesiredSize()) - eliteCount;
 					

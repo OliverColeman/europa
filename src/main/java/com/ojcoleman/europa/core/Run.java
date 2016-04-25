@@ -74,7 +74,7 @@ public class Run extends ComponentBase {
 	@Parameter(description = "The path of the file to save the Run state to (for later resume or examination). Default is the name of the Run in the current working directory.", optional = true)
 	protected String savePath;
 
-	@Parameter(description = "The default format for printing floating point numbers. Pattern string format is defined by java.text.DecimalFormat.", defaultValue = "0.00")
+	@Parameter(description = "The default format for printing floating point numbers. Pattern string format is defined by java.text.DecimalFormat.", defaultValue = "0.0000")
 	protected DecimalFormatConfigurable defaultNumberFormat;
 	
 	/**

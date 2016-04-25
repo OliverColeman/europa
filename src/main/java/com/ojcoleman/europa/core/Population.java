@@ -32,7 +32,8 @@ import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.configurable.Component;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
-import com.ojcoleman.europa.rankers.DefaultRanker;
+import com.ojcoleman.europa.rankers.NSGAII;
+import com.ojcoleman.europa.rankers.SimpleRanker;
 import com.ojcoleman.europa.speciators.NoSpeciation;
 
 /**
@@ -55,7 +56,7 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	@Component(description = "Optional component for speciating the population.", defaultClass = NoSpeciation.class)
 	protected Speciator<G, Species<G>> speciator;
 
-	@Component(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = DefaultRanker.class)
+	@Component(description = "Component for determining the overall relative fitness of individuals in the population.", defaultClass = NSGAII.class)
 	protected Ranker<G, F> ranker;
 
 	
