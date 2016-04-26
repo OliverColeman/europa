@@ -21,7 +21,9 @@ If you'd like to contribute please contact me at oliver.coleman@gmail.com
 ## Links
 
 Manual: http://olivercoleman.github.com/europa/manual.html
+
 API documentation: http://olivercoleman.github.com/europa/doc/index.html
+
 GitHub repository: https://github.com/OliverColeman/europa
 
 ## Building and Running
