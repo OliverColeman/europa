@@ -17,14 +17,14 @@ import com.ojcoleman.europa.transcribers.nn.NNPart;
  */
 public class NEATNeuronGene extends NEATGene {
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATNeuronGene(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATNeuronGene with specified type and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -37,7 +37,7 @@ public class NEATNeuronGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATNeuronGene with same type as the prototype and the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.

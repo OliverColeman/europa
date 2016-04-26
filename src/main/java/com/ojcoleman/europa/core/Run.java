@@ -37,23 +37,24 @@ import com.ojcoleman.europa.configurable.Component;
  * <p>
  * Initiates and manages an evolutionary run, implementing the basic core cycle of evaluating a population and then
  * producing a new population according to the results. A run can be started from a saved Run or a configuration file
- * (see {@link Main}). Run is designed as a singleton, there should only ever be one instance of a Run.
+ * (see {@link com.ojcoleman.europa.Main}). Run is designed as a singleton, there should only ever be one instance of a Run.
  * </p>
  * <p>
  * The stages of the cycle are implemented by various components whose implementation and parameters can be specified by
- * a JSON configuration file (see {@link com.ojcoleman.europa.configurable.ComponentBase and
+ * a JSON configuration file (see {@link com.ojcoleman.europa.configurable.ComponentBase} and
  * {@link com.ojcoleman.europa.Main}). The specific steps of the initialisation and evolutionary cycle, and their
  * corresponding (abstract) classes or interfaces and methods, are:
  * <ul>
- * <li>Create an initial {@link Population} with {@link Evolver#createPopulation(Population)}.</li>
+ * <li>Create an initial template {@link Genotype} with {@link Transcriber#getTemplateGenotype()}.</li>
+ * <li>Create an initial population from template Genotype ({@link Population#generate()}).</li>
  * <li>Evolutionary cycle
  * <ul>
  * <li>Evaluate the fitness of the population with one or more {@link Evaluator}s.</li>
  * <li>Produce a "rank" value for each member of population according to their overall fitness (accounting for multiple
  * fitness scores/objectives if applicable) via {@link Ranker#rank(Population)}.</li>
- * <li>Optionally speciate the population via {@link Speciator#speciate(Population)}.</li>
+ * <li>Optionally speciate the population via {@link Speciator#speciate(Population, List)}.</li>
  * <li>Replace some members of the population with new individuals (usually based on the fittest members) via
- * {@link Evolver#evolvePopulation(Population, List)}</li>
+ * {@link Evolver#evolve(Population)}</li>
  * </ul>
  * </li>
  * </ul>

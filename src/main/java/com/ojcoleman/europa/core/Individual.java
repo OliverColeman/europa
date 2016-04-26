@@ -46,7 +46,7 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	Species<G> species;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public Individual(Configuration config) {
 		super(config);
@@ -55,10 +55,10 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
-	 * @param gene the underlying Gene for the new Allele.
+	 * @param genotype the underlying Genotype for the new Individual.
 	 */
 	public Individual(Individual<G, F> prototype, G genotype) {
 		super(prototype);

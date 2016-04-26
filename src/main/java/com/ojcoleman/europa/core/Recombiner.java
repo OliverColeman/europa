@@ -25,14 +25,14 @@ public abstract class Recombiner<G extends Genotype<?>> extends ComponentBase {
 
 	/**
 	 * Produce a new genotype from the given genotypes. This method must be able to accept at least two parents (and up
-	 * to {@link #parentCountMaximum()).
+	 * to {@link #parentCountMaximum()}).
 	 * 
 	 * @param parents The parent genotypes.
 	 */
 	public abstract G recombine(List<G> parents);
 
 	/**
-	 * Return the maximum number of parents that {@link #recombine(Genotype...)} accepts. Must be >= 2.
+	 * Return the maximum number of parents that {@link #recombine(List)} accepts. Must be >= 2.
 	 */
 	public abstract int parentCountMaximum();
 

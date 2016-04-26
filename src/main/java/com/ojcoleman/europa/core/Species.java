@@ -29,14 +29,14 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 	protected int age;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public Species(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 */

@@ -18,14 +18,14 @@ public class NEATSpecies extends Species<NEATGenotype> {
 	protected NEATGenotype representative;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATSpecies(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
 	 * @param representative The representative for the new species.

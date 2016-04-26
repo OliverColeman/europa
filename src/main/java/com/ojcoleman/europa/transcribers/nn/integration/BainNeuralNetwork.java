@@ -80,14 +80,14 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	protected Topology topology;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public BainNeuralNetwork(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * Create a Bain neural network with the given base configuration and instance configuration.
 	 * 
@@ -169,7 +169,6 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	 *            that will refer to the value returned by {@link #addNeuronType(Map)}.
 	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map)}.
 	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map)}.
-	 * @return The index of the new synapse in this neural network.
 	 */
 	@Override
 	public void addSynapse(Map<String, Double> config, int source, int dest) {

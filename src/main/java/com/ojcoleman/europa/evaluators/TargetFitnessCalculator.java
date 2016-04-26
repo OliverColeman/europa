@@ -16,7 +16,6 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.ojcoleman.europa.algos.vector.VectorFunctionEvaluator;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
@@ -96,14 +95,14 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 
 	/**
 	 * Evaluate the given function on the given input and target output pairs. Subclasses should call this from
-	 * {@link Evaluator#evaluate(Individual)}.
+	 * {@link Evaluator#evaluate(Individual, Log)}.
 	 * 
-	 * @param Individual The individual to evaluate.
+	 * @param individual The individual to evaluate.
 	 * @param input Array containing input examples, in the form [example][input].
 	 * @param targetOutput Array containing output examples, in the form [example][output].
 	 * @param minTargetOutputValue The smallest value that occurs in the target outputs.
 	 * @param maxTargetOutputValue The largest value that occurs in the target outputs.
-	 * @param logOutput If not null then for each pattern the input, target and output will be written to this.
+	 * @param log If not null then for each pattern the input, target and output will be written to this.
 	 */
 	public void evaluate(Individual<?, VectorFunction> individual, double[][] input, double[][] targetOutput, double minTargetOutputValue, double maxTargetOutputValue, Log log) {
 		VectorFunction function = (VectorFunction) individual.getFunction();
@@ -230,8 +229,8 @@ public abstract class TargetFitnessCalculator extends VectorFunctionEvaluator {
 	/**
 	 * The type of error calculation to use.
 	 * 
-	 * @see TargetFitnessCalculator#ERROR_TYPE_TRIAL_KEY
-	 * @see TargetFitnessCalculator#ERROR_TYPE_OUTPUT_KEY
+	 * @see TargetFitnessCalculator#errorTypeExample
+	 * @see TargetFitnessCalculator#errorTypeOutput
 	 */
 	public enum ErrorType {
 		/**

@@ -54,9 +54,9 @@ public abstract class FileOrCLIMonitor extends Monitor {
 	 * settings.
 	 * 
 	 * @param observed The subject (the object being observed). Provided for context, may be ignored.
-	 * @param event An object indicating the type of change or event, this is usually an {@Link java.lang.Enum} defined
+	 * @param event An object indicating the type of change or event, this is usually an {@link java.lang.Enum} defined
 	 *            by the Subject. If null is given then the Observer(s) will be passed
-	 *            {@link Observable.Event.Unspecified}. Provided for context, may be ignored.
+	 *            {@link com.ojcoleman.europa.configurable.Observable.Event#Unspecified}. Provided for context, may be ignored.
 	 * @param state An arbitrary object typically describing the current state of the Observable or information about
 	 *            the event. Provided for context, may be ignored.
 	 * @param s The character sequence to write.

@@ -173,7 +173,7 @@ public class ConfigurableBase extends Observable implements Stringable {
 	 * Creates a copy of the given ConfigurableBase. The copy is essentially a shallow copy (except for {@link #id}):
 	 * calls to {@link #getSingleton(Class)} on the copy and the original will return exactly the same result. The
 	 * rationale for this behaviour is that this copy constructor is primarily intended to support the
-	 * {@link Prototype#Prototype(PrototypeBase)} copy constructor, which is intended to efficiently create many copies
+	 * {@link PrototypeBase#PrototypeBase(PrototypeBase)} copy constructor, which is intended to efficiently create many copies
 	 * of the same prototype object. Performing deep copies of the contained singleton and prototype objects and
 	 * associated internal supporting data structures would incur a generally undesirable and unnecessary performance
 	 * cost.
@@ -244,10 +244,9 @@ public class ConfigurableBase extends Observable implements Stringable {
 
 	/**
 	 * Instantiates and returns a new instance of the specified Class. If many instances will be created then
-	 * {@link Prototype}s should be used, see {@link #newInstance(Class)}. This is because newGenericInstance uses
-	 * Java's reflection API to instantiate new instances, which is relatively slow.
+	 * {@link Prototype}s should be used. This is because newGenericInstance uses Java's reflection API to instantiate
+	 * new instances, which is relatively slow.
 	 * 
-	 * @see #newInstance(Class)
 	 * @see #getSingleton(Class)
 	 * 
 	 * @throws IllegalArgumentException if there is no constructor in clazz taking no arguments.
@@ -274,10 +273,9 @@ public class ConfigurableBase extends Observable implements Stringable {
 	 * Convenience method to handle the generation and access of singletons. The first call to this method specifying
 	 * some specific class will generate a new instance of that class. Subsequent calls specifying the same class will
 	 * return this instance. This is useful when a configuration must specify the class for some object in the system
-	 * that should or need not be a ConfigurableBase or based on a {@link Prototype} (see {@link #newInstance(Class)}).
+	 * that should or need not be a ConfigurableBase or based on a {@link Prototype}.
 	 * Care must be taken to ensure that it has a constructor no arguments.
 	 * 
-	 * @see #newInstance(Class)
 	 * @see #newGenericInstance(Class)
 	 * 
 	 * @throws IllegalArgumentException if there is no constructor in clazz taking no arguments.
@@ -305,7 +303,7 @@ public class ConfigurableBase extends Observable implements Stringable {
 	/**
 	 * Gets the current configuration of this ConfigurableBase.
 	 * 
-	 * @param Whether or not to include the meta-data for the parameters.
+	 * @param includeMetaData Whether or not to include the meta-data for the parameters.
 	 * @throws IllegalAccessException
 	 */
 	public JsonObject getConfiguration(boolean includeMetaData) throws IllegalAccessException {

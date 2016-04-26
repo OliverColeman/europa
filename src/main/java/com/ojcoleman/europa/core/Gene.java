@@ -31,7 +31,7 @@ public class Gene extends PrototypeBase {
 	public final Set<Object> types;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public Gene(Configuration config) {
 		super(config);
@@ -39,10 +39,10 @@ public class Gene extends PrototypeBase {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
-	 * @param type The type(s) of the gene. Usually these are enum constants. May be empty. The given Set is passed
+	 * @param types The type(s) of the gene. Usually these are enum constants. May be empty. The given Set is passed
 	 *            through {@link Collections#unmodifiableSet(Set)} and then assigned to the {@link #types} field, for
 	 *            this reason it should generally not be modified after being passed to this constructor.
 	 * 
@@ -54,7 +54,7 @@ public class Gene extends PrototypeBase {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Creates a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Creates a
 	 * Gene with no {@link #types}.
 	 * 
 	 * @param prototype The (prototype) instance to copy.

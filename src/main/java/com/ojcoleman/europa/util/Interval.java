@@ -36,7 +36,7 @@ public abstract class Interval<T extends Number & Comparable<T>> {
 	/**
 	 * Determine if the given value lies within this interval.
 	 * 
-	 * @param v The value to check.
+	 * @param value The value to check.
 	 * @return true iff the given value is in this interval.
 	 */
 	public abstract boolean isIn(T value);

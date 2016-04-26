@@ -7,8 +7,8 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * Class to specify and record log items. Used in methods like {@link Transcriber#transcribe(Genotype, Function, Log)}
- * and {@link Evaluator#evaluate(Individual, Object)} so that they may record implementation-specific details of the
+ * Class to specify and record log items. Used in methods like {@link Transcriber#transcribe(Genotype, Function)}
+ * and {@link Evaluator#evaluate(Individual, Log)} so that they may record implementation-specific details of the
  * process they perform.
  * 
  * @author O. J. Coleman

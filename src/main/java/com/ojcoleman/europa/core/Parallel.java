@@ -46,7 +46,6 @@ public class Parallel extends ConfigurableBase {
 	 * processed.
 	 * 
 	 * @param elements The Collection of elements to apply the operation to.
-	 * @param threads The number of threads to use. If set to 0 then the default number will be used.
 	 * @param operation The operation to apply to each element.
 	 */
 	public <T> void foreach(final Collection<T> elements, final Operation<T> operation) {
@@ -58,7 +57,6 @@ public class Parallel extends ConfigurableBase {
 	 * processed.
 	 * 
 	 * @param elements An Iterator over elements to apply the operation to.
-	 * @param threads The number of threads to use. If set to 0 then the default number will be used.
 	 * @param operation The operation to apply to each element.
 	 */
 	public <T> void foreach(final Iterable<T> elements, final Operation<T> operation) {

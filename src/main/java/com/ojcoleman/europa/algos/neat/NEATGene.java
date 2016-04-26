@@ -17,14 +17,14 @@ import com.ojcoleman.europa.configurable.ConfigurableBase;
  */
 public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATGene(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new VectorGene with specified type(s) and parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.
@@ -37,7 +37,7 @@ public class NEATGene extends VectorGene implements Comparable<NEATGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new VectorGene with the specified parameter Vector.
 	 * 
 	 * @param prototype The prototype gene to copy.

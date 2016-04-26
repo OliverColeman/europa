@@ -21,7 +21,7 @@ import com.ojcoleman.europa.util.IntervalDouble;
  * <p>
  * <strong>Sub-classes must implement a copy-constructor that accepts a single parameter which is the allele to copy,
  * and which should generally just call <em>super()</em> with the allele to copy.</strong> See
- * {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+ * {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
  * <p>
  * 
  * @see Vector
@@ -35,7 +35,7 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	public final Vector vector;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public VectorAllele(Configuration config) {
 		super(config);
@@ -43,11 +43,11 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new VectorAllele referencing the same underlying Gene but storing an independent copy of the Vector in the
 	 * original allele.
 	 * 
-	 * @param paramVector The vector for the new allele, copied by reference.
+	 * @param prototype The prototype VectorAllele to copy.
 	 * 
 	 * @throws IllegalArgumentException if the Vector is not set as mutable.
 	 */
@@ -57,10 +57,10 @@ public class VectorAllele<G extends VectorGene> extends Allele<G> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new VectorAllele with the specified underlying Gene and storing the specified Vector.
 	 * 
-	 * @param allele The allele to copy.
+	 * @param prototype The allele to copy.
 	 * @param gene the underlying gene for the new allele.
 	 * @param paramVector The vector for the new allele, copied by reference.
 	 * 

@@ -15,7 +15,7 @@ import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.core.Run;
 
 /**
- * A component that encapsulates the configuration for a type of {@link Gene} and/or {Allele} that define a set of
+ * A component that encapsulates the configuration for a type of {@link com.ojcoleman.europa.core.Gene} and/or {@link com.ojcoleman.europa.core.Allele} that define a set of
  * evolvable parameters.
  * 
  * @author O. J. Coleman
@@ -98,8 +98,8 @@ public class ParametrisedGeneType extends ConfigurableBase {
 
 	/**
 	 * Similar to {@link #getParamsGene()}, however the parameters specified here are intended to be referenced from
-	 * other genes or alleles (see {@link #getParamsTypeReference()}), instead of those parameters being set or evolved
-	 * individually in each gene or allele. {@link #getParamsTypeCount()} alleles should be created containing values
+	 * other genes or alleles (see {@link #paramsTypeReference}), instead of those parameters being set or evolved
+	 * individually in each gene or allele. {@link #paramsTypeCount} alleles should be created containing values
 	 * for these parameters.
 	 */
 	public VectorMetadata getParamsType() {

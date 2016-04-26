@@ -319,8 +319,8 @@ public abstract class Population<G extends Genotype<?>, F extends Function<?, ?>
 	}
 
 	/**
-	 * Speciates this population with {@link Speciator#speciate(Population, List<Species<G, F>>}. {@link #getSpecies()}
-	 * and {@link #getSpeciesMembers(Species)} may be called subsequently.
+	 * Speciates this population with {@link Speciator#speciate(Population, List)}. 
+	 * {@link #getSpecies()} may be called subsequently.
 	 */
 	public void speciate() {
 		speciator.speciate(this, species);

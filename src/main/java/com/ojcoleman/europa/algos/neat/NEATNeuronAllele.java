@@ -13,14 +13,14 @@ import com.ojcoleman.europa.transcribers.nn.NNConfig;
  */
 public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATNeuronAllele(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATNeuronAllele referencing the same underlying Gene but storing an independent copy of the original
 	 * parameter Vector.
 	 * 
@@ -33,7 +33,7 @@ public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATNeuronAllele with the specified underlying Gene and storing the specified parameter Vector.
 	 * 
 	 * @param prototype The allele to copy.
@@ -47,7 +47,7 @@ public class NEATNeuronAllele extends NEATAllele<NEATNeuronGene> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATNeuronAllele based on a specified neural network configuration and with parameter values initialised to
 	 * 0.
 	 * 

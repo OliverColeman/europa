@@ -37,7 +37,7 @@ public abstract class Evaluator extends ComponentBase {
 
 	/**
 	 * <p>
-	 * Evaluate the given {@link Individual}s. The Evaluator must call {@link #setResult(EvaluationDescription, double)}
+	 * Evaluate the given {@link Individual}s. The Evaluator must call {@link EvaluationData#setResult(EvaluationDescription, double)}
 	 * on individual.evaluationData for each evaluation type it defines in {@link #getEvaluationDescriptions()}.
 	 * </p>
 	 * <p>

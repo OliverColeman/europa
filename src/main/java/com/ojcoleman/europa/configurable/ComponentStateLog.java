@@ -5,7 +5,8 @@ import java.lang.reflect.Array;
 /**
  * Stores data about the state of a {@link ComponentBase}.
  * 
- * @see ComponentBase#getStateStatistics()
+ * @see ComponentBase#getAllStateData()
+ * @see ComponentBase#getState()
  * 
  * @author O. J. Coleman
  */

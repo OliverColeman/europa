@@ -77,7 +77,8 @@ public abstract class ComponentBase extends ConfigurableBase {
 	 * provided for the componentConfig parameter</strong> (null is used to create dummy instances when printing the
 	 * available default configuration options).
 	 * 
-	 * @param config The configuration for the this component and, recursively, it's Components.
+	 * @param parentComponent The parent component, if applicable.
+	 * @param componentConfig The configuration for the this component and, recursively, it's sub-components.
 	 * @throws Exception If an error occurred instantiating Components or setting parameter field values.
 	 */
 	public ComponentBase(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
@@ -113,6 +114,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 		this.componentConfig = null;
 	}
 
+	
 	/**
 	 * Provides information about the current state of this Component and its sub-Components, if any. Useful for a
 	 * {@link com.ojcoleman.europa.core.Monitor} or similar that is observing the Component.
@@ -120,6 +122,8 @@ public abstract class ComponentBase extends ConfigurableBase {
 	 * @return The state logs for this and all sub-Components. The keys are the Components class name, and for
 	 *         sub-Components this Components class name and the sub-Components class name separated by a
 	 *         iterationPeriod, and so on.
+	 *         
+	 * @see #getState()
 	 */
 	public final Multimap<String, ComponentStateLog> getAllStateData() {
 		Multimap<String, ComponentStateLog> stats = ArrayListMultimap.create();
@@ -149,6 +153,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 		return new ArrayList<>();
 	}
 
+	
 	protected List<Field> getComponentFields() {
 		List<Field> fields = new ArrayList<>();
 		Set<String> fieldNames = new HashSet<>();
@@ -173,7 +178,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 	/**
 	 * Gets the current configuration of this component.
 	 * 
-	 * @param Whether or not to include the meta-data for the parameters and Components.
+	 * @param includeMetaData Whether or not to include the meta-data for the parameters and Components.
 	 * @throws IllegalAccessException
 	 * @throws IllegalArgumentException
 	 */
@@ -277,12 +282,12 @@ public abstract class ComponentBase extends ConfigurableBase {
 
 	/**
 	 * Returns the instance for a sub-Component of this Component (referenced via a field annotated with
-	 * {@link @Component}), initialising it if necessary. This method should be called from the Constructors of other
+	 * {@link Component}), initialising it if necessary. This method should be called from the Constructors of other
 	 * components when they require access to another Component (which may not have been initialised yet). This method
 	 * should not typically be used outside of the constructor for a Component as it is not very efficient;
 	 * sub-Components should typically be accessed via get methods defined on the parent Component.
 	 * 
-	 * @param field The name of the field referencing the sub-Component.
+	 * @param fieldName The name of the field referencing the sub-Component.
 	 * @param requestingComponent The component making the request. This is used for detecting and reporting
 	 *            initialisation loops.
 	 * 

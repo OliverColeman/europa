@@ -1,4 +1,4 @@
-package com.ojcoleman.europa.algos.vector;
+package com.ojcoleman.europa.evaluators;
 
 import java.util.Set;
 
@@ -10,7 +10,7 @@ import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Individual;
 
 /**
- * Base class for evaluators that evaluate {@link VectorFunction}s.
+ * Base class for evaluators that evaluate {@link com.ojcoleman.europa.functiontypes.VectorFunction}s.
  * 
  * @author O. J. Coleman
  */

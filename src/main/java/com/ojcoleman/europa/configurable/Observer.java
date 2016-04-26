@@ -13,9 +13,9 @@ public interface Observer extends java.util.EventListener {
 	 * way).
 	 * 
 	 * @param observed The subject (the object being observed).
-	 * @param event An object indicating the type of change or event, this is usually an {@Link java.lang.Enum} defined
+	 * @param event An object indicating the type of change or event, this is usually an {@link java.lang.Enum} defined
 	 *            by the Subject. If null is given then the Observer(s) will be passed
-	 *            {@link Observable.Event.Unspecified}.
+	 *            {@link Observable.Event#Unspecified}.
 	 * @param state An arbitrary object typically describing the current state of the Observable or information about
 	 *            the event.
 	 */

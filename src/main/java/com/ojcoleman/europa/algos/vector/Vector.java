@@ -62,7 +62,7 @@ public class Vector implements Stringable {
 	/**
 	 * Create a Vector with the specified meta data and values.
 	 * 
-	 * @param metadata The information about each element of the vector.
+	 * @param info The information about each element of the vector.
 	 * @param values The values of the vector. These will be copied into a new array.
 	 * @param mutable Whether the values may be modified.
 	 * 
@@ -85,7 +85,7 @@ public class Vector implements Stringable {
 	/**
 	 * Create a Vector with the specified meta data and values initialised to zero. The Vector will be {@link #mutable}.
 	 * 
-	 * @param metadata The information about each element of the vector.
+	 * @param info The information about each element of the vector.
 	 */
 	public Vector(VectorMetadata info) {
 		this.metadata = info;
@@ -97,7 +97,7 @@ public class Vector implements Stringable {
 	 * Create a Vector with the specified meta data and with random values distributed uniformly between their minimum
 	 * and maximum values (inclusive).
 	 * 
-	 * @param metadata The information about each element of the vector.
+	 * @param info The information about each element of the vector.
 	 * @param mutable Whether the values may be modified.
 	 * @param random The RNG to use to generate the values.
 	 */

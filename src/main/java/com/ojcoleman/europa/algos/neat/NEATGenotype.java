@@ -62,14 +62,14 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	SortedMap<Long, NEATSynapseAllele> synapses;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATGenotype(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -81,7 +81,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the given alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -89,7 +89,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	 *            and put into a new collection. If the copy should be a clone then {@link #getAlleles()} may be passed.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only,
 	 *            implementations of this class do not need to create new instances from multiple parents (this is the
-	 *            job of {@link Recombiner)s.
+	 *            job of {@link com.ojcoleman.europa.core.Recombiner}s).
 	 */
 	public NEATGenotype(NEATGenotype prototype, Collection<NEATAllele<?>> alleles, List<Genotype<?>> parents) {
 		super(prototype, alleles, parents);

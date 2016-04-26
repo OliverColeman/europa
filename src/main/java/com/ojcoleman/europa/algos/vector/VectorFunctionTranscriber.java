@@ -8,6 +8,7 @@ import com.ojcoleman.europa.core.Function;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.core.Transcriber;
+import com.ojcoleman.europa.evaluators.VectorFunctionEvaluator;
 import com.ojcoleman.europa.functiontypes.VectorFunction;
 
 /**
@@ -19,7 +20,7 @@ import com.ojcoleman.europa.functiontypes.VectorFunction;
 public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends Transcriber<G, VectorFunction> {
 	/**
 	 * The number of inputs for the function to transcribe. By default this is determined from the primary evaluator
-	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
+	 * (see {@link com.ojcoleman.europa.core.Run#getEvaluators()}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
 	private int functionInputSize;
 
@@ -45,7 +46,7 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 
 	/**
 	 * The number of inputs for the function to transcribe. By default this is determined from the primary evaluator
-	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
+	 * (see {@link com.ojcoleman.europa.core.Run#getEvaluators()}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
 	public int getFunctionInputSize() {
 		return functionInputSize;
@@ -53,7 +54,7 @@ public abstract class VectorFunctionTranscriber<G extends Genotype<?>> extends T
 
 	/**
 	 * The number of outputs for the function to transcribe. By default this is determined from the primary evaluator
-	 * (see {@link com.ojcoleman.europa.Run#}), which should usually extend {@link VectorFunctionEvaluator}.
+	 * (see {@link com.ojcoleman.europa.core.Run#getEvaluators()}), which should usually extend {@link VectorFunctionEvaluator}.
 	 */
 	public int getFunctionOutputSize() {
 		return functionOutputSize;

@@ -40,7 +40,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	protected List<Map<String, Double>> synapseTypes;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public ParametrisedNeuralNetwork(Configuration config) {
 		super(config);
@@ -48,7 +48,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}.
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}.
 	 * 
 	 * Create a neural network with the given instance configuration.
 	 *
@@ -75,7 +75,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 * 
 	 * @param config Neuron model-specific configuration parameters, if applicable.
 	 * @return The index of the new neuron type in this neural network. This is used to reference a neuron type, for
-	 *         example in {@link #addNeuron(Object)}.
+	 *         example in {@link #addNeuron(Map)}.
 	 */
 	public int addNeuronType(Map<String, Double> config) {
 		neuronTypes.add(config);
@@ -87,7 +87,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 * 
 	 * @param config Synapse model-specific configuration parameters, if applicable.
 	 * @return The index of the new synapse type in this neural network. This is used to reference a synapse type, for
-	 *         example in {@link #addSynapse(Object, int, int)}.
+	 *         example in {@link #addSynapse(Map, int, int)}.
 	 */
 	public int addSynapseType(Map<String, Double> config) {
 		synapseTypes.add(config);
@@ -99,9 +99,9 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 * 
 	 * @param config Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
 	 *            value. If types are used then the config should generally contain a reference to a type according to
-	 *            the values returned by {@link #addNeuronType(Map<String, Double>)}.
+	 *            the values returned by {@link #addNeuronType(Map)}.
 	 * @return The index of the new neuron in this neural network. This is used to reference a neuron, for example in
-	 *         {@link #addSynapse(Map<String, Double>, int, int)}.
+	 *         {@link #addSynapse(Map, int, int)}.
 	 */
 	public abstract int addNeuron(Map<String, Double> config);
 
@@ -110,17 +110,14 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	 * 
 	 * @param config Synapse model-specific configuration parameters, if applicable. This will typically contain at
 	 *            least a "weight" value. If types are used then the config should generally contain a reference to a
-	 *            type according to the values returned by {@link #addSynapseType(Map<String, Double>)}.
-	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map<String,
-	 *            Double>)}.
-	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map<String,
-	 *            Double>)}.
-	 * @return The index of the new synapse in this neural network.
+	 *            type according to the values returned by {@link #addSynapseType(Map)}.
+	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map)}.
+	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map)}.
 	 */
 	public abstract void addSynapse(Map<String, Double> config, int source, int dest);
 
 	/**
-	 * This method should be called by a {@Link Transcriber} when the neural network is completed (when there will be no
+	 * This method should be called by a {@link com.ojcoleman.europa.core.Transcriber} when the neural network is completed (when there will be no
 	 * more calls to {@link #addNeuron} or {@link #addSynapse(Map, int, int)}. Sub-classes may override this method in
 	 * order to perform any clean-up or other initialisation tasks.
 	 */

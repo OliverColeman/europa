@@ -25,11 +25,11 @@ import com.ojcoleman.europa.util.Stringer;
 /**
  * Implements speciation according to the original NEAT speciation method with a few difference:
  * <ul>
- * <li>A target number of species may be specified with {@link speciationTarget}, in which case the speciation threshold
+ * <li>A target number of species may be specified with {@link #speciationTarget}, in which case the speciation threshold
  * will be adjusted automatically.</li>
  * <li>Individuals are added to the closest matching species, not the first matching species found.</li>
  * <li>It can handle alleles with multiple parameters (not just weight or bias).</li>
- * <li>Parameter values may be normalised (see {@link normaliseParameterValues}) when calculating the distance between
+ * <li>Parameter values may be normalised (see {@link NEATSpeciator#normaliseParameterValues}) when calculating the distance between
  * two genomes.</li>
  * </ul>
  * 

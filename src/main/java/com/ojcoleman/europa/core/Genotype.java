@@ -25,7 +25,7 @@ import com.ojcoleman.europa.util.Stringer;
  * Represents the inheritable genetic material of an {@link Individual}.
  * </p>
  * <p>
- * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}
+ * <strong>Sub-classes must implement a {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}
  * type copy-constructor accepting only the allele to copy, which should generally just call <em>super()</em> with the
  * given allele.</strong>
  * </p>
@@ -51,7 +51,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	private ArrayListMultimap<Object, A> allelesByGeneType;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public Genotype(Configuration config) {
 		super(config);
@@ -62,7 +62,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -80,7 +80,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the given alleles and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -88,7 +88,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	 *            and put into a new collection.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only,
 	 *            implementations of this class do not need to create new instances from multiple parents (this is the
-	 *            job of {@link Recombiner)s.
+	 *            job of {@link Recombiner}s).
 	 */
 	public Genotype(Genotype<A> prototype, Collection<A> alleles, List<Genotype<?>> parents) {
 		super(prototype);
@@ -114,14 +114,13 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	/**
 	 * Create and return a new Collection to be used to store Alleles. This is used by the Genotype constructors. This
 	 * allows sub-classes to specify the kind of Collection to use to store alleles. For example should it be a
-	 * {@link List}, a {@link Set}, a {@link SortedSet}, a {@link HashSet}...?
+	 * {@link java.util.List}, a {@link java.util.Set}, a {@link java.util.SortedSet}, a {@link java.util.HashSet}...?
 	 */
 	protected abstract Collection<A> newAlleleCollection();
 
 	/**
 	 * Get the alleles of this genotype as an unmodifiable collection. The iterator of the returned collection will
-	 * iterate over the alleles in the same order as the collection provided to the constructor or
-	 * {@link #newPrototypeInstance(Class, Object...)}.
+	 * iterate over the alleles in the same order as the collection provided to the constructor.
 	 */
 	public Collection<A> getAlleles() {
 		return Collections.unmodifiableCollection(alleles);
@@ -142,9 +141,9 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	 * 
 	 * @param type Object representing the type, usually an enum constant.
 	 * @return The list of alleles in this genotype that are for {@link Gene}s of the specified type, in the same order
-	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles. If no alleles of
+	 *         as the Collection provided to {@link #Genotype(Genotype, Collection, List)} iterates over those alleles. If no alleles of
 	 *         the specified type exist then an empty list is returned.
-	 * @see hasAllelesOfType(String)
+	 * @see #hasAllelesOfType(Object)
 	 */
 	public List<A> getAllelesOfType(Object type) {
 		return Collections.unmodifiableList(allelesByGeneType.get(type));
@@ -155,11 +154,11 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 	 * list if there are no alleles of specified type present. Note that an allele/gene pair may have multiple types.
 	 * 
 	 * @param type Object representing the type, usually an enum constant.
-	 * @param type defaultList A list of default values to return if there are no alleles of specified type present. May
+	 * @param defaultList A list of default values to return if there are no alleles of specified type present. May
 	 *            be null.
 	 * @return The list of alleles in this genotype that are for {@link Gene}s of the specified type, in the same order
-	 *         as the Set provided to {@link #Genotype(Set, Genotype...)} iterates over those alleles.
-	 * @see hasAllelesOfType(String)
+	 *         as the Set provided to {@link #Genotype(Genotype, Collection, List)} iterates over those alleles.
+	 * @see #hasAllelesOfType(Object)
 	 */
 	public List<A> getAllelesOfType(Object type, List<A> defaultList) {
 		if (!allelesByGeneType.containsKey(type)) {

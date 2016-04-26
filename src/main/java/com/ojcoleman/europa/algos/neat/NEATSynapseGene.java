@@ -27,7 +27,7 @@ public class NEATSynapseGene extends NEATGene {
 	public final long destinationID;
 
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public NEATSynapseGene(Configuration config) {
 		super(config);
@@ -36,7 +36,7 @@ public class NEATSynapseGene extends NEATGene {
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * new NEATSynapseGene based on a specified neural network configuration. The parameter values, if any, are
 	 * initialised with random values.
 	 * 

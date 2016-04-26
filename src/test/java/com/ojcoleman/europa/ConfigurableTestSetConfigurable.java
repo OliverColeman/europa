@@ -12,7 +12,6 @@ import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
 import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.configurable.PrototypeMissingCopyConstructorException;
-import com.ojcoleman.europa.configurable.PrototypeMissingCopyMethodException;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.DefaultIDFactory;
 

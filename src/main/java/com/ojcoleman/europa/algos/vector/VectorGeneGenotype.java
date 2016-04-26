@@ -19,14 +19,14 @@ import com.ojcoleman.europa.core.Genotype;
  */
 public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Genotype<A> {
 	/**
-	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(JsonObject)}.
+	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
 	public VectorGeneGenotype(Configuration config) {
 		super(config);
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the same alleles and genes as the given genotype. The parent is set to the given prototype.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -36,7 +36,7 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	}
 
 	/**
-	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#Prototype(PrototypeBase)}. Create a
+	 * Copy constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(PrototypeBase)}. Create a
 	 * Genotype with the given ID (should generally be unique) and parents.
 	 * 
 	 * @param prototype The (prototype) instance to copy.
@@ -44,7 +44,7 @@ public abstract class VectorGeneGenotype<A extends VectorAllele<?>> extends Geno
 	 *            and put into a new collection.
 	 * @param parents The parents that were used to create this genotype (this is for record keeping only,
 	 *            implementations of this class do not need to create new instances from multiple parents (this is the
-	 *            job of {@link Recombiner)s.
+	 *            job of {@link com.ojcoleman.europa.core.Recombiner}s).
 	 */
 	public VectorGeneGenotype(VectorGeneGenotype<A> prototype, Collection<A> alleles, List<Genotype<?>> parents) {
 		super(prototype, alleles, parents);
