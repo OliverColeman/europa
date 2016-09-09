@@ -2,6 +2,7 @@ package com.ojcoleman.europa.transcribers.nn.integration;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,8 +53,6 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	// Record of how many synapses have been added via addSynapse()
 	private int addedSynapseCount;
 
-	// Number of input neurons.
-	private int inputSize;
 	// Index of the first output neuron.
 	private int outputIndex;
 
@@ -112,11 +111,10 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 			throw new RuntimeException("Error creating synapses for Bain neural network.", e);
 		}
 
-		inputSize = instConfig.inputCount;
 		outputIndex = instConfig.neuronCount - instConfig.outputCount;
 
 		// stepsPerStep and topology may be changed by setStepsPerStepForNonLayeredFF()
-		stepsPerStep = instConfig.stepsPerStep;
+		stepsPerStep = config.getSimulationStepsPerStep();
 		topology = config.getTopology();
 
 		nn = new NeuralNetwork(config.simulationResolution, neurons, synapses, config.aparapiExecutionMode);
@@ -132,8 +130,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	/**
 	 * Add a neuron to this neural network.
 	 * 
-	 * @param config Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
-	 *            value. If types are used then the config must contain a value for "typeReference" that will refer to
+	 * @param nnConfig Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
+	 *            value. If types are used then the nnConfig must contain a value for "typeReference" that will refer to
 	 *            the value returned by {@link #addNeuronType(Map)}.
 	 * @return The index of the new neuron in this neural network. This is used to reference a neuron, for example in
 	 *         {@link #addSynapse(Map, int, int)}.
@@ -164,8 +162,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	/**
 	 * Add a synapse to this neural network.
 	 * 
-	 * @param config Synapse model-specific configuration parameters, if applicable. This will typically contain at
-	 *            least a "weight" value. If types are used then the config must contain a value for "typeReference"
+	 * @param nnConfig Synapse model-specific configuration parameters, if applicable. This will typically contain at
+	 *            least a "weight" value. If types are used then the nnConfig must contain a value for "typeReference"
 	 *            that will refer to the value returned by {@link #addNeuronType(Map)}.
 	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map)}.
 	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map)}.
@@ -195,7 +193,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	 * 
 	 * @param componentCollection The collection to add the component to.
 	 * @param componentIndex The index of the component in the collection.
-	 * @param config The configuration parameters.
+	 * @param nnConfig The configuration parameters.
 	 * @param types The list of component types (eg {@link #neuronTypes}).
 	 * @param typeToBainConfig Mapping from component type indexes to Bain ConfigurableComponentCollection configuration
 	 *            index (eg {@link #neuronTypeToBainConfig}).
@@ -327,7 +325,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		for (int c = 0; c < synapses.getSizePopulated(); c++) {
 			graph.addEdge(new DirectedEdge(synapses.getPostNeuron(c), synapses.getPreNeuron(c), -1));
 		}
-
+		
 		// Apply Bellman-Ford algo for each output neuron, query for lowest
 		// value path to each input.
 		int maxDepth = 0;
@@ -349,10 +347,12 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 
 		if (!cyclic) {
-			stepsPerStep = maxDepth - 1;
+			stepsPerStep = maxDepth;
 		} else {
-			logger.warn("The Bain network marked as feed forward contains cycles. Switching to recurrent topology mode with " + stepsPerStep + " activation cycles per step.");
-			topology = Topology.RECURRENT;
+			throw new RuntimeException("The Bain network marked as feed forward contains cycles. Switching to recurrent topology mode with " + stepsPerStep + " activation cycles per step.");
+			
+			//logger.warn("The Bain network marked as feed forward contains cycles. Switching to recurrent topology mode with " + stepsPerStep + " activation cycles per step.");
+			//topology = Topology.RECURRENT;
 		}
 	}
 
@@ -366,8 +366,14 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	public double[] apply(double[] stimuli, double[] output) {
 		// Get a reference to (all) neuron outputs.
 		double[] nnOutputs = nn.getNeurons().getOutputs();
-
+		
+		boolean dbg = false;//Math.random() < 0.0001;
+		
+		if (dbg) System.out.println(this);
+		
 		if (config.getTopology() == Topology.FEED_FORWARD) {
+			if (dbg) System.out.println(Arrays.toString(stimuli));
+			
 			// For non-layered FF networks we have to run the network stepsPerStep times to propagate the
 			// signals all the way through, while making sure the input neurons have the input values
 			// maintained each step.
@@ -376,9 +382,13 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 					System.arraycopy(stimuli, 0, nnOutputs, 0, stimuli.length);
 					nn.getNeurons().setOutputsModified(0, stimuli.length);
 				}
+				
+				if (dbg) System.out.println(s + " : " + Arrays.toString(nnOutputs));
+				
 				nn.step();
 			}
-			System.arraycopy(stimuli, 0, nnOutputs, 0, stimuli.length);
+			
+			if (dbg) System.out.println(stepsPerStep + " : " + Arrays.toString(nnOutputs));
 		} else {
 			if (stimuli != null) {
 				System.arraycopy(stimuli, 0, nnOutputs, 0, stimuli.length);
@@ -388,6 +398,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 
 		System.arraycopy(nnOutputs, outputIndex, output, 0, instanceConfig.outputCount);
+		
+		if (dbg) System.out.println(Arrays.toString(output) + "\n\n");
 
 		return output;
 	}
@@ -405,8 +417,8 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		double[] nnOutputs = nn.getNeurons().getOutputs();
 
 		int stimuliCount = input.length;
+		
 		// Optimisation for layered FF networks.
-
 		if (topology == Topology.FEED_FORWARD_LAYERED) {
 			for (int stimuliIndex = 0, responseIndex = 1 - stepsPerStep; stimuliIndex < stimuliCount + stepsPerStep - 1; stimuliIndex++, responseIndex++) {
 				if (stimuliIndex < stimuliCount) {
@@ -440,7 +452,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 	}
 
 	public boolean isInput(int neuronIndex) {
-		return neuronIndex < inputSize;
+		return neuronIndex < instanceConfig.inputCount;
 	}
 
 	public boolean isOutput(int neuronIndex) {
@@ -489,7 +501,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 		}
 		String[] paramNames = nn.getNeurons().getConfigSingleton() != null ? nn.getNeurons().getConfigSingleton().getParameterNames() : null;
 		if (paramNames != null) {
-			out.append("config\t");
+			out.append("nnConfig\t");
 			for (int p = 0; p < paramNames.length; p++) {
 				out.append(paramNames[p].substring(0, Math.min(6, paramNames[p].length())) + "\t");
 			}
@@ -508,7 +520,7 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 				if (nn.getNeurons().getComponentConfiguration(i) != null) {
 					out.append("\t" + nn.getNeurons().getComponentConfigurationIndex(i) + "\t" + ArrayUtil.toString(nn.getNeurons().getComponentConfiguration(i).getParameterValues(), "\t", floatf));
 				} else {
-					out.append("<no config>");
+					out.append("<no nnConfig>");
 				}
 			}
 			out.append("\n");
@@ -574,5 +586,10 @@ public class BainNeuralNetwork extends ParametrisedNeuralNetwork {
 
 		out.append("\n");
 		return out.toString();
+	}
+
+	@Override
+	public void reset() {
+		nn.reset();
 	}
 }

@@ -114,6 +114,9 @@ import com.ojcoleman.europa.core.Stringable;
  */
 public class ConfigurableBase extends Observable implements Stringable {
 	private static Logger logger = LoggerFactory.getLogger(ConfigurableBase.class);
+	
+	// Static cache of annotated fields for a class. See getAnnotatedFields().
+	private static Map<Class, Multimap<FieldType, Field>> annotatedFields = new HashMap<>();
 
 	/**
 	 * Indicates that this instance is a dummy, most likely being used for printing out configuration options.
@@ -139,11 +142,11 @@ public class ConfigurableBase extends Observable implements Stringable {
 
 	/**
 	 * Creates and configures this ConfigurableBase with the given configuration. Sub-classes must implement a
-	 * constructor accepting the same parameters and call <code>super(config)</code>. <strong>Overriding implementations
+	 * constructor accepting the same parameters and call <code>super(nnConfig)</code>. <strong>Overriding implementations
 	 * of this constructor should return after calling super() if <em>null</em> is provided</strong> (null is used to
 	 * create dummy instances when printing the available default configuration options).
 	 * 
-	 * @param config The configuration for this ConfigurableBase.
+	 * @param nnConfig The configuration for this ConfigurableBase.
 	 * 
 	 * @throws Exception If an error occurred setting parameter field values.
 	 */
@@ -211,28 +214,32 @@ public class ConfigurableBase extends Observable implements Stringable {
 		return classes;
 	}
 
-	Multimap<FieldType, Field> getAnnotatedFields() {
-		Multimap<FieldType, Field> fields = ArrayListMultimap.create();
-
-		Set<String> fieldNames = new HashSet<>();
-
-		// Get all super-classes too so that we can set their fields.
-		for (Class<?> clazz : getSuperClasses()) {
-			for (Field f : clazz.getDeclaredFields()) {
-				if (f.isAnnotationPresent(Parameter.class)) {
-					checkFieldAlreadyDefined(fieldNames, f, clazz);
-					fields.put(FieldType.PARAMETER, f);
-				} else if (f.isAnnotationPresent(Configurable.class)) {
-					checkFieldAlreadyDefined(fieldNames, f, clazz);
-					fields.put(FieldType.CONFIGURABLE, f);
-				} else if (f.isAnnotationPresent(Prototype.class)) {
-					checkFieldAlreadyDefined(fieldNames, f, clazz);
-					fields.put(FieldType.PROTOTYPE, f);
+	protected Multimap<FieldType, Field> getAnnotatedFields() {
+		if (!annotatedFields.containsKey(this.getClass())) {
+			Multimap<FieldType, Field> fields = ArrayListMultimap.create();
+	
+			Set<String> fieldNames = new HashSet<>();
+	
+			// Get all super-classes too so that we can set their fields.
+			for (Class<?> clazz : getSuperClasses()) {
+				for (Field f : clazz.getDeclaredFields()) {
+					if (f.isAnnotationPresent(Parameter.class)) {
+						checkFieldAlreadyDefined(fieldNames, f, clazz);
+						fields.put(FieldType.PARAMETER, f);
+					} else if (f.isAnnotationPresent(Configurable.class)) {
+						checkFieldAlreadyDefined(fieldNames, f, clazz);
+						fields.put(FieldType.CONFIGURABLE, f);
+					} else if (f.isAnnotationPresent(Prototype.class)) {
+						checkFieldAlreadyDefined(fieldNames, f, clazz);
+						fields.put(FieldType.PROTOTYPE, f);
+					}
 				}
 			}
+			annotatedFields.put(this.getClass(), fields);
+			return fields;
 		}
 
-		return fields;
+		return annotatedFields.get(this.getClass());
 	}
 
 	private void checkFieldAlreadyDefined(Set<String> fieldNames, Field f, Class<?> clazz) {
@@ -582,12 +589,12 @@ public class ConfigurableBase extends Observable implements Stringable {
 
 			if (isArray) {
 				// If we're creating a dummy instance, try to initialise an example using the default or field type
-				// class. Otherwise if no config provided then an empty array will be created.
+				// class. Otherwise if no nnConfig provided then an empty array will be created.
 				if (jsonValue == null && configurable.isDummy) {
 					jsonValue = new JsonObject();
 				}
 
-				// Get config(s) as JsonArray.
+				// Get nnConfig(s) as JsonArray.
 				JsonArray configArray = new JsonArray();
 				if (jsonValue != null) {
 					if (jsonValue.isArray()) {
@@ -638,7 +645,7 @@ public class ConfigurableBase extends Observable implements Stringable {
 
 	/**
 	 * Get the constructor for the given ConfigurableBase field, taking into account the default class in the annotation
-	 * if specified and the "class" in the config if specified and performing error checking.
+	 * if specified and the "class" in the nnConfig if specified and performing error checking.
 	 */
 	Constructor<?> getConfigurableConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, FieldType fieldType, String fieldBaseTypeLabel, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
@@ -776,9 +783,9 @@ public class ConfigurableBase extends Observable implements Stringable {
 				}
 
 				// if (ConfigurableBase.class.isAssignableFrom(type)) {
-				// config.add("_metadata<" + name + "> class", "The class to use, if a class other than the base class
+				// nnConfig.add("_metadata<" + name + "> class", "The class to use, if a class other than the base class
 				// is required.");
-				// config.add("class", type.getName());
+				// nnConfig.add("class", type.getName());
 				// }
 
 			}

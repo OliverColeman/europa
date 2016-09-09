@@ -22,6 +22,11 @@ public class NiceWriter extends BufferedWriter {
 		super(out);
 		nf = new DecimalFormat(numberFormat);
 	}
+	
+	public NiceWriter(Writer out, DecimalFormat numberFormat) {
+		super(out);
+		nf = numberFormat;
+	}
 
 	public NiceWriter put(String a) throws IOException {
 		write(a);

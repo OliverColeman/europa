@@ -50,6 +50,8 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 	 */
 	public NEATAllele(NEATAllele<G> prototype) {
 		super(prototype);
+		
+		enabled = prototype.enabled;
 	}
 
 	/**
@@ -68,7 +70,19 @@ public class NEATAllele<G extends NEATGene> extends VectorAllele<G> implements C
 
 	@Override
 	public int compareTo(NEATAllele<G> other) {
-		return gene.compareTo(other.gene);
+		// Compare by gene ID first as this is generally what we're interested in for sorting purposes.
+		int comparison = gene.compareTo(other.gene);
+		
+		// If these alleles have the same gene, compare by their own IDs.
+		if (comparison == 0) {
+			if (id < other.id)
+				return -1;
+			if (id > other.id)
+				return 1;
+			return 0;
+		}
+		
+		return comparison;
 	}
 
 	/**

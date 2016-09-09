@@ -1,5 +1,7 @@
 package com.ojcoleman.europa.core;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -10,37 +12,63 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.ConfigurableBase;
 import com.ojcoleman.europa.configurable.Configuration;
+import com.ojcoleman.europa.configurable.Observable;
+import com.ojcoleman.europa.configurable.Observer;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.thoughtworks.xstream.XStream;
 
 /**
  * Utility class for performing parallel iteration over generic Collections or anything that implements the Iterable
  * interface. Code adapted from http://stackoverflow.com/questions/4010185/parallel-for-for-java#4010275
  */
-public class Parallel extends ConfigurableBase {
+public class Parallel extends ComponentBase {
 	private final static Logger logger = LoggerFactory.getLogger(Evolver.class);
 
 	@Parameter(description = "The number of threads to use for parallel operations. If set to 0 or not set then the number of CPU cores is used.", minimumValue = "0", defaultValue = "0")
-	private int threadCount;
+	protected int threadCount;
 
-	private ExecutorService executor;
-
-	public Parallel(Configuration config) {
-		super(config);
-
+	// Mark as transient so XStream does not store it. See readResolve().
+	protected transient ExecutorService executor;
+	
+	
+	public Parallel(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
+		super(parentComponent, componentConfig);
+		
 		if (threadCount <= 0) {
 			threadCount = Runtime.getRuntime().availableProcessors();
 		}
-
+		
 		executor = Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(Parallel.class.getName()));
+		
+		this.getParentComponent(Run.class).addEventListener(new Observer() {
+			@Override
+			public void eventOccurred(Observable observed, Object event, Object state) {
+				if (event == Run.Event.SnapshotBegin) {
+					if (executor instanceof ThreadPoolExecutor && ((ThreadPoolExecutor) executor).getActiveCount() > 0) {
+						logger.warn("Snapshotting while tasks are still executing. Resuming from this snapshot may produce strange results.");
+					}
+				}
+			}
+		});
 	}
-
+	
+	private Object readResolve() {
+		// Create new thread pool upon resuming from a save file.
+		executor = Executors.newFixedThreadPool(threadCount, new DaemonThreadFactory(Parallel.class.getName()));
+		return this;
+	}
+	
+	
 	/**
 	 * Perform the given {@link Parallel.Operation} on the given elements. Returns when all elements have been
 	 * processed.
@@ -64,6 +92,10 @@ public class Parallel extends ConfigurableBase {
 	}
 
 	private <T> void submitAndWait(final Iterable<T> elements, final Operation<T> operation, int size) {
+		if (executor.isShutdown()) {
+			throw new IllegalStateException("Executor service for Parallel has been shutdown, cannot submit new tasks.");
+		}
+		
 		try {
 			List<Future<Void>> futures = executor.invokeAll(createCallables(elements, operation, size));
 			assert (futures.size() == size) : futures.size() + " != " + size;
@@ -128,5 +160,12 @@ public class Parallel extends ConfigurableBase {
 			t.setDaemon(true);
 			return t;
 		}
+	}
+
+	/**
+	 * Shutdown all threads.
+	 */
+	public void stop() {
+		executor.shutdown();
 	}
 }

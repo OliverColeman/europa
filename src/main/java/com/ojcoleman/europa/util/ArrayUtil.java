@@ -128,7 +128,7 @@ public class ArrayUtil {
 	 * @param a The array to calculate the average for.
 	 * @return The average over all elements in the array.
 	 */
-	public static double average(double[] a) {
+	public static double mean(double[] a) {
 		return sum(a) / a.length;
 	}
 
@@ -438,5 +438,18 @@ public class ArrayUtil {
 			a[i] *= m;
 		}
 		return a;
+	}
+	
+	
+	/**
+	 * Returns the standard deviation of the given values.
+	 */
+	public static double getStdDev(double[] values) {
+		double mean = mean(values);
+		double d = 0;
+		for (int i = 0; i < values.length; i++) {
+			d += Math.pow(values[i] - mean, 2);
+		}
+		return Math.sqrt(d / values.length);
 	}
 }

@@ -1,30 +1,44 @@
 package com.ojcoleman.europa;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
+import java.lang.reflect.Array;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipInputStream;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.eclipsesource.json.Json;
 import com.eclipsesource.json.JsonArray;
 import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 import com.eclipsesource.json.WriterConfig;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.DefaultIDFactory;
-import com.ojcoleman.europa.configurable.Observable;
-import com.ojcoleman.europa.configurable.Observer;
+import com.ojcoleman.europa.core.EvaluationDescription;
+import com.ojcoleman.europa.core.Evaluator;
 import com.ojcoleman.europa.core.Run;
+import com.ojcoleman.europa.util.ArrayUtil;
 import com.thoughtworks.xstream.XStream;
 
 /**
@@ -45,6 +59,9 @@ public class Main {
 
 	@Parameter(names = "--strictJSON", description = "If printConfig is provided, disables \"commenting out\" the metadata in the JSON output, thus producing valid JSON. Metadata about parameters and components is commented out by default to improve readability. Note that this program will accept configuration files with comments.")
 	private boolean strictJSON = false;
+
+	@Parameter(names = "--runCount", description = "The number of runs to perform. This is only applicable when launching from a configuration, not a saved run. Default is 1.")
+	private int runCount = 1;
 
 	public static void main(String[] args) {
 		try {
@@ -67,7 +84,7 @@ public class Main {
 					jcom.usage();
 					System.exit(-1);
 				}
-
+				
 				if (main.configOrSavedRun.get(0).endsWith(".json")) {
 					main.launchFromConfig(mergeConfigs(main.configOrSavedRun));
 				} else if (main.configOrSavedRun.get(0).endsWith(".europa")) {
@@ -81,12 +98,17 @@ public class Main {
 			e.printStackTrace();
 		}
 	}
-
+	
 	private synchronized void launchFromSaved(String configOrSavedRun) throws Exception {
-		XStream xstream = new XStream();
-		xstream.setMarshallingStrategy(null);
+		ZipFile zipFile = new ZipFile(configOrSavedRun);
+		ZipEntry zipEntry = zipFile.getEntry("europarun.xml");
+		BufferedInputStream is = new BufferedInputStream (zipFile.getInputStream(zipEntry));
 
-		Run run = (Run) xstream.fromXML(new FileReader(configOrSavedRun));
+		XStream xstream = new XStream();
+		Run run = (Run) xstream.fromXML(is);
+		
+		zipFile.close();
+		
 		run.run();
 	}
 
@@ -95,10 +117,44 @@ public class Main {
 		for (String confPath : configOrSavedRun) {
 			configFilePaths.add(confPath);
 		}
-		config.add("configFilePaths", configFilePaths);
-
-		Run run = new Run(null, new Configuration(config, false, new DefaultIDFactory()));
-		run.run();
+		
+		config.set("configFilePaths", configFilePaths);
+		
+		String outputDir = getUniqueOutputDirectory(config);
+		
+		config.set("runCount", runCount);
+		int solvedCount = 0;
+		double[] performances = new double[runCount];
+		EvaluationDescription evDesc = null;
+		for (int runIndex = 0; runIndex < runCount; runIndex++) {
+			config.set("runIndex", runIndex);
+			if (runCount > 1) {
+				config.set("outputDirectory", outputDir + File.separator + runIndex);
+			}
+			
+			Run run = new Run(null, new Configuration(config, false, new DefaultIDFactory()));
+			
+			run.run();
+			
+			if (run.getCurrentIteration() < run.getMaximumIterations()) {
+				solvedCount++;
+			}
+			
+			evDesc = getEvalDescription(run);
+			
+			if (evDesc.isPerformanceIndicator) {
+				performances[runIndex] = run.getPopulation().getBestPerforming().evaluationData.getPerformanceResults().get(evDesc);
+			}
+			else {
+				performances[runIndex] = run.getPopulation().getFittest().evaluationData.getFitnessResults().get(evDesc);
+			}
+		}
+		
+		double avgPerf = ArrayUtil.mean(performances);
+		double sdPerf = ArrayUtil.getStdDev(performances);
+		System.out.println("Solved count: " + solvedCount);
+		System.out.println(evDesc.name + "\n\tmean: " + avgPerf + "\n\tstd. dev.:" + sdPerf + "\n\tall: " + Arrays.toString(performances));
+		
 	}
 
 	private synchronized void launch(final Run run) throws Exception {
@@ -106,9 +162,16 @@ public class Main {
 	}
 
 	private void printConfigOptionsFromSaved(String configOrSavedRun) throws Exception {
+		FileInputStream fis = new FileInputStream(configOrSavedRun);
+		ZipInputStream zis = new ZipInputStream(new BufferedInputStream(fis));
+		zis.getNextEntry();
+		
 		XStream xstream = new XStream();
-		xstream.setMarshallingStrategy(null);
-		Run run = (Run) xstream.fromXML(new FileReader(configOrSavedRun));
+		
+		Run run = (Run) xstream.fromXML(zis);
+		
+		zis.close();
+		
 		printConfig(run);
 	}
 
@@ -171,7 +234,10 @@ public class Main {
 		return json;
 	}
 
-	private static JsonObject mergeConfigs(List<String> configPaths) throws IOException {
+	/**
+	 * Merge the given JSON files together into one JsonObject. Latter values override former values.
+	 */ 
+	public static JsonObject mergeConfigs(List<String> configPaths) throws IOException {
 		JsonObject mergedConfig = new JsonObject();
 
 		for (String confPath : configPaths) {
@@ -205,5 +271,41 @@ public class Main {
 				o1.set(key, merged);
 			}
 		}
+	}
+	
+
+	private String getUniqueOutputDirectory(JsonObject config) throws IOException {
+		String outputDir = config.getString("outputDirectory", null);
+		if (outputDir == null) {
+			String name = config.getString("name", null);;
+			if (name == null) {
+				name = Run.getDefaultName(config);
+			}
+			outputDir = Run.getDefaultOutputDirectory(name);
+		}
+		outputDir = Run.getUniqueDirectoryName(outputDir);
+		return outputDir;
+	}
+	
+	
+	/**
+	 * Determine which performance (or fitness) evaluation to use.
+	 * Use (first) performance indicator from primary evaluator if available.
+	 * Otherwise the first fitness indicator from the (most) primary evaluator is used.
+	 */
+	private EvaluationDescription getEvalDescription(Run run) {
+		EvaluationDescription fitnessEvDesc = null;
+		
+		for (Evaluator ev : run.getEvaluators()) {
+			for (EvaluationDescription desc : ev.getEvaluationDescriptions()) {
+				if (desc.isPerformanceIndicator) {
+					return desc;
+				}
+				else if (fitnessEvDesc == null) {
+					fitnessEvDesc = desc;
+				}
+			}
+		}
+		return fitnessEvDesc;
 	}
 }

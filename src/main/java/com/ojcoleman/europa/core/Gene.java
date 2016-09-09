@@ -3,6 +3,7 @@ package com.ojcoleman.europa.core;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import com.eclipsesource.json.JsonObject;
@@ -73,5 +74,12 @@ public class Gene extends PrototypeBase {
 		// Remove "null" type in case this was included in the list somewhere along the line.
 		set.remove(null);
 		return Collections.unmodifiableSet(set);
+	}
+	
+
+	@Override
+	public void getStringableMap(Map<String, Object> map) {
+		super.getStringableMap(map);
+		map.put("types", types);
 	}
 }

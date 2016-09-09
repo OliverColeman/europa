@@ -26,3 +26,4 @@ public class BainParametrisedGeneType extends ParametrisedGeneType {
 		return modelClass;
 	}
 }
+

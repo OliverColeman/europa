@@ -15,6 +15,7 @@ import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
 import com.ojcoleman.europa.configurable.Prototype;
+import com.ojcoleman.europa.transcribers.nn.NNPart;
 import com.ojcoleman.europa.util.ArrayUtil;
 import com.ojcoleman.europa.util.Stringer;
 import com.ojcoleman.europa.configurable.Component;

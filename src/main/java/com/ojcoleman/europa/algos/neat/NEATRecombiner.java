@@ -2,6 +2,7 @@ package com.ojcoleman.europa.algos.neat;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -18,13 +19,16 @@ import com.google.common.collect.TreeMultimap;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.core.Genotype;
+import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Recombiner;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
+import com.ojcoleman.europa.transcribers.nn.NNPart;
 import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
 import com.ojcoleman.europa.transcribers.nn.Topology;
 import com.ojcoleman.europa.util.ArrayUtil;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Implements recombination as described by the NEAT evolutionary algorithm (See
@@ -54,80 +58,90 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 		NNConfig nnConfig = ((NeuralNetworkTranscriber<?>) run.getTranscriber()).getNeuralNetworkPrototype().getConfig();
 		Random random = run.random;
 		Population<NEATGenotype, ?> population = this.getParentComponent(Population.class);
-
+		
 		NEATGenotype child = null;
-
-		SortedMap<Double, NEATGenotype> parentsRanker = new TreeMap<>();
+		
+		//boolean dbg = Math.random() < 0.0001;
+		
+		List<Individual<NEATGenotype, ?>> parentsRanked = new ArrayList<>(parents.size());
 		List<Genotype<?>> genericParents = new ArrayList<>(parents.size());
-		for (NEATGenotype parent : parents) {
-			parentsRanker.put(population.getIndividual(parent.id).getRank(), parent);
-			genericParents.add(parent);
+		for (NEATGenotype parentGenotype : parents) {
+			parentsRanked.add(population.getIndividual(parentGenotype.id));
+			genericParents.add(parentGenotype);
 		}
-		List<Double> ranks = new ArrayList<>(parentsRanker.keySet());
-		List<NEATGenotype> parentsRanked = new ArrayList<>(parentsRanker.values());
+		Collections.sort(parentsRanked);
+		Collections.reverse(parentsRanked);
+		
+		//if (dbg) System.out.println(Stringer.toString(parentsRanked.get(0).evaluationData.getFitnessResults()));
+		//if (dbg) System.out.println(Stringer.toString(parentsRanked.get(1).evaluationData.getFitnessResults()));
+		
+		// Keep a convenient record of the synapses added. This allows checking if adding a synapse would create a
+		// cycle (if applicable).
+		Table<Long, Long, Boolean> synapses = HashBasedTable.create();
+		
+		boolean firstParentIsFitter = !parentsRanked.get(0).evaluationData.equals(parentsRanked.get(1).evaluationData);
+		
+		// Create an empty genotype (genes will be added one by one).
+		// new NEATGenotype(parentsRanked.get(0).genotype, new ArrayList<NEATAllele<?>>(), genericParents);
+		child = parentsRanked.get(0).genotype.newInstance(new ArrayList<NEATAllele<?>>(), genericParents);
 
-		// If one parent dominates (all the) other(s).
-		if (ranks.get(0) > ranks.get(1)) {
-			// Child inherits all structure/genes from dominant parent.
-			// new NEATGenotype(parentsRanked.get(0), parentsRanked.get(0).getAlleles(), genericParents);
-			child = parentsRanked.get(0).newInstance(parentsRanked.get(0).getAlleles(), genericParents);
-
-			// Set values for each allele in the new genotype based on all values for same allele in all parents with
-			// this gene/allele.
-			for (NEATAllele<?> childAllele : child.getAlleles()) {
-				// Get the matching alleles from each parent with this gene/allele.
-				List<NEATAllele<?>> alleleParents = new ArrayList<>(parentsRanked.size());
-				for (NEATGenotype parent : parentsRanked) {
-					NEATAllele<?> otherAllele = parent.getAllele(childAllele.gene.id);
-					if (otherAllele != null) {
-						alleleParents.add(otherAllele);
-					}
-				}
-
-				// Set enabled by randomly picking enabled value from one of the parents with this gene.
-				childAllele.setEnabled(alleleParents.get(random.nextInt(alleleParents.size())).enabled());
-
-				// Set the values from one or more of the parents.
-				setValues(childAllele, random, alleleParents);
+		// Get a list of all gene IDs across all parents, with associated alleles from each parent.
+		TreeMultimap<Long, NEATAllele<?>> allAlleles = TreeMultimap.create();
+		for (NEATGenotype parent : parents) {
+			for (NEATAllele<?> allele : parent.getAlleles()) {
+				allAlleles.put(allele.gene.id, allele);
 			}
-		} else {
-			// Highest ranked parent doesn't dominate next highest ranked.
-			// Child inherits structure/genes from all parents.
+		}
+		
+		// For each gene and set of alleles from each parent for that gene.
+		for (Entry<Long, Collection<NEATAllele<?>>> geneIDAlleles : allAlleles.asMap().entrySet()) {
+			// Get the gene (from one of the parents, doesn't matter which).
+			NEATGene gene = geneIDAlleles.getValue().iterator().next().gene;
+			
+			boolean include;
+			// If the first parent is fitter, then just include genes from it.
+			if (firstParentIsFitter) {
+				include = parentsRanked.get(0).genotype.getAllele(gene.id) != null;
+				
+				if (!include && gene.id == 66) {
+					System.err.println("firstParentIsFitter");
+				}
+			} else {
+				// Otherwise include a gene if all parents include it, or with 50% chance otherwise.
+				include = geneIDAlleles.getValue().size() == parents.size() || random.nextBoolean();
 
-			// Create an empty genotype (genes will be added one by one).
-			// new NEATGenotype(parentsRanked.get(0), new ArrayList<NEATAllele<?>>(), genericParents);
-			child = parentsRanked.get(0).newInstance(new ArrayList<NEATAllele<?>>(), genericParents);
-
-			// Get a list of all gene IDs across all parents, with associated alleles from each parent.
-			TreeMultimap<Long, NEATAllele<?>> allAlleles = TreeMultimap.create();
-			for (NEATGenotype parent : parents) {
-				for (NEATAllele<?> allele : parent.getAlleles()) {
-					allAlleles.put(allele.gene.id, allele);
+				if (!include && gene.id == 66) {
+					System.err.println("!firstParentIsFitter");
 				}
 			}
-
-			// Keep a convenient record of the synapses added. This allows checking if adding a synapse would create a
-			// cycle (if applicable).
-			Table<Long, Long, Boolean> synapses = HashBasedTable.create();
-
-			// For each gene and set of alleles from each parent for that gene.
-			for (Entry<Long, Collection<NEATAllele<?>>> geneIDAlleles : allAlleles.asMap().entrySet()) {
-				// Get the gene (from one of the parents, doesn't matter which).
-				NEATGene gene = geneIDAlleles.getValue().iterator().next().gene;
-
-				// If this is a synapse gene and recurrent connections are not allowed,
-				// make sure it won't create a cycle.
+			
+			
+			if (include) {
+				// For synapse genes, check for source and dest neurons, and cycles if applicable.
 				boolean okayToAdd = true;
-				if (gene instanceof NEATSynapseGene && nnConfig.getTopology() != Topology.RECURRENT) {
+				if (gene instanceof NEATSynapseGene) {
 					NEATSynapseGene synapseGene = (NEATSynapseGene) gene;
-					okayToAdd = !evolver.synapseWouldCreateCycle(synapseGene.sourceID, synapseGene.destinationID, synapses);
-
+					
+					// Make sure the source and target neurons have been added.
+					// The source and dest neurons should be added first as their gene ID will be lower, so it's safe to assume they've already been added.
+					okayToAdd = child.hasGene(synapseGene.sourceID) && child.hasGene(synapseGene.destinationID);
+					
+					// Make sure a synapse with same source and dest (but with different parameters) doesn't already exist.
 					if (okayToAdd) {
-						// Add synapse to the record of synapses.
-						synapses.put(synapseGene.sourceID, synapseGene.destinationID, Boolean.TRUE);
+						okayToAdd = !synapses.contains(synapseGene.sourceID, synapseGene.destinationID);
+					}
+					
+					// If recurrent connections are not allowed, make sure it won't create a cycle.
+					if (okayToAdd && nnConfig.getTopology() != Topology.RECURRENT) {
+						okayToAdd = !evolver.synapseWouldCreateCycle(synapseGene.sourceID, synapseGene.destinationID, synapses);
+	
+						if (okayToAdd) {
+							// Add synapse to the record of synapses.
+							synapses.put(synapseGene.sourceID, synapseGene.destinationID, Boolean.TRUE);
+						}
 					}
 				}
-
+				
 				if (okayToAdd) {
 					// Get alleles from all parents with this gene as a list.
 					List<NEATAllele<?>> alleleParents = new ArrayList<NEATAllele<?>>(geneIDAlleles.getValue());
@@ -135,9 +149,26 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 					// Create a new allele that is a copy of one of the alleles from the parents.
 					NEATAllele<?> newAllele = (NEATAllele<?>) alleleParents.get(0).newInstance();
 
-					// Set enabled by randomly picking enabled value from one of the parents.
-					newAllele.setEnabled(alleleParents.get(random.nextInt(alleleParents.size())).enabled());
-
+					if (gene instanceof NEATSynapseGene) {
+						// Set enabled randomly 2% of the time.
+						//if (random.nextInt(50) == 0) {
+						//	newAllele.setEnabled(random.nextBoolean());
+						//}
+						//else {
+							// From original paper: "There was a 75% chance that an inherited gene was disabled if it was disabled in either parent."
+							boolean disabledInAParent = false;
+							boolean disabledInAllParents = true;
+							for (NEATAllele<?> ap :  alleleParents) {
+								disabledInAParent |= !ap.enabled;
+								disabledInAllParents &= !ap.enabled;
+							}
+							// Enable if it's not disabled in any parent OR disable if it's disabled in all parents, 
+							// otherwise it's disabled in some but not all parents so enable with 25% probability.
+							boolean enable = !disabledInAParent || (!disabledInAllParents && random.nextDouble() < 0.25);
+							newAllele.setEnabled(enable);
+						//}
+					}
+					
 					// Set the values from one or more of the parents.
 					setValues(newAllele, random, alleleParents);
 
@@ -146,10 +177,12 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 				}
 			}
 		}
-
+		
+		//if (dbg) System.exit(0);
+		
 		return child;
 	}
-
+	
 	private void setValues(NEATAllele<?> childAllele, Random random, List<NEATAllele<?>> alleleParents) {
 		// Set values based on a randomly selected method.
 		if (random.nextBoolean()) {
@@ -169,7 +202,7 @@ public class NEATRecombiner extends Recombiner<NEATGenotype> {
 			}
 		}
 	}
-
+	
 	@Override
 	public int parentCountMaximum() {
 		return 2;

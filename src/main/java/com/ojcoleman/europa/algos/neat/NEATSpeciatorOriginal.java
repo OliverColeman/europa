@@ -10,6 +10,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.ComponentStateLog;
 import com.ojcoleman.europa.configurable.Configuration;
@@ -36,6 +39,8 @@ import com.ojcoleman.europa.util.Stringer;
  * @author O. J. Coleman
  */
 public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpecies> {
+	private final Logger logger = LoggerFactory.getLogger(NEATSpeciatorOriginal.class);
+	
 	@Parameter(description = "(Initial) speciation threshold.", defaultValue = "3", minimumValue = "0")
 	protected double speciationThreshold;
 
@@ -45,6 +50,7 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 	private final Run run;
 	private double currentSpeciationThreshold;
 	private int lastGenChangedSpeciesCompatThreshold;
+	private int countChangedSpeciesCompatThresholdSoonAsAllowed;
 	private double previousSpeciationThreshold;
 
 	// Statistics for getStateStatistics()
@@ -57,6 +63,7 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 
 		if (speciationTarget == 0) {
 			speciationTarget = (int) Math.round(Math.pow(this.getParentComponent(Population.class).getDesiredSize(), 0.6));
+			logger.info("Target species count: " + speciationTarget + " (acceptable range: [" + ((int) Math.round(speciationTarget * 0.85)) + ", " + ((int) Math.round(speciationTarget * 1.15)) + "]).");
 		}
 
 		currentSpeciationThreshold = speciationThreshold;
@@ -66,81 +73,64 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 	public void speciate(Population<NEATGenotype, ?> population, final List<NEATSpecies> speciesList) {
 		newSpeciesCount = 0;
 		speciesRemovedCount = 0;
-
+		
 		// Reference to the component used to perform operations in parallel.
 		Parallel parallel = this.getParentComponent(Run.class).getParallel();
-
+		
 		// Sort so highest ranked are first as it's probably best to use the highest
 		// ranked as the representative of a species when creating new species.
 		List<Individual<NEATGenotype, ?>> individuals = new ArrayList<Individual<NEATGenotype, ?>>(population.getMembers());
 		Collections.sort(individuals);
 		Collections.reverse(individuals);
-
-		// System.out.println(Stringer.toString(individuals, 4));
-
-		// final Run run = this.getParentComponent(Run.class);
-
-		// If the threshold has been adjusted since the last speciation.
-		if (currentSpeciationThreshold != previousSpeciationThreshold) {
-			// if (run.getCurrentIteration() > 50) System.out.println("st changed");
-
+		
+		// If we've just adjusted the threshold, and have done so as soon 
+		// as allowed 3 times in a row, re-assign all individuals.
+		if (previousSpeciationThreshold != currentSpeciationThreshold && countChangedSpeciesCompatThresholdSoonAsAllowed == 3) {
 			// Check that each individual still belongs in it's current species.
 			parallel.foreach(individuals, new Parallel.Operation<Individual<NEATGenotype, ?>>() {
 				public void perform(Individual<NEATGenotype, ?> ind) {
-					// if (run.getCurrentIteration() > 50) System.out.print(ind.id + " ");
-
 					if (ind.hasSpecies()) {
-						// if (run.getCurrentIteration() > 50) System.out.println(ind.getSpecies().id);
-
-						NEATSpecies species = (NEATSpecies) ind.getSpecies();
-						// If this individual no longer matches it's current species.
-						if (!match(species, ind)) {
-							synchronized (species) {
-								species.removeMember(ind);
-							}
-						}
-					} else {
-						// if (run.getCurrentIteration() > 50) System.out.println(" no species");
+						ind.getSpecies().removeMember(ind);
 					}
 				}
 			});
+			
+			countChangedSpeciesCompatThresholdSoonAsAllowed = 0;
 		}
-
+		previousSpeciationThreshold = currentSpeciationThreshold;
+		
+		final boolean dbg = false; //currentSpeciationThreshold > 100;
+		
+		if (dbg) System.out.println("currentSpeciationThreshold: " + currentSpeciationThreshold);
+		
 		// Determine species for each individual that isn't already in a species.
-		// We can't parellelise over the list of individuals because we need to process them in rank order, so that
+		// We can't parallelise over the list of individuals because we need to process them in rank order, so that
 		// as new species are added, subsequent lower-ranked individuals can be matched against the new species.
 		final NEATSpeciatorOriginal speciator = this;
 		for (Individual<NEATGenotype, ?> ind : individuals) {
 			if (!ind.hasSpecies()) {
 				// Determine best matching species.
-				final TreeMap<Double, NEATSpecies> map = new TreeMap<>();
-				final Individual<NEATGenotype, ?> indFinal = ind;
-				this.getParentComponent(Run.class).getParallel().foreach(speciesList, new Parallel.Operation<NEATSpecies>() {
-					public void perform(NEATSpecies species) {
-						double distance = getDistance(species.representative, indFinal.genotype);
-
-						// If the individual matches this species.
-						if (distance < speciationThreshold) {
-							synchronized (map) {
-								// If the distance is the same as another species then just keep the first one.
-								if (!map.containsKey(distance)) {
-									map.put(distance, species);
-								}
-							}
-						}
+				NEATSpecies match = null;
+				for (NEATSpecies species : speciesList) {
+					double distance = getDistance(species.representative, ind.genotype);
+					
+					if (dbg) System.out.println("distance: " + distance); 
+					
+					// If the individual matches this species.
+					if (distance < currentSpeciationThreshold) {
+						match = species;
 					}
-				});
-
+				}
+				
 				// If we found one or more matching species.
-				if (!map.isEmpty()) {
+				if (match != null) {
 					// Add to closest species.
-					NEATSpecies closest = map.firstEntry().getValue();
-					closest.addMember(ind);
+					match.addMember(ind);
 				} else {
 					// Otherwise create a new species with this individual's genotype as representative.
-					// new NEATSpecies(speciesPrototype, ind.genotype); //newInstance prototype constructor parameter
-					// check.
-					NEATSpecies species = new NEATSpecies(speciesPrototype, ind.genotype); // speciesPrototype.newInstance(ind.genotype);
+					// new NEATSpecies(speciesPrototype, ind.genotype); //newInstance prototype constructor parameter check.
+					NEATGenotype genotypeCopy = ind.genotype.newInstance();
+					NEATSpecies species = speciesPrototype.newInstance(genotypeCopy);
 					species.addMember(ind);
 					speciesList.add(species);
 					newSpeciesCount++;
@@ -151,20 +141,40 @@ public class NEATSpeciatorOriginal extends NEATSpeciator<NEATGenotype, NEATSpeci
 		// Remove empty species.
 		Iterator<NEATSpecies> speciesIter = speciesList.iterator();
 		while (speciesIter.hasNext()) {
-			if (speciesIter.next().isEmpty()) {
+			NEATSpecies s = speciesIter.next();
+			if (s.isEmpty()) {
 				speciesIter.remove();
 				speciesRemovedCount++;
+			}
+			else {
+				List<Individual<NEATGenotype, ?>> rankedMembers = new ArrayList<>(s.getMembers());
+				Collections.sort(rankedMembers);
+				Collections.reverse(rankedMembers);
+				Individual<NEATGenotype, ?> fittest = rankedMembers.get(0);
+				//System.out.println(s.id + " : " + s.size() + " | " + fittest.id + " : " + fittest.evaluationData.getFitnessResults().values().iterator().next());
 			}
 		}
 
 		// Attempt to maintain species count target if specified.
 		// Don't change threshold too frequently.
-		int maxAdjustFreq = (int) Math.round(Math.pow(population.size(), 0.333));
-		if (speciationTarget > 0 && speciesList.size() != speciationTarget && (run.getCurrentIteration() - lastGenChangedSpeciesCompatThreshold > maxAdjustFreq)) {
+		int maxAdjustFreq = 1; //(int) Math.round(Math.pow(population.size(), 0.333));
+		if (speciationTarget > 0 && (run.getCurrentIteration() - lastGenChangedSpeciesCompatThreshold >= maxAdjustFreq) && 
+				(speciesList.size() > Math.round(speciationTarget * 1.15) || speciesList.size() < Math.round(speciationTarget * 0.85))) {
 			// Change the threshold an amount proportional to the discrepancy between target and current species counts.
 			double ratio = (double) speciesList.size() / speciationTarget;
 			double factor = (ratio - 1) * 0.1 + 1;
 			currentSpeciationThreshold = currentSpeciationThreshold * factor;
+			
+			if (currentSpeciationThreshold < 1) currentSpeciationThreshold = 1;
+			
+			// Record the number of times in a row the threshold has been changed as soon as allowed. 
+			if (run.getCurrentIteration() - lastGenChangedSpeciesCompatThreshold == maxAdjustFreq) {
+				countChangedSpeciesCompatThresholdSoonAsAllowed++;
+			}
+			else {
+				countChangedSpeciesCompatThresholdSoonAsAllowed = 0;
+			}
+			
 			lastGenChangedSpeciesCompatThreshold = run.getCurrentIteration();
 		}
 	}

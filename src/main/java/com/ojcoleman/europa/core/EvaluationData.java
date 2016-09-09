@@ -1,6 +1,9 @@
 package com.ojcoleman.europa.core;
 
 import java.util.Map;
+import java.util.Map.Entry;
+
+import com.ojcoleman.europa.util.Stringer;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -74,6 +77,32 @@ public class EvaluationData {
 	public int getPerformanceResultCount() {
 		return performanceResults.size();
 	}
+	
+	/**
+	 * Returns true iff every fitness and performance objective defined in 
+	 * both EvaluationData objects is present in the other and has the same value.
+	 */
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof EvaluationData) {
+			EvaluationData ed = (EvaluationData) o;
+			
+			if (this.allResults.size() != ed.allResults.size()) {
+				return false;
+			}
+			
+			for (Entry<EvaluationDescription, Double> thisResults : allResults.entrySet()) {
+				if (!ed.allResults.containsKey(thisResults.getKey())) {
+					return false;
+				}
+				if (!thisResults.getValue().equals(ed.allResults.get(thisResults.getKey()))) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
 
 	/**
 	 * Removes all evaluation data.
@@ -84,6 +113,7 @@ public class EvaluationData {
 		performanceResults.clear();
 	}
 
+	@Override
 	public String toString() {
 		StringBuilder s = new StringBuilder();
 		boolean first = true;

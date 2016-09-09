@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -11,6 +13,7 @@ import java.util.TreeSet;
 import com.eclipsesource.json.JsonObject;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.PrototypeBase;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Represents a species in the evolutionary algorithm.
@@ -27,7 +30,13 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 	 * The number of generations this Species has persisted for.
 	 */
 	protected int age;
-
+	
+	/**
+	 * Indicates that this species should be considered defunct. Typically the {@link Evolver} may mark a species as being defunct, 
+	 * and the {@link Population} will subsequently remove the species.
+	 */ 
+	protected boolean defunct;
+	
 	/**
 	 * PrototypeBase constructor. See {@link com.ojcoleman.europa.configurable.PrototypeBase#PrototypeBase(Configuration)}.
 	 */
@@ -49,7 +58,7 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 	/**
 	 * Adds the given Individual to this Species. This should generally only be called by a {@link Speciator}.
 	 */
-	public void addMember(Individual<G, ?> member) {
+	public synchronized void addMember(Individual<G, ?> member) {
 		if (members.contains(member)) {
 			throw new IllegalStateException("Attempted to add an Individual to the Species it's already in.");
 		}
@@ -59,24 +68,39 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 
 		members.add(member);
 		member.species = this;
+		
+		boolean found = false;
+		for (Individual<G, ?> m : members) {
+			if (member.id == m.id) {
+				found = true;
+				break;
+				
+			}
+		}
+		
+		if (!found) {
+			System.out.println((found ? "" : "NOT ") + "FOUND");
+		}
+		
+		assert members.contains(member);
 	}
 
 	/**
 	 * Removes the given Individual from this Species. This should generally only be called by a {@link Speciator}.
 	 */
-	public void removeMember(Individual<G, ?> member) {
+	public synchronized void removeMember(Individual<G, ?> member) {
 		if (!members.contains(member)) {
-			throw new IllegalStateException("Attempted to remove an Individual from a Species it's not in.");
+			throw new IllegalStateException("Attempted to remove an Individual from a Species it's not in. This species: " + this.id + ", Individual species: " + member.getSpecies().id);
 		}
 		members.remove(member);
 		member.species = null;
 	}
 
 	/**
-	 * Adds the given Individual to this Species., removing it if necessary from it's current Species. This should
+	 * Adds the given Individual to this Species, removing it if necessary from it's current Species. This should
 	 * generally only be called by a {@link Speciator}.
 	 */
-	public void addMemberRemoveFromCurrent(Individual<G, ?> member) {
+	public synchronized void addMemberRemoveFromCurrent(Individual<G, ?> member) {
 		if (member.hasSpecies()) {
 			member.getSpecies().removeMember(member);
 		}
@@ -110,29 +134,34 @@ public class Species<G extends Genotype<?>> extends PrototypeBase {
 	public void incrementAge() {
 		age++;
 	}
-
+	
 	/**
-	 * Get the average rank of the members of this species. This is used for "fitness sharing"
-	 */
-	public double getAverageRank() {
-		double totalRank = 0;
-		for (Individual<G, ?> ind : members) {
-			totalRank += ind.getRank();
-		}
-		return totalRank / members.size();
+	 * Mark this species as defunct. Typically the {@link Evolver} may mark a species as being defunct, 
+	 * and the {@link Population} will subsequently remove the species.
+	 */ 
+	public void setDefunct() {
+		defunct = true;
 	}
-
+	
+	/**
+	 * Indicates that this species should be considered defunct. Typically the {@link Evolver} may mark a species as being defunct, 
+	 * and the {@link Population} will subsequently remove the species.
+	 */ 
+	public boolean isDefunct() {
+		return defunct;
+	}
+	
 	/**
 	 * Returns true iff there are no Individuals in this Species.
 	 */
 	public boolean isEmpty() {
 		return members.size() == 0;
 	}
-
+	
 	/**
 	 * Removes all the members from this Species.
 	 */
-	public void clear() {
+	public synchronized void clear() {
 		for (Individual<G, ?> ind : members) {
 			this.removeMember(ind);
 		}

@@ -15,7 +15,7 @@ import com.ojcoleman.europa.transcribers.nn.NNConfig;
  * 
  * @author O. J. Coleman
  */
-public class BainNNConfig extends NNConfig<BainParametrisedGeneType, BainParametrisedGeneType> {
+public class BainNNConfig extends NNConfig<BainParametrisedNeuronGeneType, BainParametrisedGeneType> {
 	@Parameter(description = "The number of discrete simulation steps performed for each second of simulation time. A typical resolution is 1000, or 1ms duration for each step. This is only relevant for models with decay factors and similar.", defaultValue = "1000")
 	int simulationResolution;
 

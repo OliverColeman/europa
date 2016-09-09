@@ -1,5 +1,8 @@
 {
-	"maximumIterations":101,
+	"name":"xor-neat",
+	"maximumIterations":100,
+	"saveFrequency": 0,
+	
 	"evaluators":[
 		{
 			"class":"com.ojcoleman.europa.evaluators.CSVTargetFunctionEvaluator",
@@ -12,5 +15,145 @@
 			"performanceMetric":"percent-correct",
 			"terminateOnPerformance":1
 		}
+	],
+	
+	"transcriber":{
+		"class":"com.ojcoleman.europa.algos.neat.NEATTranscriber",
+		
+		"neuralNetwork":{
+			"class":"com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork",
+			"config":{
+				"topology":"FEED_FORWARD",
+				"simulationResolution":1000,
+				"aparapiExecutionMode":"SEQ",
+				"neuron":{
+					"modelClass":"com.ojcoleman.bain.neuron.rate.SigmoidNeuronCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-4,
+								"max":4,
+								"label":"bias"
+							}
+						]
+					},
+					"paramsGene":{
+						"elements":[
+							{
+								"min":4.9,
+								"max":4.9,
+								"label":"slope"
+							}
+						]
+					}
+				},
+				"synapse":{
+					"modelClass":"com.ojcoleman.bain.synapse.rate.FixedSynapseCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-4,
+								"max":4,
+								"label":"weight"
+							}
+						]
+					}
+				}
+			}
+		},
+		
+		"population":{
+			"desiredSize": 150,
+			
+			"evolver":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATEvolver",
+				
+				"relativeCloneProportion":0.25,
+				"parentsProportion":0.2,
+				"elitismProportion":0.1,
+				"elitismMax":1,
+				"speciesFitnessSharing":true,
+				"speciesMaxStagnantIterations": 0,
+				
+				"mutators":[
+					{
+						"class":"com.ojcoleman.europa.algos.vector.VectorMutator",
+						"applyPercentageClones":0.8,
+						"applyPercentageRecombined":0.8,
+						"alleleApplyRate":1,
+						"valueApplyRate":1,
+						"perturbationType":"normal",
+						"perturbationMagnitude":0.5,
+						"perturbationMagnitudeNormalise":false,
+						"alleleClass":"com.ojcoleman.europa.algos.neat.NEATSynapseAllele"
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATNeuronMutator",
+						"applyPercentageClones":0.8,
+						"applyPercentageRecombined":0.8,
+						"alleleApplyRate":1,
+						"valueApplyRate":1,
+						"perturbationType":"normal",
+						"perturbationMagnitude":0.5,
+						"perturbationMagnitudeNormalise":false
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATSynapseAddMutator",
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"type":"FIXED",
+						"fixedMaximum":1,
+						"applyRate":0.1
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATNeuronAddMutator",
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"maximum":1,
+						"applyRate":0.05
+					}
+				],
+				
+				"recombiners":[
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATRecombiner",
+						"vetoMutation":false,
+						"relativeProportion":0.75
+					}
+				]
+			},
+			
+			"speciator":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATSpeciatorOriginal",
+				"excessGenesFactor":1.0,
+				"disjointGenesFactor":1.0,
+				"paramValueDifferenceFactor":0.4,
+				"normaliseParameterValues":false,
+				"geneMismatchUseValues":false,
+				"speciationThreshold":2,
+				"speciationTarget":0
+			}
+		}
+	},
+	
+	"parallel":{
+		"class":"com.ojcoleman.europa.core.Parallel",
+		"threadCount":0
+	},
+	
+	"monitors":[
+		{
+			"class":"com.ojcoleman.europa.monitor.OverviewMonitor",
+			"printToConsole":true,
+			"printToFile":"overview.log"
+		},
+		{
+			"class":"com.ojcoleman.europa.monitor.FittestMonitor",
+			"period":20
+		},
+		{
+			"class":"com.ojcoleman.europa.monitor.ConfigMonitor"
+		}
 	]
 }
+

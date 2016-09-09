@@ -35,12 +35,6 @@ public class NNInstanceConfig implements Stringable {
 	public final int outputCount;
 
 	/**
-	 * If applicable, the number of simulation steps to perform for each request to apply input to the network and
-	 * retrieve output, for example via {@link VectorFunction#apply(double[])}.
-	 */
-	public final int stepsPerStep;
-
-	/**
 	 * A name/identifier for the network.
 	 */
 	public String name;
@@ -53,7 +47,6 @@ public class NNInstanceConfig implements Stringable {
 		this.synapseCount = 0;
 		this.inputCount = 0;
 		this.outputCount = 0;
-		this.stepsPerStep = 0;
 		this.name = null;
 	}
 
@@ -65,19 +58,6 @@ public class NNInstanceConfig implements Stringable {
 		this.synapseCount = synapseCount;
 		this.inputCount = inputCount;
 		this.outputCount = outputCount;
-		this.stepsPerStep = 1;
-		this.name = name;
-	}
-
-	/**
-	 * Creates an NNInstanceConfig initialised with the given metadata.
-	 */
-	public NNInstanceConfig(int neuronCount, int synapseCount, int inputCount, int outputCount, int stepsPerStep, String name) {
-		this.neuronCount = neuronCount;
-		this.synapseCount = synapseCount;
-		this.inputCount = inputCount;
-		this.outputCount = outputCount;
-		this.stepsPerStep = stepsPerStep;
 		this.name = name;
 	}
 
@@ -87,7 +67,6 @@ public class NNInstanceConfig implements Stringable {
 		map.put("synapseCount", synapseCount);
 		map.put("inputCount", inputCount);
 		map.put("outputCount", outputCount);
-		map.put("stepsPerStep", stepsPerStep);
 		map.put("name", name);
 	}
 }

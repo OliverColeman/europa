@@ -1,0 +1,316 @@
+{
+	"name":"tmaze-neat",
+	"maximumIterations":100,
+	"saveFrequency": 0,
+	
+	"evaluators":[
+		{
+		  // class: The class to use for 'evaluators', if defaultImplementation is not defined or a custom class is required.
+	      "class": "com.ojcoleman.europa.evaluators.TMaze",
+	
+	      // description: The total number of trials to evaluate an agent over.
+	      // type: int
+	      // optional: false
+	      // defaultValue: 100
+	      "trialCount": 80,
+	
+	      // description: The total number of times to move the high value reward to a different maze end
+	      //            : location during an evaluation.
+	      // type: int
+	      // optional: false
+	      // defaultValue: 3
+	      "rewardSwitchCount": 3,
+	
+	      // description: The variation in switch times (fraction of number of trials between switching).
+	      // type: double
+	      // optional: false
+	      // defaultValue: 0.2
+	      "rewardSwitchVariation": 0.2,
+	
+	      // description: Reward value of low reward (used in fitness calculation).
+	      // type: double
+	      // optional: false
+	      // defaultValue: 0.1
+	      "rewardLow": 0.1,
+	
+	      // description: Reward value of high reward (used in fitness calculation).
+	      // type: double
+	      // optional: false
+	      // defaultValue: 1
+	      "rewardHigh": 1.0,
+	
+	      // description: "Colour" of low reward (reward signal input to agent).
+	      // type: double
+	      // optional: false
+	      // defaultValue: 0.2
+	      "rewardLowColour": 0.2,
+	
+	      // description: "Colour" of high reward (reward signal input to agent).
+	      // type: double
+	      // optional: false
+	      // defaultValue: 1
+	      "rewardHighColour": 1.0,
+	
+	      // description: Reward value given upon crashing into a wall (used in fitness calculation).
+	      // type: double
+	      // optional: false
+	      // defaultValue: -0.4
+	      "rewardCrash": -0.4,
+	
+	      // description: Reward value given upon failing to return home (used in fitness calculation). If
+	      //            : this is set to 0 then the agent is not required to return home.
+	      // type: double
+	      // optional: false
+	      // defaultValue: -0.3
+	      "rewardFailReturnHome": 0,
+	
+	      // description: Length of passages of maze.
+	      // type: int
+	      // optional: false
+	      // defaultValue: 3
+	      "passageLength": 2,
+	
+	      // description: Set to "true" to specify a double T-maze.
+	      // type: boolean
+	      // optional: false
+	      // defaultValue: false
+	      "isDouble": false,
+	
+	      // description: Set to "RANGE" to use range-finder type inputs indicating if walls are present
+	      //            : to the left, right and forward, and a reward input. Set to "FEATURES" to use
+	      //            : inputs that indicate the following conditions: turn required; maze end reached;
+	      //            : home position reached; reward.
+	      // type: com.ojcoleman.europa.evaluators.TMaze$InputType
+	      // optional: false
+	      // defaultValue: FEATURES
+	      "inputType": "FEATURES",
+	
+	      // description: Set to "SINGLE" to use a single output to indicate the action to take next. Set
+	      //            : to "MULTIPLE" to use three outputs to indicate which action to take next.
+	      // type: com.ojcoleman.europa.evaluators.TMaze$OutputType
+	      // optional: false
+	      // defaultValue: SINGLE
+	      "outputType": "SINGLE",
+		}
+	],
+	
+	"transcriber":{
+		"class":"com.ojcoleman.europa.algos.neat.NEATTranscriber",
+		
+		"neuralNetwork":{
+			"class":"com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork",
+			"config":{
+				"topology":"FEED_FORWARD",
+				//"simulationStepsPerStep":3,
+				"neuron":{
+					"class":"com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedNeuronGeneType",
+					
+					//"modelClass":"com.ojcoleman.bain.neuron.rate.RisiModulatoryNeuronCollection",
+					"modelClass":"com.ojcoleman.bain.neuron.rate.SoltoggioModulatoryNeuronCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-20.0,
+								"max":20.0,
+								"label":"bias"
+							//},
+							//{
+							//	"min":-10.0,
+							//	"max":10.0,
+							//	"label":"modBias"
+							}
+						]
+					},
+					"paramsInputNeuronGene":{
+						"elements":[
+							{
+								"label": "modulatory",
+								"min":0,
+								"max":0
+							}
+						]
+					},
+					"paramsOutputNeuronGene":{
+						"elements":[
+							{
+								"label": "modulatory",
+								"min":0,
+								"max":0
+							}
+						]
+					},
+					"paramsGene":{
+						"elements":[
+							{
+								"label": "modulatory",
+								"min":0,
+								"max":1
+							}
+						]
+					}
+				},
+				"synapse":{
+					//"modelClass":"com.ojcoleman.bain.synapse.rate.RisiModulatorySynapseCollection",
+					"modelClass":"com.ojcoleman.bain.synapse.rate.SoltoggioModulatorySynapseCollection",
+					"paramsAllele":{
+						"elements":[
+							{
+								"min":-20,
+								"max":20,
+								"label":"weight"
+							},
+							{
+								"min":-50,
+								"max":50,
+								"label":"n"
+							},
+							{
+								"min":-1,
+								"max":1,
+								"label":"a"
+							},
+							{
+								"min":-1,
+								"max":1,
+								"label":"b"
+							},
+							{
+								"min":-1,
+								"max":1,
+								"label":"c"
+							},
+							{
+								"min":-1,
+								"max":1,
+								"label":"d"
+							//},
+							//{
+							//	"label": "modulatory",
+							//	"min":-1,
+							//	"max":1
+							}
+						]
+					}
+				}
+			}
+		},
+		
+		"population":{
+			"desiredSize": 1000,
+			
+			"evolver":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATEvolver",
+				
+				"relativeCloneProportion":0.25,
+				"parentsProportion":0.3,
+				"elitismProportion":0.1,
+				"elitismMax":-1,
+				"speciesFitnessSharing":true,
+				"speciesMaxStagnantIterations": 0,
+				
+				"mutators":[
+					{
+						"class":"com.ojcoleman.europa.algos.vector.VectorMutator",
+						"overallApplyRate": 0.8,
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"alleleApplyRate":0.2,
+						"valueApplyRate":0.2,
+						"perturbationType":"normal",
+						"perturbationMagnitude":0.1,
+						"perturbationMagnitudeNormalise":true,
+						"alleleClass":"com.ojcoleman.europa.algos.neat.NEATSynapseAllele",
+						
+						"parameterTuning": {
+		 					"overallApplyRate": {},
+		 					"alleleApplyRate": {},
+		 					"valueApplyRate": {},
+		 					"perturbationMagnitude": {}
+ 						}
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATNeuronMutator",
+						"overallApplyRate": 0.8,
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"alleleApplyRate":0.2,
+						"valueApplyRate":1,
+						"perturbationType":"normal",
+						"perturbationMagnitude":0.1,
+						"perturbationMagnitudeNormalise":true,
+						
+						"parameterTuning": {
+		 					"overallApplyRate": {},
+		 					"alleleApplyRate": {},
+		 					"valueApplyRate": {},
+		 					"perturbationMagnitude": {}
+ 						}
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATSynapseAddMutator",
+						"overallApplyRate":0.05,
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"type":"FIXED",
+						"fixedMaximum":1,
+						
+						"parameterTuning": {
+		 					"overallApplyRate": {}
+ 						}
+					},
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATNeuronAddMutator",
+						"overallApplyRate":0.03,
+						"applyPercentageClones":1,
+						"applyPercentageRecombined":1,
+						"maximum":1,
+						
+						"parameterTuning": {
+		 					"overallApplyRate": {}
+ 						}
+					}
+				],
+				
+				"recombiners":[
+					{
+						"class":"com.ojcoleman.europa.algos.neat.NEATRecombiner",
+						"vetoMutation":false,
+						"relativeProportion":0.75
+					}
+				]
+			},
+			
+			"speciator":{
+				"class":"com.ojcoleman.europa.algos.neat.NEATSpeciatorOriginal",
+				"excessGenesFactor":1,
+				"disjointGenesFactor":1,
+				"paramValueDifferenceFactor":3,
+				"normaliseParameterValues":true,
+				"geneMismatchUseValues":false,
+				"speciationThreshold":1,
+				"speciationTarget":0
+			}
+		}
+	},
+	
+	"parallel":{
+		"class":"com.ojcoleman.europa.core.Parallel",
+		"threadCount":0
+	},
+	
+	"monitors":[
+		{
+			"class":"com.ojcoleman.europa.monitor.OverviewMonitor",
+			"printToConsole":true,
+			"printToFile":"overview.log"
+		},
+		{
+			"class":"com.ojcoleman.europa.monitor.FittestMonitor",
+			"period":20
+		},
+		{
+			"class":"com.ojcoleman.europa.monitor.ConfigMonitor"
+		}
+	]
+}
+

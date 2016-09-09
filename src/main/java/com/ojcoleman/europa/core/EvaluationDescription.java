@@ -46,4 +46,17 @@ public class EvaluationDescription {
 	public int hashCode() {
 		return evaluator.getName().hashCode();
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		if (o instanceof EvaluationDescription) {
+			EvaluationDescription ed = (EvaluationDescription) o;
+			return this.name.equals(ed.name) && 
+					this.evaluator == ed.evaluator && 
+					this.range.equals(ed.range) && 
+					this.optimalValue == ed.optimalValue && 
+					this.isPerformanceIndicator == ed.isPerformanceIndicator;
+		}
+		return false;
+	}
 }

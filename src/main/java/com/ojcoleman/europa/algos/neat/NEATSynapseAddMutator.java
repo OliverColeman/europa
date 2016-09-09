@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 import java.util.Set;
 
@@ -17,8 +18,10 @@ import com.ojcoleman.europa.core.Evolver;
 import com.ojcoleman.europa.core.Mutator;
 import com.ojcoleman.europa.core.Run;
 import com.ojcoleman.europa.transcribers.nn.NNConfig;
+import com.ojcoleman.europa.transcribers.nn.NNPart;
 import com.ojcoleman.europa.transcribers.nn.NeuralNetworkTranscriber;
 import com.ojcoleman.europa.transcribers.nn.Topology;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Mutator that adds synapses to a NEAT genotype.
@@ -28,7 +31,7 @@ import com.ojcoleman.europa.transcribers.nn.Topology;
 public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 	public enum Type {
 		/**
-		 * A fixed maximum number of synapses may be added.
+		 * A fixed maximum number of synapses may be added, the actual number added is selected uniformly between 1 and fixedMaximum.
 		 */
 		FIXED,
 		/**
@@ -40,11 +43,11 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 	@Parameter(description = "Specifies the type of limit on how many synapses may be added. May be 'fixed' (a fixed maximum number synapse may be added) or 'any' (synapses may be added anywhere a synapse can exist).", defaultValue = "fixed")
 	protected Type type;
 
-	@Parameter(description = "If type is set to 'fixed', specifies the maximum number of synapses that may be added.", defaultValue = "1", minimumValue = "1")
+	@Parameter(description = "If type='fixed', specifies the maximum number of synapses that may be added, the actual number added is selected uniformly between 1 and fixedMaximum.", defaultValue = "1", minimumValue = "1")
 	protected int fixedMaximum;
 
-	@Parameter(description = "For each synapse that may be added, specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
-	protected double applyRate;
+	@Parameter(description = "If type='any', for each synapse that could possibly be added specifies the probability of adding the synapse. ", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
+	protected double anyApplyRate;
 
 	public NEATSynapseAddMutator(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
@@ -59,7 +62,8 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 	public void mutate(NEATGenotype genotype) {
 		Run run = getParentComponent(Run.class);
 		Random random = run.random;
-		NeuralNetworkTranscriber<?> transcriber = (NeuralNetworkTranscriber<?>) run.getSubComponent("transcriber", this);
+		//NeuralNetworkTranscriber<?> transcriber = (NeuralNetworkTranscriber<?>) run.getSubComponent("transcriber", this);
+		NeuralNetworkTranscriber<?> transcriber = (NeuralNetworkTranscriber<?>) run.getTranscriber();
 		NNConfig nnConfig = transcriber.getNeuralNetworkPrototype().getConfig();
 		NEATEvolver evolver = (NEATEvolver) this.getParentComponent(Evolver.class);
 
@@ -74,50 +78,63 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 
 		// For each synapse to add, we iterate over a random ordering of source and destination neurons.
 		// This way we'll try every possible combination in a random order.
-		List<Long> sources = new ArrayList<>(neuronIDs);
-		List<Long> dests = new ArrayList<>(neuronIDs);
-
+		
+		List<Long> sources = new ArrayList<>(neuronIDs.size());
+		for (Entry<Long, NEATNeuronAllele> n : genotype.getNeurons().entrySet()) {
+			// For feed-forward networks, don't allow connections from output neurons.
+			if (nnConfig.getTopology() == Topology.RECURRENT || !n.getValue().gene.types.contains(NNPart.NEURON_OUTPUT)) {
+				sources.add(n.getKey());
+			}
+		}
+		
+		List<Long> dests = new ArrayList<>(neuronIDs.size());
+		for (Entry<Long, NEATNeuronAllele> n : genotype.getNeurons().entrySet()) {
+			// Don't include input neurons in list of destination neurons.
+			if (!n.getValue().gene.types.contains(NNPart.NEURON_INPUT)) {
+				dests.add(n.getKey());
+			}
+		}
+		
 		if (type == Type.FIXED) {
-			// For each synapse that may be added.
-			for (int i = 0; i < fixedMaximum; i++) {
-				// If we should add a synapse according to probabilistic apply rate.
-				if (random.nextDouble() < applyRate) {
-					// For each synapse to add, we iterate over a random ordering of source and destination neurons.
-					// This way we can try every possible combination in a random order without repeats.
-					Collections.shuffle(sources, random);
-					Collections.shuffle(dests, random);
+			int numberToAdd = random.nextInt(fixedMaximum) + 1;
+			
+			// For each synapse to add.
+			for (int i = 0; i < numberToAdd; i++) {
+				// For each synapse to add, we iterate over a random ordering of source and destination neurons.
+				// This way we can try every possible combination in a random order without repeats.
+				Collections.shuffle(sources, random);
+				Collections.shuffle(dests, random);
 
-					boolean synapsePermissible = true;
-					for (long source : sources) {
-						for (long dest : dests) {
-							if (synapses.contains(source, dest)) {
-								// If this synapse already exists, try again.
+				boolean synapsePermissible = true;
+				for (long source : sources) {
+					for (long dest : dests) {
+						if (synapses.contains(source, dest)) {
+							// If this synapse already exists, try again.
+							synapsePermissible = false;
+						} else if (nnConfig.getTopology() != Topology.RECURRENT) {
+							// If recurrent synapses are not allowed, check if adding this synapse would
+							// create a cycle.
+							if (evolver.synapseWouldCreateCycle(source, dest, synapses)) {
 								synapsePermissible = false;
-							} else if (nnConfig.getTopology() != Topology.RECURRENT) {
-								// If recurrent synapses are not allowed, check if adding this synapse would
-								// create a cycle.
-								if (evolver.synapseWouldCreateCycle(source, dest, synapses)) {
-									synapsePermissible = false;
-								}
-							}
-
-							if (synapsePermissible) {
-								addSynapse(genotype, source, dest, synapses, evolver);
-
-								break;
 							}
 						}
 
 						if (synapsePermissible) {
+							addSynapse(genotype, source, dest, synapses, evolver);
+
 							break;
 						}
 					}
 
-					if (!synapsePermissible) {
-						// Couldn't find anywhere to add any (more) synapses,
-						// nothing else to do, so return.
-						return;
+					if (synapsePermissible) {
+						break;
 					}
+				}
+
+				if (!synapsePermissible) {
+					// Couldn't find anywhere to add any (more) synapses,
+					// nothing else to do, so return.
+					return;
 				}
 			}
 		} else {
@@ -127,7 +144,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 					// If the synapse doesn't already exist.
 					if (!synapses.contains(source, dest)) {
 						// If we should add a synapse here according to probabilistic apply rate.
-						if (random.nextDouble() < applyRate) {
+						if (random.nextDouble() < anyApplyRate) {
 							// If recurrent synapses are allowed or adding this synapse wouldn't cause a cycle
 							if (nnConfig.getTopology() == Topology.RECURRENT || !evolver.synapseWouldCreateCycle(source, dest, synapses)) {
 								// Add the synapse.
@@ -146,7 +163,7 @@ public class NEATSynapseAddMutator extends Mutator<NEATGenotype> {
 		// parameter values are the same, if applicable).
 		NEATSynapseAllele allele = evolver.newSynapseAllele(genotype, source, dest);
 		genotype.addAllele(allele);
-
+		
 		// Update record of synapses in this network.
 		synapses.put(source, dest, Boolean.TRUE);
 	}

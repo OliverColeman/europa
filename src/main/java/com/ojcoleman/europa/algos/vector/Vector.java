@@ -13,7 +13,6 @@ import com.google.common.primitives.Doubles;
 import com.ojcoleman.europa.core.Stringable;
 import com.ojcoleman.europa.util.Interval;
 import com.ojcoleman.europa.util.IntervalDouble;
-import com.sun.swing.internal.plaf.metal.resources.metal;
 
 /**
  * A Vector stores an array of double-precision floating point values. The meta-data for each element are defined by a
@@ -140,6 +139,28 @@ public class Vector implements Stringable {
 	}
 
 	/**
+	 * Get the value for the specified label. If the element for the specified label is intended to hold an integer value
+	 * then it may be safely cast to a long without losing precision.
+	 */
+	public double get(String label) {
+		return values[metadata.getLabelIndex(label)];
+	}
+	
+	/**
+	 * Get the value at the specified index cast as an int.
+	 */
+	public int getInt(String label) {
+		return (int) values[metadata.getLabelIndex(label)];
+	}
+
+	/**
+	 * Get the value at the specified index cast as a long.
+	 */
+	public long getLong(String label) {
+		return (long) values[metadata.getLabelIndex(label)];
+	}
+
+	/**
 	 * Set the value at the specified index. If the element at the given index is intended to store an integer then the
 	 * given value will be rounded. If the value is outside of the bounds specified by the {@link #metadata} then it
 	 * will be clamped to the lower or upper bound as necessary.
@@ -154,6 +175,19 @@ public class Vector implements Stringable {
 		}
 		value = metadata.bound(index).clamp(value);
 		setIgnoreMutable(index, value);
+	}
+
+	/**
+	 * Set the value for the specified label. If the element for the given label is intended to store an integer then the
+	 * given value will be rounded. If the value is outside of the bounds specified by the {@link #metadata} then it
+	 * will be clamped to the lower or upper bound as necessary.
+	 * 
+	 * @throws UnsupportedOperationException if the values are not {@link #mutable} or if the value at the specified
+	 *             index is intended to store an integer and a value with magnitude greater than
+	 *             {@link #maximumIntegerValue} was given.
+	 */
+	public void set(String label, double value) {
+		set(metadata.getLabelIndex(label), value);
 	}
 
 	private void setIgnoreMutable(int index, double value) {

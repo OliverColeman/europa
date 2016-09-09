@@ -4,13 +4,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
+import java.util.Map.Entry;
 
+import com.ojcoleman.europa.algos.neat.NEATSpecies;
 import com.ojcoleman.europa.configurable.ComponentBase;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.Parameter;
+import com.ojcoleman.europa.core.DefaultEvolver.SpeciesData;
+import com.ojcoleman.europa.transcribers.nn.NNPart;
 import com.ojcoleman.europa.util.Stringer;
 
 /**
@@ -21,13 +27,21 @@ import com.ojcoleman.europa.util.Stringer;
  */
 public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 	@Parameter(description = "The proportion of parents to select from the population or each species, used to generate new genotypes.", defaultValue = "0.2", minimumValue = "0", maximumValue = "1")
-	double parentsProportion;
+	protected double parentsProportion;
 
 	@Parameter(description = "The proportion of elites to select from the population or each species, elites continue to next generation unchanged.", defaultValue = "0.05", minimumValue = "0", maximumValue = "1")
-	double elitismProportion;
+	protected double elitismProportion;
+
+	@Parameter(description = "The maximum number of elites to select from the population or each species, elites continue to next generation unchanged. -1 indicates no limit.", defaultValue = "-1", minimumValue = "-1")
+	protected int elitismMax;
 
 	@Parameter(description = "If speciation is used, whether to use fitness sharing for a species when determining the relative number of children to produce from a species. If disabled then the number of children is proportional to a species current size.", defaultValue = "true")
-	boolean speciesFitnessSharing;
+	protected boolean speciesFitnessSharing;
+
+	@Parameter(description = "If speciation is used, how many iterations a species may persist without the (overall) fitness of its fittest individual improving. Set to 0 to disable.", defaultValue = "0")
+	protected int speciesMaxStagnantIterations;
+	
+	private final Map<Species<G>, SpeciesData<G>> speciesData = Collections.synchronizedMap(new HashMap<Species<G>, SpeciesData<G>>());
 
 	/**
 	 * Constructor for {@link ComponentBase}.
@@ -38,65 +52,128 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 
 	@Override
 	public void evolve(final Population<G, ?> population) {
-		List<Species<G>> parentSpecies = population.getSpecies();
+		List<Species<G>> parentSpecies = new ArrayList<>(population.getSpecies());
+		// Remove empty species.
+		Iterator<Species<G>> speciesIter = parentSpecies.iterator();
+		while (speciesIter.hasNext()) {
+			if (speciesIter.next().isEmpty()) {
+				speciesIter.remove();
+			}
+		}
 
 		if (parentSpecies.isEmpty()) {
 			throw new IllegalStateException("No species from which to produce offspring.");
 		}
-
-		final Map<Species<G>, Double> speciesNewSizeProportional = new HashMap<>();
+		
+		// Calculate stats and rank members for each species.
+		this.getParentComponent(Run.class).parallel.foreach(parentSpecies, new Parallel.Operation<Species<G>>() {
+			public void perform(Species<G> species) {
+				SpeciesData<G> sd = speciesData.get(species);
+				if (sd == null) {
+					sd = new SpeciesData<G>();
+					speciesData.put(species, sd);
+				}
+				sd.setMembers(species.getMembers());
+			}
+		});
+		
 		if (speciesFitnessSharing) {
 			// Number of offspring to produce from a species is proportional to its average fitness (fitness sharing).
-			double totalAvgRank = 0;
+			double totalAvgFitness = 0;
+			int includeCount = 0;
+			int totalIncludePop = 0;
 			for (Species<G> species : parentSpecies) {
-				double avgRank = species.getAverageRank();
-				speciesNewSizeProportional.put(species, avgRank);
-				totalAvgRank += avgRank;
+				SpeciesData<G> sd = speciesData.get(species);
+				
+				if (speciesMaxStagnantIterations <= 0 || sd.stagnantIterationCount < speciesMaxStagnantIterations) {
+					totalAvgFitness += sd.averageFitness;
+					includeCount++;
+					totalIncludePop += sd.rankedMembers.size();
+				}
 			}
-
-			// Normalise proportional new sizes.
+			
+			
+			// Normalise proportional new sizes, and factor in species previous.
 			for (Species<G> species : parentSpecies) {
-				speciesNewSizeProportional.put(species, speciesNewSizeProportional.get(species) / totalAvgRank);
+				SpeciesData<G> sd = speciesData.get(species);
+				
+				// If there's only one species, or this species hasn't been stagnant too long.
+				if (parentSpecies.size() == 1 || speciesMaxStagnantIterations <= 0 || sd.stagnantIterationCount < speciesMaxStagnantIterations) {
+					// If every single species has zero fitness value, assign equal sizes.
+					if (totalAvgFitness == 0) {
+						sd.newSizeProportion = 1.0 / includeCount;
+					}
+					else {
+						double newSizeFitnessSharing = speciesData.get(species).averageFitness / totalAvgFitness;
+						// Factor in previous size. This helps stop a species' size from oscillating.
+						double previousSize = (double) species.size() / totalIncludePop;
+						
+						sd.newSizeProportion = 0.7 * newSizeFitnessSharing + 0.3 * previousSize;
+						//sd.newSizeProportion = newSizeFitnessSharing;
+					}
+				}
+				else {
+					// Species has been stagnant too long, don't reproduce from it.
+					sd.newSizeProportion = 0;
+				}
 			}
 
 		} else {
-			// Number of offspring to produce from a species is proportional to the species size.
+			// Number of offspring to produce from a species is proportional to the species size (determined by the speciator).
 			for (Species<G> species : parentSpecies) {
-				speciesNewSizeProportional.put(species, (double) species.size() / population.size());
+				SpeciesData<G> sd = speciesData.get(species);
+				
+				// If there's only one species, or this species hasn't been stagnant too long.
+				if (parentSpecies.size() == 1 || speciesMaxStagnantIterations <= 0 || sd.stagnantIterationCount < speciesMaxStagnantIterations) {
+					sd.newSizeProportion = (double) species.size() / population.size();
+				}
+				else {
+					// Species has been stagnant too long, don't reproduce from it.
+					sd.newSizeProportion = 0;
+				}
 			}
 		}
-
+		
 		final List<G> newOffspring = Collections.synchronizedList(new ArrayList<G>(population.getDesiredSize()));
+		final List<Individual<G, ?>> toRemove = Collections.synchronizedList(new ArrayList<Individual<G, ?>>());
 		final DefaultEvolver<G> evolver = this;
 		final Random random = this.getParentComponent(Run.class).random;
-
+		
 		// Reproduce from each species relative to its percentage of total fitness.
 		this.getParentComponent(Run.class).parallel.foreach(parentSpecies, new Parallel.Operation<Species<G>>() {
 			public void perform(Species<G> species) {
-				if (!species.isEmpty()) {
-					// Get all members of species, highest ranked first.
-					List<Individual<G, ?>> rankedMembers = new ArrayList<>(species.getMembers());
-					Collections.sort(rankedMembers);
-					Collections.reverse(rankedMembers);
-
-					int eliteCount = (int) Math.round(elitismProportion * species.size());
-					int numSpeciesOffspring = (int) Math.round(speciesNewSizeProportional.get(species) * population.getDesiredSize()) - eliteCount;
-
+				SpeciesData<G> sd = speciesData.get(species);
+				
+				int newSpeciesSize = (int) Math.round(sd.newSizeProportion * population.getDesiredSize());
+				
+				int eliteCount = Math.min(sd.rankedMembers.size(), (int) Math.round(elitismProportion * newSpeciesSize));
+				if (elitismMax != -1 && eliteCount > elitismMax) {
+					eliteCount = elitismMax;
+				}
+				
+				if (sd != null) {
+					Individual<G, ?> fittest = sd.rankedMembers.get(0);
+					//System.out.println(species.id + " : " + newSpeciesSize + " : " + eliteCount + " | " + fittest.id + " : " + fittest.evaluationData.getFitnessResults().values().iterator().next());
+				}
+				
+				if (newSpeciesSize > 0) {
+					int numSpeciesOffspring = newSpeciesSize - eliteCount;
+					
 					if (numSpeciesOffspring > 0) {
 						// Get parents.
 						int parentCount = Math.max(2, (int) Math.round(species.size() * parentsProportion));
-						if (parentCount > rankedMembers.size()) {
-							parentCount = rankedMembers.size();
+						if (parentCount > sd.rankedMembers.size()) {
+							parentCount = sd.rankedMembers.size();
 						}
-						List<Individual<G, ?>> parents = rankedMembers.subList(0, parentCount);
-
+						List<Individual<G, ?>> parents = new ArrayList<>(sd.rankedMembers.subList(0, parentCount));
+						
 						for (int offspringIdx = 0; offspringIdx < numSpeciesOffspring; offspringIdx++) {
 							G newGenotype = null;
-
+							
 							// Select a recombiner (or cloning) at random, with probability proportional to
 							// Evolver#actualRecombinerProportions
 							Recombiner<G> recombiner = selectRandomRecombiner();
-
+							
 							// If we should use a recombiner (not cloning).
 							if (recombiner != null && parents.size() >= 2) {
 								// Determine number of parents.
@@ -105,7 +182,7 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 									throw new IllegalStateException("The maximum number of parents for a Recombiner must be >= 2, " + recombiner.getClass().getName() + " gave " + maxParents);
 								}
 								int offspringParentCount = random.nextInt(maxParents - 1) + 2;
-
+								
 								// Collect genotypes from randomly selected parents.
 								Collections.shuffle(parents, random);
 								List<Individual<G, ?>> offspringParents = parents.subList(0, offspringParentCount);
@@ -113,32 +190,39 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 								for (Individual<G, ?> p : offspringParents) {
 									offspringParentGenotypes.add(p.genotype);
 								}
-
+								
 								// Create a new genotype by recombining parent genotypes.
 								newGenotype = recombiner.recombine(offspringParentGenotypes);
 							} else {
 								// Create a clone of one of the parents.
 								Individual<G, ?> parent = parents.get(random.nextInt(parents.size()));
-
+								
 								newGenotype = parent.genotype.newInstance();
 							}
-
+							
 							// Mutate the new genotype as necessary.
 							mutateGenotype(newGenotype, false);
-
+							
 							// Add to list to add to population.
 							newOffspring.add(newGenotype);
 						}
 					}
-
-					// Remove non-elites from population (this also removes the individuals from the species).
-					List<Individual<G, ?>> toRemove = rankedMembers.subList(eliteCount, rankedMembers.size());
-					for (Individual<G, ?> ind : toRemove) {
-						population.removeIndividual(ind);
-					}
+					
+					// Record non-elites of this species to be removed from population.
+					toRemove.addAll(sd.rankedMembers.subList(eliteCount, sd.rankedMembers.size()));
+				}
+				else {
+					// Species is either not fit enough to reproduce or has been stagnant for too long.
+					toRemove.addAll(species.members);
+					species.setDefunct();
 				}
 			}
 		});
+		
+		// Remove non-elites from population (this also removes the individuals from the species).
+		for (Individual<G, ?> ind : toRemove) {
+			population.removeIndividual(ind);
+		}
 
 		// The number of offspring should be the desired size minus the number of remaining elites.
 		int targetNewOffspringCount = population.getDesiredSize() - population.size();
@@ -154,10 +238,67 @@ public class DefaultEvolver<G extends Genotype<?>> extends Evolver<G> {
 			mutateGenotype(newGenotype, false);
 			newOffspring.add(newGenotype);
 		}
-
+		
 		// Add new genotypes to population.
 		for (G newGenotype : newOffspring) {
 			population.addGenotype(newGenotype);
+		}
+		
+		// Remove data for missing/defunct species.
+		Iterator<Entry<Species<G>, SpeciesData<G>>> itr = speciesData.entrySet().iterator();
+		while (itr.hasNext()) {
+			if (!parentSpecies.contains(itr.next().getKey())) {
+				itr.remove();
+			}
+		};
+	}
+	
+	
+	static class SpeciesData<G2 extends Genotype<?>> {
+		public double newSizeProportion;
+		public double newSize;
+		public double averageFitness;
+		public double currentBestFitness;
+		public double bestEverFitness = Double.NaN;
+		public int stagnantIterationCount = 0;
+		public List<Individual<G2, ?>> rankedMembers = new ArrayList<>();
+		
+		public void setMembers(Set<Individual<G2, ?>> members) {
+			rankedMembers.clear();
+			rankedMembers.addAll(members);
+			Collections.sort(rankedMembers);
+			Collections.reverse(rankedMembers);
+			
+			averageFitness = 0;
+			currentBestFitness = Double.NaN;
+			
+			for (Individual<G2, ?> ind : members) {
+				Map<EvaluationDescription, Double> results = ind.evaluationData.getFitnessResults();
+				double f = 0;
+				for (Entry<EvaluationDescription, Double> evData : results.entrySet()) {
+					f += evData.getKey().range.translateToUnit(evData.getValue());
+				}
+				f /= results.size();
+				averageFitness += f;
+				if (Double.isNaN(currentBestFitness) || f > currentBestFitness) {
+					currentBestFitness = f;
+				}
+			}
+			
+			averageFitness /= members.size();
+			
+			//String s = bestEverFitness + " : " + currentBestFitness;
+			
+			if (Double.isNaN(bestEverFitness) || currentBestFitness > bestEverFitness) {
+				bestEverFitness = currentBestFitness;
+				stagnantIterationCount = 0;
+			}
+			else {
+				stagnantIterationCount++;
+				//s += " : +1 = ";
+			}
+			
+			//System.out.println(s + stagnantIterationCount);
 		}
 	}
 }

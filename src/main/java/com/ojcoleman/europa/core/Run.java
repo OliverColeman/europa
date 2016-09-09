@@ -1,5 +1,8 @@
 package com.ojcoleman.europa.core;
 
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +36,11 @@ import com.ojcoleman.europa.monitor.OverviewMonitor;
 import com.ojcoleman.europa.util.DecimalFormatConfigurable;
 import com.ojcoleman.europa.util.Stringer;
 import com.thoughtworks.xstream.XStream;
+import com.eclipsesource.json.JsonObject;
 import com.google.common.collect.Table;
+import com.ojcoleman.europa.algos.neat.NEATNeuronAllele;
+import com.ojcoleman.europa.algos.neat.NEATSynapseAllele;
+import com.ojcoleman.europa.algos.vector.VectorAllele;
 import com.ojcoleman.europa.configurable.Component;
 
 /**
@@ -63,15 +73,18 @@ import com.ojcoleman.europa.configurable.Component;
  */
 public class Run extends ComponentBase {
 	private final Logger logger = LoggerFactory.getLogger(Run.class);
+	
+	@Parameter(description = "The total number of runs being performed. NOTE: this is informational only, setting it has no effect.", defaultValue = "1")
+	protected int runCount;
+
+	@Parameter(description = "The zero-based index of this run. NOTE: this is informational only, setting it has no effect.", defaultValue = "0")
+	protected int runIndex;
 
 	@Parameter(description = "The path(s) to the original configuration file(s) (.json extension). NOTE: this is informational only, setting it has no effect.", optional = true)
 	protected String[] configFilePaths;
 
 	@Parameter(description = "How many iterations/generations to perform before saving the Run state to a file (for later resume or examination). A value <= 0 indicates no saving.", defaultValue = "1000")
 	protected int saveFrequency;
-
-	@Parameter(description = "The path of the file to save the Run state to (for later resume or examination). Default is the name of the Run in the current working directory.", optional = true)
-	protected String savePath;
 
 	@Parameter(description = "The default format for printing floating point numbers. Pattern string format is defined by java.text.DecimalFormat.", defaultValue = "0.0000")
 	protected DecimalFormatConfigurable defaultNumberFormat;
@@ -106,7 +119,7 @@ public class Run extends ComponentBase {
 	@Component(description = "Components for monitoring the evolutionary process.", defaultClass = OverviewMonitor.class)
 	protected Monitor[] monitors;
 
-	@Configurable(description = "Configuration for utility class to perform operations in parallel.", defaultClass = Parallel.class)
+	@Component(description = "Configuration for utility class to perform operations in parallel.", defaultClass = Parallel.class)
 	protected Parallel parallel;
 
 	/**
@@ -140,10 +153,6 @@ public class Run extends ComponentBase {
 
 		defaultNumberFormatStatic = defaultNumberFormat;
 
-		if (savePath == null || savePath.equals("")) {
-			savePath = getName();
-		}
-
 		evaluatorsList = Collections.unmodifiableList(Arrays.asList(evaluators));
 
 		// if (singleton != null) {
@@ -152,8 +161,7 @@ public class Run extends ComponentBase {
 		// singleton = this;
 
 		if (name == null) {
-			name = getConfigFilePath().getFileName().toString();
-			name += (new SimpleDateFormat("_yyyyMMdd_HHmmss")).format(new Date());
+			name = getDefaultName(componentConfig);
 		}
 
 		if (randomSeed == 0) {
@@ -165,6 +173,8 @@ public class Run extends ComponentBase {
 		currentIteration = 0;
 
 		monitor(this);
+		
+		final Run run = this;
 
 		// If we should save the run state periodically.
 		if (saveFrequency > 0) {
@@ -173,13 +183,22 @@ public class Run extends ComponentBase {
 				public void eventOccurred(Observable observed, Object event, Object state) {
 					if (event == Run.Event.IterationComplete) {
 						if (currentIteration > 0 && currentIteration % saveFrequency == 0) {
+							run.fireEvent(Run.Event.SnapshotBegin);
+							
 							XStream xstream = new XStream();
-							xstream.setMarshallingStrategy(null);
 							try {
-								xstream.toXML(this, new FileWriter(savePath));
+								FileOutputStream dest = new FileOutputStream(run.getOutputDirectory() + "/save-" + run.getCurrentIteration() + ".europa");
+								ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+								out.putNextEntry(new ZipEntry("europarun.xml"));
+							    
+								xstream.toXML(run, out);
+								
+								out.close();
 							} catch (IOException e) {
 								logger.error("Could not save Run state to file.", e);
 							}
+							
+							run.fireEvent(Run.Event.SnapshotComplete);
 						}
 					}
 				}
@@ -188,7 +207,7 @@ public class Run extends ComponentBase {
 
 		this.fireEvent(Event.Initialised);
 	}
-
+	
 	/**
 	 * Execute the run.
 	 * 
@@ -197,9 +216,10 @@ public class Run extends ComponentBase {
 	public final synchronized void run() throws Exception {
 		mainLoop();
 	}
-
+	
 	/**
 	 * Get a reference to the Transcriber component.
+	 * @return 
 	 */
 	protected void mainLoop() {
 		// Get a reference to the Population Component.
@@ -210,8 +230,15 @@ public class Run extends ComponentBase {
 			// Create initial population.
 			population.generate();
 		}
+		else {
+			// Otherwise we must be resuming from a snapshot.
+			outputDirectory = getUniqueDirectoryName(outputDirectory + "-resume");
+			this.fireEvent(Event.SnapshotResume);
+		}
 
 		double prevTime = System.currentTimeMillis();
+		
+		Individual prevFittest = null;
 
 		// For each iteration/generation...
 		while ((maximumIterations <= 0 || currentIteration < maximumIterations) && !stop) {
@@ -220,16 +247,33 @@ public class Run extends ComponentBase {
 			// Evaluate the population (transcribing from genotype to phenotype as necessary).
 			// Return value of true indicates we should terminate.
 			stop |= population.evaluate();
-
+			
 			// Produce a ranking over the population, if applicable.
 			population.rank();
+			
+			/*if (prevFittest != null) {
+				double newFitness = population.getFittest().evaluationData.getFitnessResults().values().iterator().next();
+				double prevFitness = prevFittest.evaluationData.getFitnessResults().values().iterator().next();
+				
+				if (prevFitness > 0.1 && newFitness < prevFitness) {
+					System.out.println("fitness dropped from " + prevFitness + " to " + newFitness);
+					if (!population.getMembers().contains(prevFittest)) {
+						System.out.println("prev fittest not in population.");
+					}
+					//if (prevFitness > 0.1 && newFitness < 0.5 * prevFitness) {
+						//System.exit(0);
+					//}
+				}
+			}*/
 
-			// Speciate population if applicable.
-			population.speciate();
+			prevFittest = population.getFittest();
 
 			// Don't produce new generation if we're terminating.
 			// (We still rank and speciate as this info might be useful).
-			if (!stop) {
+			if (!stop && (currentIteration+1) < maximumIterations) {
+				// Speciate population if applicable.
+				population.speciate();
+
 				// Evolve population.
 				population.evolve();
 			}
@@ -242,10 +286,53 @@ public class Run extends ComponentBase {
 				avgIterationTime = duration;
 			else
 				avgIterationTime = avgIterationTime * 0.9 + duration * 0.1;
-
-			this.fireEvent(Event.IterationComplete, currentIteration);
-
+			
 			currentIteration++;
+			
+			this.fireEvent(Event.IterationComplete, currentIteration);
+		}
+		
+		parallel.stop();
+		
+		//printpop(population);
+	}
+	
+	private void printpop(Population<?, ?> population) {
+		DecimalFormat f = new DecimalFormat("0.0000");
+		
+		Map<String, Double> vmap = new TreeMap<>();
+		
+		System.out.println("\n\n\n\n");
+		for (Individual<?, ?> i : population.getMembers()) {
+			System.out.print(i.id + "\t" + i.genotype.id + "\t" + i.getRank() + "\t" + f.format(i.evaluationData.getFitnessResults().values().iterator().next()) + "\t");
+			boolean first = true;
+			for (Genotype g : i.genotype.parents) {
+				if (!first) {
+					System.out.print(" + ");
+				}
+				else {
+					first = false;
+				}
+				System.out.print(g.id);
+			}
+			for (Allele a : i.genotype.getAlleles()) {
+				System.out.print("\t" + a.id + " : " + a.gene.id + " = ");
+				
+				VectorAllele va = (VectorAllele) a;
+				
+				va.getAllValuesAsMap(vmap);
+				boolean firstVal = true;
+				for (Map.Entry<String, Double> v : vmap.entrySet()) {
+					if (!firstVal) {
+						System.out.print("  ");
+					}
+					else {
+						firstVal = false;
+					}
+					System.out.print(v.getKey().charAt(0) + " " + f.format(v.getValue()));
+				}
+			}
+			System.out.println();
 		}
 	}
 
@@ -300,6 +387,14 @@ public class Run extends ComponentBase {
 	}
 
 	/**
+	 * Returns the maximum number of iterations/generations.
+	 */
+	public int getMaximumIterations() {
+		return maximumIterations;
+	}
+
+	
+	/**
 	 * Returns the name of this Run.
 	 * 
 	 * @see #name
@@ -309,24 +404,31 @@ public class Run extends ComponentBase {
 	}
 
 	/**
+	 * Determine the default name for a run based on the the given nnConfig.
+	 */
+	public static String getDefaultName(JsonObject config) {
+		String name = Paths.get(config.get("configFilePaths").asArray().get(0).asString()).getFileName().toString();
+		name += (new SimpleDateFormat("_yyyyMMdd_HHmmss")).format(new Date());
+		return name;
+	}
+	
+	
+
+	/**
 	 * Returns the path to the directory where output files should be saved to.
+	 * This method will create the directory if it does not exist.
 	 * 
 	 * @see #outputDirectory
 	 */
 	public Path getOutputDirectory() {
 		if (outputDirectory == null) {
 			try {
-				outputDirectory = Paths.get(".", "output", name).toFile().getCanonicalPath().toString();
+				outputDirectory = getDefaultOutputDirectory(name);
 			} catch (IOException e) {
-				logger.error(" Could not get canonical path for output directory.", e);
+				throw new RuntimeException("Could not get canonical path for output directory.", e);
 			}
-
-			int id = 0;
-			DecimalFormat formatter = new DecimalFormat("000");
-			while (Files.exists(Paths.get(outputDirectory + (id == 0 ? "" : "_" + formatter.format(id))))) {
-				id++;
-			}
-			outputDirectory = outputDirectory + (id == 0 ? "" : "_" + formatter.format(id));
+			
+			outputDirectory = getUniqueDirectoryName(outputDirectory);
 		}
 
 		if (!Files.exists(Paths.get(outputDirectory))) {
@@ -338,6 +440,33 @@ public class Run extends ComponentBase {
 		}
 
 		return Paths.get(outputDirectory);
+	}
+	
+	/**
+	 * Returns the path to the default directory where output files should be saved to for the given run name.
+	 * To get the output directory for a specific Run instance use {@link #getOutputDirectory()};
+	 * 
+	 * @throws IOException if the canonical path could not be determined.
+	 */
+	public static String getDefaultOutputDirectory(String name) throws IOException {
+		Path p = Paths.get(".", "output", name);
+		File f = Paths.get(".", "output", name).toFile();
+		return Paths.get(".", "output", name).toFile().getCanonicalPath().toString();
+	}
+	
+	
+	/**
+	 * Utility method to get a unique directory name by appending an incremented 
+	 * number that will make the given desired directory name unique.
+	 */
+	public static String getUniqueDirectoryName(String desired) {
+		int id = 0;
+		DecimalFormat formatter = new DecimalFormat("000");
+		while (Files.exists(Paths.get(desired + (id == 0 ? "" : "_" + formatter.format(id))))) {
+			id++;
+		}
+		desired = desired + (id == 0 ? "" : "_" + formatter.format(id));
+		return desired;
 	}
 
 	/**
@@ -422,7 +551,7 @@ public class Run extends ComponentBase {
 
 		/**
 		 * An event type indicating that an iteration of the main cycle (evaluation of individuals; replacement of some
-		 * individuals generated from fittest) is complete. This event is fired before incrementing the iteration
+		 * individuals generated from fittest) is complete. This event is fired after incrementing the iteration
 		 * counter {@link Run#getCurrentIteration()}.
 		 */
 		IterationComplete,
@@ -435,6 +564,21 @@ public class Run extends ComponentBase {
 		/**
 		 * An event type indicating that this Run and all its sub-Components have finished initialising.
 		 */
-		Initialised
+		Initialised,
+
+		/**
+		 * An event type indicating that a snapshot of the run is about to be saved.
+		 */
+		SnapshotBegin,
+
+		/**
+		 * An event type indicating that a snapshot of the run has been saved.
+		 */
+		SnapshotComplete,
+		
+		/**
+		 * An event type indicating that the system has just been resumed from a snapshot.
+		 */
+		SnapshotResume
 	}
 }

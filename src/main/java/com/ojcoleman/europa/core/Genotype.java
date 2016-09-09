@@ -104,7 +104,7 @@ public abstract class Genotype<A extends Allele<?>> extends PrototypeBase implem
 			A newAllele = allele.newInstance();
 			this.alleles.add(newAllele);
 		}
-
+		
 		allelesByGeneType = ArrayListMultimap.create();
 		for (A allele : this.alleles) {
 			updateAllelesByGeneTypeForAdd(allele);

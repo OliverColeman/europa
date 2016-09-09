@@ -18,6 +18,7 @@ import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 import com.ojcoleman.europa.core.Ranker;
 import com.ojcoleman.europa.core.Run;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * This is a simple ranker that only considers the primary fitness objective when ranking individuals.
@@ -36,8 +37,15 @@ public class SimpleRanker<G extends Genotype<?>, F extends Function<?, ?>> exten
 
 	@Override
 	public void rank(Population<G, F> population) {
+		if (population.size() == 0) {
+			return;
+		}
+		
 		Set<EvaluationDescription> evDescs = population.getMembers().iterator().next().evaluationData.getFitnessResults().keySet();
 		if (evDescs.size() != 1) {
+			for (EvaluationDescription evd : evDescs) {
+				System.out.println(evd.name);
+			}
 			throw new IllegalArgumentException("The SimpleRanker can only be used when a single fitness evaluation is defined.");
 		}
 		// Get a reference to the one and only EvaluationDescription.

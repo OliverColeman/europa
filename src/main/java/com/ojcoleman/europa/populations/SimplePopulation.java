@@ -16,7 +16,7 @@ import com.ojcoleman.europa.core.Individual;
 import com.ojcoleman.europa.core.Population;
 
 /**
- * DefaultEvolver population class. Stores {@link Individual}s as a HashSet.
+ * DefaultEvolver population class. Stores {@link Individual}s as a HashMap.
  * 
  * @author O. J. Coleman
  */
@@ -28,7 +28,7 @@ public class SimplePopulation<G extends Genotype<?>, F extends Function<?, ?>> e
 	 */
 	public SimplePopulation(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
-		members = new HashMap<>();
+		members = Collections.synchronizedMap(new HashMap<Long, Individual<G, F>>());
 	}
 
 	@Override

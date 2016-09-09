@@ -71,7 +71,7 @@ public class VectorMetadata extends ConfigurableBase {
 		elements = new Element[labels.size()];
 
 		for (int e = 0; e < elements.length; e++) {
-			elements[e] = new Element(labels.get(e), minValues[e], maxValues[e], isInteger[e]);
+			elements[e] = new Element(labels.get(e), minValues[e], maxValues[e], isInteger[e], e);
 		}
 
 		this.labels = new ArrayList<>(labels);
@@ -111,6 +111,10 @@ public class VectorMetadata extends ConfigurableBase {
 
 	public boolean hasLabel(String label) {
 		return labelMap.containsKey(label);
+	}
+	
+	public int getLabelIndex(String label) {
+		return labelMap.get(label).getIndex();
 	}
 
 	public IntervalDouble bound(String label) {
@@ -201,14 +205,17 @@ public class VectorMetadata extends ConfigurableBase {
 	public static class Element extends ElementDefaults {
 		@Parameter(description = "The label for this Vector Element.", optional = true)
 		protected String label;
+		
+		private int index;
 
 		public Element(Configuration config) {
 			super(config);
 		}
 
-		public Element(String label, double min, double max, boolean isInteger) {
+		public Element(String label, double min, double max, boolean isInteger, int index) {
 			super(min, max, isInteger);
 			this.label = label;
+			this.index = index;
 		}
 
 		/**
@@ -218,6 +225,14 @@ public class VectorMetadata extends ConfigurableBase {
 			return label;
 		}
 
+		/**
+		 * Get the index for this Vector Element.
+		 */
+		public int getIndex() {
+			return index;
+		}
+		
+		@Override
 		public boolean equals(Object o) {
 			if (o == this) {
 				return true;

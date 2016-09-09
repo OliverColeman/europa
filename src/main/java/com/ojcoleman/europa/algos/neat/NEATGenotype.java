@@ -21,6 +21,7 @@ import com.ojcoleman.europa.configurable.PrototypeBase;
 import com.ojcoleman.europa.core.Gene;
 import com.ojcoleman.europa.core.Genotype;
 import com.ojcoleman.europa.transcribers.nn.NNPart;
+import com.ojcoleman.europa.util.Stringer;
 
 /**
  * Genotype for the NEAT algorithm.
@@ -47,7 +48,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	protected NEATSynapseAllele synapseAllelePrototype;
 
 	/**
-	 * A map view of all alleles in this genotype, mapping from NEAT innovation ID ({@link NEATGene#id}) to allele.
+	 * A sorted map view of all alleles in this genotype, mapping from NEAT innovation ID ({@link NEATGene#id}) to allele.
 	 */
 	Map<Long, NEATAllele<?>> allAlleles;
 
@@ -98,7 +99,7 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	}
 
 	private void init() {
-		allAlleles = new HashMap<>();
+		allAlleles = new TreeMap<>();
 		for (NEATAllele<?> allele : alleles) {
 			allAlleles.put(allele.gene.id, allele);
 		}
@@ -117,6 +118,18 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 	@Override
 	public void addAllele(NEATAllele<?> allele) {
 		super.addAllele(allele);
+		
+		assert !allAlleles.containsKey(allele.gene.id);
+		
+		if (allele instanceof NEATSynapseAllele) {
+			NEATSynapseAllele synAllele = (NEATSynapseAllele) allele;
+			for (NEATSynapseAllele a : synapses.values()) {
+				assert a.gene.sourceID != synAllele.gene.sourceID || a.gene.destinationID != synAllele.gene.destinationID;
+			}
+		}
+		
+		allAlleles.put(allele.gene.id, allele);
+		
 		if (allele.gene.types.contains(NNPart.NEURON)) {
 			neurons.put(allele.gene.id, (NEATNeuronAllele) allele);
 		} else if (allele.gene.types.contains(NNPart.SYNAPSE)) {
@@ -138,6 +151,17 @@ public class NEATGenotype extends VectorGeneGenotype<NEATAllele<?>> {
 		return Collections.unmodifiableSortedMap(synapses);
 	}
 
+	/**
+	 * Returns true iff this genotype contains a gene with the specified (NEAT innovation) ID.
+	 */ 
+	public boolean hasGene(long geneID) {
+		return allAlleles.containsKey(geneID);
+	}
+
+	/**
+	 * Returns the allele in this genotype for the gene with the specified (NEAT innovation) ID, 
+	 * or null if this genotype does not contain an allele for the gene.
+	 */ 
 	public NEATAllele<?> getAllele(long geneID) {
 		return allAlleles.get(geneID);
 	}

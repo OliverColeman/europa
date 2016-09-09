@@ -52,8 +52,8 @@ import com.ojcoleman.europa.core.Allele;
  * to copy.</li>
  * </ul>
  * Example: <code>
-    public Allele(Configuration config) {
-		super(config);
+    public Allele(Configuration nnConfig) {
+		super(nnConfig);
 	}
 	public Allele(Allele<G> allele, Gene gene) {
 		super(allele);
@@ -86,11 +86,11 @@ public abstract class PrototypeBase extends ConfigurableBase {
 
 	/**
 	 * Constructor to initialise the prototype object from which all other instances should be copied. Sub-classes must
-	 * implement a constructor accepting the same parameters and call <code>super(config)</code>. <strong>Overriding
+	 * implement a constructor accepting the same parameters and call <code>super(nnConfig)</code>. <strong>Overriding
 	 * implementations of this constructor should return after calling super() if <em>null</em> is provided</strong>
 	 * (null is used to create dummy instances when printing the available default configuration options).
 	 * 
-	 * @param config The configuration for this ConfigurableBase.
+	 * @param nnConfig The configuration for this ConfigurableBase.
 	 */
 	public PrototypeBase(Configuration config) {
 		super(config);

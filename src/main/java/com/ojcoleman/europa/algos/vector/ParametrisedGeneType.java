@@ -31,7 +31,7 @@ public class ParametrisedGeneType extends ConfigurableBase {
 	protected VectorMetadata paramsType;
 
 	/**
-	 * If {@link #paramsType} is non-empty, this is a reference to the one of {@link #paramsGene} or {#paramsAllele}
+	 * If {@link #paramsType} is non-empty, this is a reference to one of {@link #paramsGene} or {#paramsAllele}
 	 * which contains the "typeReference" parameter.
 	 */
 	public final VectorMetadata paramsTypeReference;

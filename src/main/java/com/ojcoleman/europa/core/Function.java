@@ -28,4 +28,9 @@ public interface Function<I, O> {
 	 * supplied output objects.
 	 */
 	public O[] apply(I[] input, O[] output);
+	
+	/**
+	 * Reset internal state to initial values, if applicable.
+	 */
+	public void reset();
 }

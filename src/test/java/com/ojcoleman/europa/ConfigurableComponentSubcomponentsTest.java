@@ -80,10 +80,10 @@ public class ConfigurableComponentSubcomponentsTest {
 //	public void subCompExtendedWithOverriddenParams() throws Exception {
 //		JsonValue json = Json.parse("{ \"sub\": {\n" + "      \"class\": \"com.ojcoleman.europa.ConfigurableComponentSubcomponentsTest$SubcomponentExtendedWithParams\",\n" + "      \"intParam\": 1234,\n" + "      \"floatParam\": 1.23\n" + "    }\n" + "  }\n");
 //		BaseComponentExtendedSubWithParams base = new BaseComponentExtendedSubWithParams(null, json.asObject());
-//		String config = base.getConfiguration(true).toString();
-//		if (config.contains("Test String parameter overriding that in superclass")) {
+//		String nnConfig = base.getConfiguration(true).toString();
+//		if (nnConfig.contains("Test String parameter overriding that in superclass")) {
 //			// pass
-//		} else if (config.contains("Test String parameter")) {
+//		} else if (nnConfig.contains("Test String parameter")) {
 //			Assert.fail("Parameter definition in subclass does not override that in superclass.");
 //		} else {
 //			Assert.fail("Cannot find Parameter definition in retrieved configuration json.");

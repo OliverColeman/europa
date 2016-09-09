@@ -28,7 +28,7 @@ import com.ojcoleman.europa.core.Run;
 /**
  * 
  * Implementation of {@link Monitor} that prints out the configuration for the Run in JSON format to a file called
- * config.json.
+ * nnConfig.json.
  * 
  * @author O. J. Coleman
  */
@@ -43,7 +43,7 @@ public class ConfigMonitor extends Monitor {
 			try {
 				Run run = this.getParentComponent(Run.class);
 				FileWriter outputFile;
-				outputFile = new FileWriter(run.getOutputDirectory().resolve("config.json").toFile());
+				outputFile = new FileWriter(run.getOutputDirectory().resolve("nnConfig.json").toFile());
 				outputFile.append(run.getConfiguration(false).toString(WriterConfig.PRETTY_PRINT));
 				outputFile.close();
 			} catch (IOException | IllegalAccessException e) {

@@ -73,7 +73,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	/**
 	 * Add a neuron type to this neural network.
 	 * 
-	 * @param config Neuron model-specific configuration parameters, if applicable.
+	 * @param nnConfig Neuron model-specific configuration parameters, if applicable.
 	 * @return The index of the new neuron type in this neural network. This is used to reference a neuron type, for
 	 *         example in {@link #addNeuron(Map)}.
 	 */
@@ -85,7 +85,7 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	/**
 	 * Add a synapse type to this neural network.
 	 * 
-	 * @param config Synapse model-specific configuration parameters, if applicable.
+	 * @param nnConfig Synapse model-specific configuration parameters, if applicable.
 	 * @return The index of the new synapse type in this neural network. This is used to reference a synapse type, for
 	 *         example in {@link #addSynapse(Map, int, int)}.
 	 */
@@ -95,10 +95,10 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	}
 
 	/**
-	 * Add a neuron to this neural network.
+	 * Add a neuron to this neural network. Neurons should be added in order of input, hidden and output.
 	 * 
-	 * @param config Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
-	 *            value. If types are used then the config should generally contain a reference to a type according to
+	 * @param nnConfig Neuron model-specific configuration parameters, if applicable. This will typically contain a "bias"
+	 *            value. If types are used then the nnConfig should generally contain a reference to a type according to
 	 *            the values returned by {@link #addNeuronType(Map)}.
 	 * @return The index of the new neuron in this neural network. This is used to reference a neuron, for example in
 	 *         {@link #addSynapse(Map, int, int)}.
@@ -108,8 +108,8 @@ public abstract class ParametrisedNeuralNetwork extends PrototypeBase implements
 	/**
 	 * Add a synapse to this neural network.
 	 * 
-	 * @param config Synapse model-specific configuration parameters, if applicable. This will typically contain at
-	 *            least a "weight" value. If types are used then the config should generally contain a reference to a
+	 * @param nnConfig Synapse model-specific configuration parameters, if applicable. This will typically contain at
+	 *            least a "weight" value. If types are used then the nnConfig should generally contain a reference to a
 	 *            type according to the values returned by {@link #addSynapseType(Map)}.
 	 * @param source The index of the source neuron for the synapse, as returned by {@link #addNeuron(Map)}.
 	 * @param dest The index of the destination neuron for the synapse, as returned by {@link #addNeuron(Map)}.

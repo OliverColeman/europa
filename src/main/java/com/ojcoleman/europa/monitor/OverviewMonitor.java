@@ -65,6 +65,10 @@ public class OverviewMonitor extends FileOrCLIMonitor {
 
 	@Override
 	public void eventOccurred(Observable observed, Object event, Object state) {
+		if (event == Run.Event.SnapshotResume) {
+			write(observed, event, state, "================= Resuming from snapshot =================");
+		}
+		
 		if (event == Run.Event.IterationComplete && run.getCurrentIteration() % period == 0) {
 			Multimap<String, ComponentStateLog> stateData = this.getParentComponent(Run.class).getAllStateData();
 

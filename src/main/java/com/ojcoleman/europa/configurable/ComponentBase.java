@@ -216,7 +216,8 @@ public abstract class ComponentBase extends ConfigurableBase {
 
 					// Find and list available implementations.
 					Reflections reflections = new Reflections("com.ojcoleman.europa");
-					Set<?> subTypes = reflections.getSubTypesOf(isArray ? type.getComponentType() : type);
+					Class t = isArray ? type.getComponentType() : type;
+					Set<?> subTypes = reflections.getSubTypesOf(t);
 					List<Class<?>> imps = new ArrayList<>();
 					for (Object o : subTypes) {
 						Class<?> c = (Class<?>) o;
@@ -230,7 +231,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 							config.add("_metadata<" + name + c.getName() + "> ", " " + c.getName());
 						}
 					}
-					// config.add("_metadata for component", meta);
+					// nnConfig.add("_metadata for component", meta);
 				}
 
 				// Get the Components as a list if they're not already.
@@ -373,11 +374,11 @@ public abstract class ComponentBase extends ConfigurableBase {
 
 			if (isArray) {
 				// If we're creating a dummy instance, try to initialise an example using the default or field type
-				// class. Otherwise if no config provided and this field is optional then an empty array will be
+				// class. Otherwise if no nnConfig provided and this field is optional then an empty array will be
 				// created.
 				if (jsonValue == null && isDummy) {
 					try {
-						// If we can get a valid constructor with an empty config, set the jsonValue to empty so we
+						// If we can get a valid constructor with an empty nnConfig, set the jsonValue to empty so we
 						// create one example instance, otherwise just create an empty array.
 						getComponentConstructor(definingClass, this, field, new JsonObject(), isArray);
 						jsonValue = new JsonObject();
@@ -390,7 +391,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 					throw new RequiredComponentDefinitionMissingException(error);
 				}
 
-				// Get config(s) as JsonArray.
+				// Get nnConfig(s) as JsonArray.
 				JsonArray configArray = new JsonArray();
 				if (jsonValue != null) {
 					if (jsonValue.isArray()) {
@@ -452,7 +453,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 
 	/**
 	 * Get the constructor for the given Component field, taking into account the default class in the annotation if
-	 * specified and the "class" in the config if specified and performing error checking.
+	 * specified and the "class" in the nnConfig if specified and performing error checking.
 	 */
 	Constructor<?> getComponentConstructor(Class<?> definingClass, ConfigurableBase configurable, Field field, JsonValue jsonConfig, boolean isArray) {
 		if (!jsonConfig.isObject()) {
@@ -487,7 +488,7 @@ public abstract class ComponentBase extends ConfigurableBase {
 				throw new InvalidConfigurationException(error);
 			}
 		}
-		// If class not specified in config, get default implementation class specified by annotation if present.
+		// If class not specified in nnConfig, get default implementation class specified by annotation if present.
 		else if (!annotation.defaultClass().equals(Void.class)) {
 			// Make sure the default class is a sub-class of the field type.
 			if (!type.isAssignableFrom(annotation.defaultClass())) {

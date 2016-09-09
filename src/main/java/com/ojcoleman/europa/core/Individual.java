@@ -38,7 +38,7 @@ public class Individual<G extends Genotype<?>, F extends Function<?, ?>> extends
 	/**
 	 * The {@link Function} to be evaluated (transcribed from the Genotype if the Genotype is not also the Function).
 	 */
-	protected F function;
+	protected transient F function;
 
 	/**
 	 * The Species this Individual is currently associated with.

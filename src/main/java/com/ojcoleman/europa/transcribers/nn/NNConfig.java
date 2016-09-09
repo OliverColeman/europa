@@ -8,15 +8,15 @@ import java.util.Map;
 import com.ojcoleman.europa.algos.vector.ParametrisedGeneType;
 import com.ojcoleman.europa.configurable.Configurable;
 import com.ojcoleman.europa.configurable.Parameter;
-import com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedGeneType;
+import com.ojcoleman.europa.transcribers.nn.integration.BainParametrisedNeuronGeneType;
 
 /**
  * A component describing essential configuration information for a neural network for which the configuration is
- * defined by {@link BainParametrisedGeneType}s.
+ * defined by {@link BainParametrisedNeuronGeneType}s.
  * 
  * @author O. J. Coleman
  */
-public class NNConfig<N extends ParametrisedGeneType, S extends ParametrisedGeneType> extends ConfigurableBase {
+public class NNConfig<N extends ParametrisedNeuronGeneType, S extends ParametrisedGeneType> extends ConfigurableBase {
 	@Configurable(description = "Configuration for the neurons.")
 	protected N neuron;
 

@@ -65,7 +65,10 @@ public class FittestMonitor extends Monitor {
 				log(run.getPopulation().getFittest(), "fittest");
 			}
 			if (logBestPerforming) {
-				log(run.getPopulation().getBestPerforming(), "best_performing");
+				Individual<?, ?> bestPerforming = run.getPopulation().getBestPerforming();
+				if (bestPerforming != null) {
+					log(run.getPopulation().getBestPerforming(), "best_performing");
+				}
 			}
 		}
 	}
@@ -73,7 +76,7 @@ public class FittestMonitor extends Monitor {
 	protected void log(Individual<?, ?> ind, String label) {
 		try {
 			FileWriter outputFile = new FileWriter(run.getOutputDirectory().resolve(label + "-" + run.getCurrentIteration() + "-" + ind.id + "-genotype.log").toFile());
-			outputFile.append(Stringer.toString(ind.genotype));
+			outputFile.append(Stringer.toString(ind.genotype, 20));
 			outputFile.close();
 
 			// Transcribe a function from the genotype.
@@ -81,11 +84,13 @@ public class FittestMonitor extends Monitor {
 			ind.setFunction(function);
 
 			outputFile = new FileWriter(run.getOutputDirectory().resolve(label + "-" + run.getCurrentIteration() + "-" + ind.id + "-function.log").toFile());
-			outputFile.append(Stringer.toString(function));
+			outputFile.append(Stringer.toString(function, 20));
 			outputFile.close();
+			
+			//System.out.println("log 1 : " + ind.id + " : " + Stringer.toString(ind.evaluationData));
 
 			ind.evaluationData.clear();
-
+			
 			int evalIndex = 0;
 			for (Evaluator evaluator : run.getEvaluators()) {
 				// Allow for thread cancellation.
@@ -99,11 +104,15 @@ public class FittestMonitor extends Monitor {
 
 				if (log.hasItem("string")) {
 					outputFile = new FileWriter(run.getOutputDirectory().resolve(label + "-" + run.getCurrentIteration() + "-" + ind.id + "-evaluation-" + evalIndex + "-" + evaluator.getName() + ".log").toFile());
-					outputFile.append(Stringer.toString(log.getLog("string")));
+					outputFile.append(Stringer.toString(log.getLog("string"), 20));
 					outputFile.close();
 				}
 				evalIndex++;
 			}
+			
+			//System.out.println("log 2 " + ind.id + " : " + Stringer.toString(ind.evaluationData));
+
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

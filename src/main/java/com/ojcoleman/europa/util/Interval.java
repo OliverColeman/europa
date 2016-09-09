@@ -21,8 +21,8 @@ public abstract class Interval<T extends Number & Comparable<T>> {
 	public final T end;
 
 	public Interval(T s, T e) {
-		if (e.compareTo(s) <= 0) {
-			throw new IllegalArgumentException("The start of an Interval must be less than the end of the Interval, values given were: [" + s + ", " + e + "].");
+		if (e.compareTo(s) < 0) {
+			throw new IllegalArgumentException("The start of an Interval must be less than or equal to the end of the Interval, values given were: [" + s + ", " + e + "].");
 		}
 		start = s;
 		end = e;

@@ -1,5 +1,6 @@
 package com.ojcoleman.europa.monitor;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Array;
@@ -7,6 +8,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.reflections.ReflectionUtils;
@@ -40,13 +42,15 @@ public abstract class FileOrCLIMonitor extends Monitor {
 	protected String printToFile;
 
 	private String previousFileName;
-	private FileWriter outputFile;
+	// Mark as transient so XStream does not store it. See readResolve().
+	private transient FileWriter outputFile;
 	private Run run;
 
 	public FileOrCLIMonitor(ComponentBase parentComponent, Configuration componentConfig) throws Exception {
 		super(parentComponent, componentConfig);
 
 		run = this.getParentComponent(Run.class);
+		
 	}
 
 	/**
@@ -68,15 +72,25 @@ public abstract class FileOrCLIMonitor extends Monitor {
 			try {
 				String eventName = event.getClass().isEnum() ? event.toString() : "";
 				String newFileName = printToFile.replace("%itr", "" + run.getCurrentIteration()).replace("%observed", observed.getClass().getSimpleName()).replace("%event", eventName);
-
+				File file = run.getOutputDirectory().resolve(newFileName).toFile();
+				
 				if (previousFileName == null || !previousFileName.equals(newFileName)) {
 					if (outputFile != null) {
 						outputFile.close();
 					}
 
-					outputFile = new FileWriter(run.getOutputDirectory().resolve(newFileName).toFile());
+					outputFile = new FileWriter(file);
 
 					previousFileName = newFileName;
+				}
+				
+				// If we get here and outputFile is null then it means we're resuming from a snapshot save file.
+				// We reopen the file here rather than in a readObject() method because we need to access 
+				// run.getOutputDirectory() but the run object is not fully initialised when readObject() is called 
+				// on this object.
+				if (outputFile == null) {
+					// (Re)open output file.
+					outputFile = new FileWriter(file, file.exists());
 				}
 
 				outputFile.append(s);

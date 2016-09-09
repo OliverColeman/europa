@@ -46,7 +46,7 @@ public class NEATSpeciatorKMeans extends NEATSpeciator<NEATGenotype, NEATSpecies
 		super(parentComponent, componentConfig);
 
 		run = this.getParentComponent(Run.class);
-		parallel = this.getParentComponent(Run.class).getParallel();
+		parallel = (Parallel) this.getParentComponent(Run.class).getSubComponent("parallel", this);
 
 		if (speciesCount <= 0) {
 			speciesCount = (int) Math.round(Math.pow(this.getParentComponent(Population.class).getDesiredSize(), 0.6));
@@ -67,10 +67,12 @@ public class NEATSpeciatorKMeans extends NEATSpeciator<NEATGenotype, NEATSpecies
 			speciesList.clear();
 			for (int i = 0; i < speciesCount; i++) {
 				int indIndexRandom = run.random.nextInt(individualList.size());
-				// new NEATSpecies(speciesPrototype, individualList.get(indIndexRandom).genotype); //newInstance
 				// prototype constructor parameter check.
+				//new NEATSpecies(speciesPrototype, individualList.get(indIndexRandom).genotype);
 				NEATSpecies species = speciesPrototype.newInstance(individualList.get(indIndexRandom).genotype);
 				speciesList.add(species);
+				
+				//System.out.println(species.id + " : " + indIndexRandom + " : " + species.getRepresentative().id + " : " + individualList.get(indIndexRandom).genotype.id);
 			}
 		}
 
@@ -114,7 +116,7 @@ public class NEATSpeciatorKMeans extends NEATSpeciator<NEATGenotype, NEATSpecies
 
 		assert testSpeciationIntegrity(individualList, speciesList);
 
-		// List of modified species (had individuals allocated to and/or from it).
+		// List of modified species (had individuals allocated to and/or removed from it).
 		final Set<NEATSpecies> speciesMod = Collections.synchronizedSet(new HashSet<NEATSpecies>());
 
 		// Main k-means loop.
@@ -127,7 +129,7 @@ public class NEATSpeciatorKMeans extends NEATSpeciator<NEATGenotype, NEATSpecies
 			reallocationsOccurred = false;
 
 			assert testSpeciationIntegrity(individualList, speciesList);
-
+			
 			// Loop over individuals. For each one find the species it is closest to; if it is not the species
 			// it is currently in then reallocate it.
 			parallel.foreach(individualList, new Parallel.Operation<Individual<NEATGenotype, ?>>() {
@@ -139,8 +141,8 @@ public class NEATSpeciatorKMeans extends NEATSpeciator<NEATGenotype, NEATSpecies
 						speciesMod.add((NEATSpecies) individual.getSpecies());
 						speciesMod.add(closestSpecies);
 
-						closestSpecies.addMemberRemoveFromCurrent(individual); // This removes the individual from its
-																				// previous species.
+						// This removes the individual from its previous species.
+						closestSpecies.addMemberRemoveFromCurrent(individual); 
 
 						// assert testSpeciationIntegrity(individualList, speciesList);
 					}
