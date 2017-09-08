@@ -15,14 +15,23 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
+
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.DumperOptions.FlowStyle;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.nodes.Tag;
+import org.yaml.snakeyaml.parser.ParserException;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
@@ -33,6 +42,7 @@ import com.eclipsesource.json.JsonObject.Member;
 import com.eclipsesource.json.JsonValue;
 import com.eclipsesource.json.ParseException;
 import com.eclipsesource.json.WriterConfig;
+import com.ojcoleman.collections.LSListMap;
 import com.ojcoleman.europa.configurable.Configuration;
 import com.ojcoleman.europa.configurable.DefaultIDFactory;
 import com.ojcoleman.europa.core.EvaluationDescription;
@@ -48,16 +58,19 @@ import com.thoughtworks.xstream.XStream;
  * @author O. J. Coleman
  */
 public class Main {
-	@Parameter(description = "<Configuration file (.json extension) or previously saved run (.europa extension)>")
+	@Parameter(description = "<Configuration file (.json or .yaml extension) or previously saved run (.europa extension)>")
 	List<String> configOrSavedRun;
 
 	@Parameter(names = "--printConfig", description = "Prints an example configuration file showing available parameters and default sub-components. May be combined with a custom input configuration file or snapshot to see options for custom components or the configuration of the snapshot.")
 	private boolean printConfig = false;
 
+	@Parameter(names = "--printFormat", description = "The format to print the configuration in, either 'json' or 'yaml'. Deault is 'yaml'")
+	private String printFormat = "yaml";
+	
 	@Parameter(names = "--noMetadata", description = "If printConfig is provided, disables including the metadata for parameters and components.")
 	private boolean noMetadata = false;
 
-	@Parameter(names = "--strictJSON", description = "If printConfig is provided, disables \"commenting out\" the metadata in the JSON output, thus producing valid JSON. Metadata about parameters and components is commented out by default to improve readability. Note that this program will accept configuration files with comments.")
+	@Parameter(names = "--strictJSON", description = "If printConfig is provided and printFormat is 'json', disables \"commenting out\" the metadata in the JSON output, thus producing valid JSON. Metadata about parameters and components is commented out by default to improve readability. Note that this program will accept configuration files with comments.")
 	private boolean strictJSON = false;
 
 	@Parameter(names = "--runCount", description = "The number of runs to perform. This is only applicable when launching from a configuration, not a saved run. Default is 1.")
@@ -67,28 +80,33 @@ public class Main {
 		try {
 			Main main = new Main();
 			JCommander jcom = new JCommander(main, args);
-
+			
+			boolean firstFileIsEmpty = main.configOrSavedRun == null || main.configOrSavedRun.isEmpty();
+			String firstFile = firstFileIsEmpty ? null : main.configOrSavedRun.get(0);
+			boolean firstFileIsSavedRun = firstFile == null ? false : firstFile.endsWith(".europa");
+			boolean firstFileIsConfig = firstFile == null ? false : (firstFile.endsWith(".json") || firstFile.endsWith(".yaml"));
+			
 			if (main.printConfig) {
-				if (main.configOrSavedRun == null || main.configOrSavedRun.isEmpty()) {
+				if (firstFileIsEmpty) {
 					main.printConfigOptionsFromDefault();
-				} else if (main.configOrSavedRun.get(0).endsWith(".json")) {
+				} else if (firstFileIsConfig) {
 					main.printConfigOptionsFromConfig(mergeConfigs(main.configOrSavedRun));
-				} else if (main.configOrSavedRun.get(0).endsWith(".europa")) {
-					main.printConfigOptionsFromSaved(main.configOrSavedRun.get(0));
+				} else if (firstFileIsSavedRun) {
+					main.printConfigOptionsFromSaved(firstFile);
 				} else {
 					jcom.usage();
 					System.exit(-1);
 				}
 			} else {
-				if (main.configOrSavedRun == null) {
+				if (firstFileIsEmpty) {
 					jcom.usage();
 					System.exit(-1);
 				}
 				
-				if (main.configOrSavedRun.get(0).endsWith(".json")) {
+				if (firstFileIsConfig) {
 					main.launchFromConfig(mergeConfigs(main.configOrSavedRun));
-				} else if (main.configOrSavedRun.get(0).endsWith(".europa")) {
-					main.launchFromSaved(main.configOrSavedRun.get(0));
+				} else if (firstFileIsSavedRun) {
+					main.launchFromSaved(firstFile);
 				} else {
 					jcom.usage();
 					System.exit(-1);
@@ -189,29 +207,49 @@ public class Main {
 
 	private void printConfig(Run run) throws Exception {
 		JsonObject configJO = run.getConfiguration(!noMetadata);
-		String configOut = configJO.toString(WriterConfig.PRETTY_PRINT);
-
-		if (!strictJSON) {
-			// Comment out meta data. This produces totally illegal JSON. However they totally should have have included
-			// comments in the standard.
-			configOut = Pattern.compile("^(\\s*)\"_metadata(?:.*?) ([^\"]*)\"\\s*:\\s*\"?(.*?)\"?,?$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1// $2: $3");
-			// Blank lines.
-			configOut = Pattern.compile("^\\s*//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll("");
-		}
-
-		// Replace \" with " in comment lines.
-		StringBuilder configOutSB = new StringBuilder(configOut.length());
-		Pattern comment = Pattern.compile("^\\s*//.*");
-		for (String line : configOut.split("\n")) {
-			if (comment.matcher(line).matches()) {
-				configOutSB.append(line.replace("\\\"", "\""));
-			} else {
-				configOutSB.append(line);
+		
+		if (printFormat.equals("json")) { 
+			String configOut = configJO.toString(WriterConfig.PRETTY_PRINT);
+			
+			if (!strictJSON) {
+				// Comment out meta data. This produces totally illegal JSON. However they totally should have have included
+				// comments in the standard.
+				configOut = Pattern.compile("^(\\s*)\"_metadata<[^>]*>([^\"]*)\"\\s*:\\s*\"?(.*?)\"?,?$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1//$2: $3");
+				// Blank lines.
+				configOut = Pattern.compile("^(\\s*)//\\s*:\\s*(\"\")?\\s*$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1");
 			}
-			configOutSB.append("\n");
+	
+			// Replace \" with " in comment lines.
+			StringBuilder configOutSB = new StringBuilder(configOut.length());
+			Pattern comment = Pattern.compile("^\\s*//.*");
+			for (String line : configOut.split("\n")) {
+				if (comment.matcher(line).matches()) {
+					configOutSB.append(line.replace("\\\"", "\""));
+				} else {
+					configOutSB.append(line);
+				}
+				configOutSB.append("\n");
+			}
+	
+			System.out.println(configOutSB.toString());
 		}
-
-		System.out.println(configOutSB.toString());
+		else {
+			DumperOptions dumperOptions = new DumperOptions();
+			dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+		    dumperOptions.setDefaultScalarStyle(DumperOptions.ScalarStyle.PLAIN);
+		    dumperOptions.setSplitLines(false);
+		    dumperOptions.setPrettyFlow(true);
+		    Yaml yaml = new Yaml(dumperOptions);
+			
+			String configOut = yaml.dump(convertConfigToMapsAndLists(configJO));
+			
+			// Convert meta data elements to comments.
+			configOut = Pattern.compile("^( *)'?_metadata<[^>]*>([^':]*)'?: *('?)(.*)(\\3)$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1#$2: $4");
+			// Blank lines.
+			configOut = Pattern.compile("^( *)# *: *$", Pattern.MULTILINE).matcher(configOut).replaceAll("$1");
+			
+			System.out.println(configOut);
+		}
 	}
 
 	private static String stripComments(String jsonWithComments) {
@@ -241,13 +279,27 @@ public class Main {
 		JsonObject mergedConfig = new JsonObject();
 
 		for (String confPath : configPaths) {
-			List<String> configLines = Files.readAllLines(Paths.get(confPath), StandardCharsets.UTF_8);
-			String configStr = stripComments(configLines);
 			try {
-				JsonObject config = Json.parse(configStr).asObject();
-
+				JsonObject config = null;
+	
+				if (confPath.endsWith(".json")) {
+					List<String> configLines = Files.readAllLines(Paths.get(confPath), StandardCharsets.UTF_8);
+					String configStr = stripComments(configLines);
+					config = Json.parse(configStr).asObject();
+				}
+				
+				else if (confPath.endsWith(".yaml")) {
+					Yaml yaml = new Yaml();
+				    config = convertConfigFromMapsAndLists(yaml.load(new FileInputStream(confPath))).asObject();
+				}
+				
+				else {
+					throw new IllegalArgumentException("Invalid extension on configuration file " + confPath + ". Must be .yaml or .json.");
+				}
+				
 				recursiveMerge(mergedConfig, config);
-			} catch (ParseException ex) {
+			}
+			catch (ParseException | ParserException ex) {
 				throw new IllegalArgumentException("Could not parse configuration file " + confPath, ex);
 			}
 		}
@@ -307,5 +359,73 @@ public class Main {
 			}
 		}
 		return fitnessEvDesc;
+	}
+	
+	
+	/**
+	 * Convert a configuration specified in regular Java Maps and Lists.
+	 * This is used to convert a configuration file loaded via SnakeYAML.
+	 */  
+	static private JsonValue convertConfigFromMapsAndLists(Object c) {
+		if (c instanceof Map) {
+			Map<String, Object> map = (Map<String, Object>) c;
+			JsonObject jo = new JsonObject();
+			map.forEach((k, v) -> {
+				jo.add(k, convertConfigFromMapsAndLists(v));
+			});
+			return jo;
+		}
+		else if (c instanceof List) {
+			List<Object> list = (List<Object>) c;
+			JsonArray ja = new JsonArray();
+			list.forEach(v -> {
+				ja.add(convertConfigFromMapsAndLists(v));
+			});
+			return ja;
+		}
+		else {
+			if (c instanceof Boolean) return Json.value((Boolean) c);
+			if (c instanceof Integer) return Json.value((Integer) c);
+			if (c instanceof Long) return Json.value((Long) c);
+			if (c instanceof Float) return Json.value((Float) c);
+			if (c instanceof Double) return Json.value((Double) c);
+			return Json.value(c.toString());
+		}
+	}
+	
+
+	/**
+	 * Convert a configuration to regular Java Maps and Lists.
+	 * This is used to convert a configuration to YAML via SnakeYAML.
+	 */  
+	static private Object convertConfigToMapsAndLists(JsonValue c) {
+		if (c.isObject()) {
+			Map<String, Object> map = new LSListMap<>();
+			JsonObject jo = c.asObject();
+			jo.names().forEach(k -> {
+				map.put(k, convertConfigToMapsAndLists(jo.get(k)));
+			});
+			return map;
+		}
+		else if (c.isArray()) {
+			JsonArray ja = c.asArray();
+			List<Object> list = new ArrayList<>(ja.size());
+			ja.forEach(v -> {
+				list.add(convertConfigToMapsAndLists(v));
+			});
+			return list;
+		}
+		else {
+			if (c.isNumber()) {
+				try {
+					return c.asLong();
+				}
+				catch (NumberFormatException e) {}
+				return c.asDouble();
+			}
+			if (c.isBoolean()) return c.asBoolean();
+			if (c.isString()) return c.asString();
+			return c.toString();
+		}
 	}
 }

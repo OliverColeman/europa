@@ -1,0 +1,115 @@
+---
+name: dpb-neat
+maximumIterations: 20
+saveFrequency: 0
+
+evaluators:
+- class: com.ojcoleman.europa.evaluators.dpb.DoublePoleBalancing
+  # defaultValue: 4.8
+  trackLength: 4.8
+  # defaultValue: 10000
+  maxTimesteps: 10000
+  # defaultValue: 36
+  poleAngleThreshold: 36
+
+transcriber:
+  class: com.ojcoleman.europa.algos.neat.NEATTranscriber
+
+  neuralNetwork:
+    class: com.ojcoleman.europa.transcribers.nn.integration.BainNeuralNetwork
+    config:
+      topology: FEED_FORWARD
+      neuron:
+        modelClass: com.ojcoleman.bain.neuron.rate.SigmoidNeuronCollection
+        paramsAllele:
+          elements:
+          - min: -3
+            max: 3
+            label: bias
+        paramsGene:
+          elements:
+          - min: 4.9
+            max: 4.9
+            label: slope
+      synapse:
+        modelClass: com.ojcoleman.bain.synapse.rate.FixedSynapseCollection
+        paramsAllele:
+          elements:
+          - min: -3
+            max: 3
+            label: weight
+
+  population:
+    desiredSize: 150
+    evolver:
+      class: com.ojcoleman.europa.algos.neat.NEATEvolver
+      relativeCloneProportion: 0.9
+      parentsProportion: 0.2
+      elitismProportion: 0.1
+      elitismMax: 1
+      speciesFitnessSharing: true
+      speciesMaxStagnantIterations: 0
+      parameterTuning:
+        relativeCloneProportion:
+          min: 0
+          max: 1
+          magnitude: 1.5
+          adjustType: factor
+        speciesFitnessSharing:
+          order: 1
+      mutators:
+      - class: com.ojcoleman.europa.algos.vector.VectorMutator
+        applyPercentageClones: 0.8
+        applyPercentageRecombined: 0.8
+        alleleApplyRate: 0.25
+        valueApplyRate: 1
+        perturbationType: normal
+        perturbationMagnitude: 0.25
+        perturbationMagnitudeNormalise: false
+        alleleClass: com.ojcoleman.europa.algos.neat.NEATSynapseAllele
+      - class: com.ojcoleman.europa.algos.neat.NEATNeuronMutator
+        applyPercentageClones: 0.8
+        applyPercentageRecombined: 0.8
+        alleleApplyRate: 0.25
+        valueApplyRate: 1
+        perturbationType: normal
+        perturbationMagnitude: 0.25
+        perturbationMagnitudeNormalise: false
+      - class: com.ojcoleman.europa.algos.neat.NEATSynapseAddMutator
+        applyPercentageClones: 1
+        applyPercentageRecombined: 1
+        type: FIXED
+        fixedMaximum: 1
+        overallApplyRate: 0.05
+      - class: com.ojcoleman.europa.algos.neat.NEATNeuronAddMutator
+        applyPercentageClones: 1
+        applyPercentageRecombined: 1
+        maximum: 1
+        overallApplyRate: 0.03
+      recombiners:
+      - class: com.ojcoleman.europa.algos.neat.NEATRecombiner
+        vetoMutation: false
+        relativeProportion: 0.75
+
+    speciator:
+      class: com.ojcoleman.europa.algos.neat.NEATSpeciatorOriginal
+      excessGenesFactor: 1
+      disjointGenesFactor: 1
+      paramValueDifferenceFactor: 0.4
+      normaliseParameterValues: false
+      geneMismatchUseValues: false
+      speciationThreshold: 3
+      speciationTarget: 0
+
+parallel:
+  class: com.ojcoleman.europa.core.Parallel
+  threadCount: 0
+
+monitors:
+- class: com.ojcoleman.europa.monitor.OverviewMonitor
+  printToConsole: true
+  printToFile: overview.log
+- class: com.ojcoleman.europa.monitor.FittestMonitor
+  period: 20
+- class: com.ojcoleman.europa.monitor.ConfigMonitor
+#- class: class":"com.ojcoleman.europa.monitor.SpeciesMonitor

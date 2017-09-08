@@ -226,9 +226,12 @@ public abstract class ComponentBase extends ConfigurableBase {
 						}
 					}
 					if (!imps.isEmpty()) {
-						config.add("_metadata<" + name + "> available implementations", "");
-						for (Class<?> c : imps) {
-							config.add("_metadata<" + name + c.getName() + "> ", " " + c.getName());
+						for (int ci = 0; ci < imps.size(); ci++) {
+							if (ci == 0) {
+								config.add("_metadata<" + name + " imp " + ci + "> available implementations", imps.get(ci).getName());
+							} else {
+								config.add("_metadata<" + name + " imp " + ci + ">                          ", imps.get(ci).getName());
+							}
 						}
 					}
 					// nnConfig.add("_metadata for component", meta);

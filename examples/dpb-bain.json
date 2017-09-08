@@ -6,13 +6,10 @@
 	"evaluators":[
 		{
 		  "class": "com.ojcoleman.europa.evaluators.dpb.DoublePoleBalancing",
-	      // defaultValue: 4.8
 	      "trackLength": 4.8,
 	
-	      // defaultValue: 100000
 	      "maxTimesteps": 10000,
 	
-	      // defaultValue: 36
 	      "poleAngleThreshold": 36
 		}
 	],
@@ -163,9 +160,6 @@
 		},
 		{
 			"class":"com.ojcoleman.europa.monitor.ConfigMonitor"
-		//},
-		//{
-		//	"class":"com.ojcoleman.europa.monitor.SpeciesMonitor"
 		}
 	]
 }
